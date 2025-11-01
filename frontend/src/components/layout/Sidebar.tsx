@@ -253,30 +253,34 @@ export const Sidebar = () => {
           }}
         >
           {/* New Button */}
-          <Box sx={{ px: 2, mb: 2 }}>
+          <Box sx={{ px: 2, mb: 1 }}>
             <Button
-              variant="contained"
+              variant="outlined"
               startIcon={<AddIcon />}
               onClick={handleNewMenuOpen}
               sx={{
-                width: sidebarOpen ? 120 : 56,
                 height: 56,
-                borderRadius: 28,
+                borderRadius: 2,
                 textTransform: "none",
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: 500,
+                backgroundColor: "white",
+                border: `1px solid ${colors.border}`,
+                color: "text.primary",
                 boxShadow:
                   "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
                 "&:hover": {
+                  backgroundColor: "#fafafa",
+                  border: `1px solid ${colors.border}`,
                   boxShadow:
                     "0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15)",
                 },
-                minWidth: 56,
-                px: sidebarOpen ? 3 : 0,
-                justifyContent: sidebarOpen ? "flex-start" : "center",
+                justifyContent: "flex-start",
+                px: 3,
+                minWidth: "auto",
               }}
             >
-              {sidebarOpen && "New"}
+              New
             </Button>
 
             <Menu
@@ -312,18 +316,19 @@ export const Sidebar = () => {
           </Box>
 
           {/* Navigation Items */}
-          <List sx={{ flexGrow: 1, px: 1 }}>
+          <List sx={{ flexGrow: 1, px: 1.5 }}>
             {navItems.map((item) => {
               const active = isActive(item.path);
               return (
-                <ListItem key={item.id} disablePadding sx={{ mb: 0.5 }}>
+                <ListItem key={item.id} disablePadding sx={{ mb: 0.25 }}>
                   <ListItemButton
                     selected={active}
                     onClick={() => navigate(item.path)}
                     sx={{
-                      borderRadius: active ? "0 24px 24px 0" : 4,
-                      height: active ? 48 : 40,
-                      px: sidebarOpen ? 2 : 1,
+                      borderRadius: active ? "0 24px 24px 0" : 2,
+                      height: 36,
+                      px: sidebarOpen ? 2.5 : 1,
+                      py: 0.5,
                       justifyContent: sidebarOpen ? "flex-start" : "center",
                       backgroundColor: active ? colors.selected : "transparent",
                       "&:hover": {
@@ -335,9 +340,12 @@ export const Sidebar = () => {
                   >
                     <ListItemIcon
                       sx={{
-                        minWidth: sidebarOpen ? 40 : "auto",
+                        minWidth: sidebarOpen ? 32 : "auto",
                         color: active ? colors.primary : "text.secondary",
                         justifyContent: "center",
+                        "& .MuiSvgIcon-root": {
+                          fontSize: 20,
+                        },
                       }}
                     >
                       {item.icon}
@@ -347,7 +355,7 @@ export const Sidebar = () => {
                         primary={item.label}
                         primaryTypographyProps={{
                           fontSize: 14,
-                          fontWeight: active ? 700 : 400,
+                          fontWeight: active ? 500 : 400,
                           color: active ? colors.primary : "text.primary",
                         }}
                       />
