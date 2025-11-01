@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 import {
   Box,
   Table,
@@ -8,7 +8,6 @@ import {
   TableHead,
   TableRow,
   TableSortLabel,
-  Checkbox,
   IconButton,
   Menu,
   MenuItem,
@@ -17,26 +16,24 @@ import {
   Typography,
   Tooltip,
   alpha,
-} from '@mui/material';
+} from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
-  Star as StarIcon,
-  StarBorder as StarBorderIcon,
   Share as ShareIcon,
   GetApp as DownloadIcon,
   DriveFileMove as MoveIcon,
   Edit as RenameIcon,
   Delete as DeleteIcon,
   InfoOutlined as InfoIcon,
-} from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
-import type { DriveItem, SortField, SortOrder } from '../../types/file.types';
-import { useFileStore } from '../../store/fileStore';
-import { getFileIcon } from '../../utils/fileIcons';
-import { formatDate, formatFileSize } from '../../utils/formatters';
-import { colors } from '../../theme/theme';
-import { animations, getStaggerDelay } from '../../utils/animations';
-import { EmptyState } from '../common/EmptyState';
+} from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
+import type { DriveItem, SortField } from "../../types/file.types";
+import { useFileStore } from "../../store/fileStore";
+import { getFileIcon } from "../../utils/fileIcons";
+import { formatDate, formatFileSize } from "../../utils/formatters";
+import { colors } from "../../theme/theme";
+import { animations, getStaggerDelay } from "../../utils/animations";
+import { EmptyState } from "../common/EmptyState";
 
 interface FileListProps {
   files: DriveItem[];
@@ -45,34 +42,23 @@ interface FileListProps {
   onFileClick?: (file: DriveItem) => void;
 }
 
-export const FileList = ({ files, onSort, onContextMenu, onFileClick }: FileListProps) => {
+export const FileList = ({
+  files,
+  onSort,
+  onContextMenu,
+  onFileClick,
+}: FileListProps) => {
   const navigate = useNavigate();
   const selectedFiles = useFileStore((state) => state.selectedFiles);
-  const toggleFileSelection = useFileStore((state) => state.toggleFileSelection);
-  const selectAll = useFileStore((state) => state.selectAll);
-  const clearSelection = useFileStore((state) => state.clearSelection);
   const sortField = useFileStore((state) => state.sortField);
   const sortOrder = useFileStore((state) => state.sortOrder);
   const toggleSortOrder = useFileStore((state) => state.toggleSortOrder);
   const setSortField = useFileStore((state) => state.setSortField);
-  const updateFile = useFileStore((state) => state.updateFile);
 
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{
     element: HTMLElement;
     fileId: string;
   } | null>(null);
-
-  const handleSelectAll = (event: React.ChangeEvent<HTMLInputElement>) => {
-    if (event.target.checked) {
-      selectAll();
-    } else {
-      clearSelection();
-    }
-  };
-
-  const handleSelectFile = (fileId: string) => {
-    toggleFileSelection(fileId);
-  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -86,25 +72,21 @@ export const FileList = ({ files, onSort, onContextMenu, onFileClick }: FileList
   const handleFileClick = (file: DriveItem) => {
     if (onFileClick) {
       onFileClick(file);
-    } else if (file.type === 'folder') {
+    } else if (file.type === "folder") {
       navigate(`/folder/${file.id}`);
     }
   };
 
-  const handleActionMenuOpen = (event: React.MouseEvent<HTMLElement>, fileId: string) => {
+  const handleActionMenuOpen = (
+    event: React.MouseEvent<HTMLElement>,
+    fileId: string
+  ) => {
     event.stopPropagation();
     setActionMenuAnchor({ element: event.currentTarget, fileId });
   };
 
   const handleActionMenuClose = () => {
     setActionMenuAnchor(null);
-  };
-
-  const handleToggleStar = (fileId: string) => {
-    const file = files.find((f) => f.id === fileId);
-    if (file) {
-      updateFile(fileId, { isStarred: !file.isStarred });
-    }
   };
 
   const handleAction = (action: string) => {
@@ -114,61 +96,128 @@ export const FileList = ({ files, onSort, onContextMenu, onFileClick }: FileList
   };
 
   const isSelected = (fileId: string) => selectedFiles.includes(fileId);
-  const isAllSelected = files.length > 0 && selectedFiles.length === files.length;
-  const isSomeSelected = selectedFiles.length > 0 && selectedFiles.length < files.length;
 
   return (
-    <Box>
-      <TableContainer>
-        <Table sx={{ minWidth: 650 }}>
+    <Box sx={{ width: "100%" }}>
+      <TableContainer sx={{ width: "100%" }}>
+        <Table sx={{ width: "100%", tableLayout: "fixed" }}>
           <TableHead>
-            <TableRow>
-              <TableCell padding="checkbox" sx={{ width: 48 }}>
-                <Checkbox
-                  indeterminate={isSomeSelected}
-                  checked={isAllSelected}
-                  onChange={handleSelectAll}
-                  size="small"
-                />
-              </TableCell>
-              <TableCell sx={{ width: 40 }} />
-              <TableCell sx={{ width: '40%' }}>
+            <TableRow
+              sx={{
+                borderBottom: `1px solid ${colors.border}`,
+              }}
+            >
+              <TableCell
+                sx={{ width: 48, py: 0.75, borderBottom: "none", pl: 2 }}
+              />
+              <TableCell
+                sx={{
+                  width: "45%",
+                  py: 0.75,
+                  borderBottom: "none",
+                }}
+              >
                 <TableSortLabel
-                  active={sortField === 'name'}
-                  direction={sortField === 'name' ? sortOrder : 'asc'}
-                  onClick={() => handleSort('name')}
+                  active={sortField === "name"}
+                  direction={sortField === "name" ? sortOrder : "asc"}
+                  onClick={() => handleSort("name")}
+                  sx={{
+                    "& .MuiTableSortLabel-root": {
+                      fontSize: 14,
+                      fontWeight: 500,
+                      color: "text.secondary",
+                    },
+                  }}
                 >
-                  Name
+                  <Typography
+                    fontSize={12}
+                    fontWeight={500}
+                    color="text.secondary"
+                  >
+                    Name
+                  </Typography>
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ width: '20%' }}>
+              <TableCell
+                sx={{
+                  width: "18%",
+                  py: 0.75,
+                  borderBottom: "none",
+                }}
+              >
                 <TableSortLabel
-                  active={sortField === 'owner'}
-                  direction={sortField === 'owner' ? sortOrder : 'asc'}
-                  onClick={() => handleSort('owner')}
+                  active={sortField === "owner"}
+                  direction={sortField === "owner" ? sortOrder : "asc"}
+                  onClick={() => handleSort("owner")}
                 >
-                  Owner
+                  <Typography
+                    fontSize={12}
+                    fontWeight={500}
+                    color="text.secondary"
+                  >
+                    Owner
+                  </Typography>
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ width: '20%' }}>
+              <TableCell
+                sx={{
+                  width: "18%",
+                  py: 0.75,
+                  borderBottom: "none",
+                }}
+              >
                 <TableSortLabel
-                  active={sortField === 'modifiedTime'}
-                  direction={sortField === 'modifiedTime' ? sortOrder : 'asc'}
-                  onClick={() => handleSort('modifiedTime')}
+                  active={sortField === "modifiedTime"}
+                  direction={sortField === "modifiedTime" ? sortOrder : "asc"}
+                  onClick={() => handleSort("modifiedTime")}
                 >
-                  Last modified
+                  <Typography
+                    fontSize={12}
+                    fontWeight={500}
+                    color="text.secondary"
+                  >
+                    Date modified
+                  </Typography>
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ width: '15%' }}>
+              <TableCell
+                sx={{
+                  width: "12%",
+                  py: 0.75,
+                  borderBottom: "none",
+                }}
+              >
                 <TableSortLabel
-                  active={sortField === 'size'}
-                  direction={sortField === 'size' ? sortOrder : 'asc'}
-                  onClick={() => handleSort('size')}
+                  active={sortField === "size"}
+                  direction={sortField === "size" ? sortOrder : "asc"}
+                  onClick={() => handleSort("size")}
                 >
-                  File size
+                  <Typography
+                    fontSize={12}
+                    fontWeight={500}
+                    color="text.secondary"
+                  >
+                    File size
+                  </Typography>
                 </TableSortLabel>
               </TableCell>
-              <TableCell sx={{ width: 48 }} />
+              <TableCell
+                sx={{
+                  width: 80,
+                  py: 0.75,
+                  borderBottom: "none",
+                  textAlign: "right",
+                  pr: 2,
+                }}
+              >
+                <Typography
+                  fontSize={12}
+                  fontWeight={500}
+                  color="text.secondary"
+                >
+                  Sort
+                </Typography>
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -183,78 +232,95 @@ export const FileList = ({ files, onSort, onContextMenu, onFileClick }: FileList
                   onContextMenu?.(e, file);
                 }}
                 sx={{
-                  cursor: 'pointer',
-                  '&.Mui-selected': {
+                  cursor: "pointer",
+                  borderBottom: `1px solid ${colors.border}`,
+                  "&:hover": {
+                    backgroundColor: alpha(colors.primary, 0.04),
+                  },
+                  "&.Mui-selected": {
                     backgroundColor: alpha(colors.primary, 0.08),
+                    "&:hover": {
+                      backgroundColor: alpha(colors.primary, 0.12),
+                    },
                   },
                   ...animations.fadeIn,
                   ...getStaggerDelay(index, 20),
                 }}
               >
-                <TableCell padding="checkbox">
-                  <Checkbox
-                    checked={isSelected(file.id)}
-                    onChange={() => handleSelectFile(file.id)}
-                    onClick={(e) => e.stopPropagation()}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                <TableCell sx={{ py: 0.75, borderBottom: "none", pl: 2 }}>
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
                     {getFileIcon(file.type)}
                   </Box>
                 </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" noWrap>
+                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography fontSize={14} noWrap color="text.primary">
                       {file.name}
                     </Typography>
                     {file.isShared && (
                       <Tooltip title="Shared">
-                        <ShareIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                        <ShareIcon
+                          sx={{ fontSize: 16, color: "text.secondary" }}
+                        />
                       </Tooltip>
                     )}
                   </Box>
                 </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {file.ownerName}
-                  </Typography>
+                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        borderRadius: "50%",
+                        backgroundColor: colors.primary,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 12,
+                        color: "white",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {file.ownerName?.charAt(0).toUpperCase() || "U"}
+                    </Box>
+                    <Typography fontSize={14} color="text.secondary" noWrap>
+                      me
+                    </Typography>
+                  </Box>
                 </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
+                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
+                  <Typography fontSize={14} color="text.secondary">
                     {formatDate(file.modifiedTime)}
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Typography variant="body2" color="text.secondary">
-                    {file.type === 'folder' ? '—' : formatFileSize((file as any).size || 0)}
+                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
+                  <Typography fontSize={14} color="text.secondary">
+                    {file.type === "folder"
+                      ? "—"
+                      : formatFileSize(file.size || 0)}
                   </Typography>
                 </TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', gap: 0.5 }}>
-                    <Tooltip title={file.isStarred ? 'Remove star' : 'Add star'}>
-                      <IconButton
-                        size="small"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleStar(file.id);
-                        }}
-                      >
-                        {file.isStarred ? (
-                          <StarIcon sx={{ fontSize: 20, color: colors.warning }} />
-                        ) : (
-                          <StarBorderIcon sx={{ fontSize: 20 }} />
-                        )}
-                      </IconButton>
-                    </Tooltip>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleActionMenuOpen(e, file.id)}
-                    >
-                      <MoreVertIcon sx={{ fontSize: 20 }} />
-                    </IconButton>
-                  </Box>
+                <TableCell
+                  sx={{
+                    py: 0.75,
+                    borderBottom: "none",
+                    textAlign: "right",
+                    pr: 1,
+                  }}
+                >
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleActionMenuOpen(e, file.id)}
+                    sx={{
+                      opacity: 0.6,
+                      "&:hover": {
+                        opacity: 1,
+                      },
+                    }}
+                  >
+                    <MoreVertIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
@@ -269,41 +335,43 @@ export const FileList = ({ files, onSort, onContextMenu, onFileClick }: FileList
         onClose={handleActionMenuClose}
         onClick={handleActionMenuClose}
       >
-        <MenuItem onClick={() => handleAction('share')}>
+        <MenuItem onClick={() => handleAction("share")}>
           <ListItemIcon>
             <ShareIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Share</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction('download')}>
+        <MenuItem onClick={() => handleAction("download")}>
           <ListItemIcon>
             <DownloadIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Download</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction('rename')}>
+        <MenuItem onClick={() => handleAction("rename")}>
           <ListItemIcon>
             <RenameIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Rename</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction('move')}>
+        <MenuItem onClick={() => handleAction("move")}>
           <ListItemIcon>
             <MoveIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Move</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction('details')}>
+        <MenuItem onClick={() => handleAction("details")}>
           <ListItemIcon>
             <InfoIcon fontSize="small" />
           </ListItemIcon>
           <ListItemText>Details</ListItemText>
         </MenuItem>
-        <MenuItem onClick={() => handleAction('delete')}>
+        <MenuItem onClick={() => handleAction("delete")}>
           <ListItemIcon>
             <DeleteIcon fontSize="small" color="error" />
           </ListItemIcon>
-          <ListItemText sx={{ color: 'error.main' }}>Move to trash</ListItemText>
+          <ListItemText sx={{ color: "error.main" }}>
+            Move to trash
+          </ListItemText>
         </MenuItem>
       </Menu>
 

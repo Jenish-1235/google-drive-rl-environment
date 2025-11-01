@@ -4,7 +4,7 @@ import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
 import { mockFiles } from "../../utils/mockData";
-import { Breadcrumbs } from "../../components/common/Breadcrumbs";
+import { FileToolbar } from "../../components/files/FileToolbar";
 import { FileList } from "../../components/files/FileList";
 import { FileGrid } from "../../components/files/FileGrid";
 import { FileListSkeleton } from "../../components/loading/FileListSkeleton";
@@ -222,31 +222,29 @@ export const HomePage = () => {
   ]);
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100%", py: 3 }}>
-      <Box sx={{ px: viewMode === "grid" ? 3 : 2 }}>
-        <Breadcrumbs />
+    <Box sx={{ width: "100%", minHeight: "100%", py: 3, px: 3 }}>
+      <FileToolbar />
 
-        {/* File Views */}
-        {isLoading ? (
-          viewMode === "list" ? (
-            <FileListSkeleton />
-          ) : (
-            <FileGridSkeleton />
-          )
-        ) : viewMode === "list" ? (
-          <FileList
-            files={currentFiles}
-            onContextMenu={handleContextMenuOpen}
-            onFileClick={handleFilePreview}
-          />
+      {/* File Views */}
+      {isLoading ? (
+        viewMode === "list" ? (
+          <FileListSkeleton />
         ) : (
-          <FileGrid
-            files={currentFiles}
-            onContextMenu={handleContextMenuOpen}
-            onFileClick={handleFilePreview}
-          />
-        )}
-      </Box>
+          <FileGridSkeleton />
+        )
+      ) : viewMode === "list" ? (
+        <FileList
+          files={currentFiles}
+          onContextMenu={handleContextMenuOpen}
+          onFileClick={handleFilePreview}
+        />
+      ) : (
+        <FileGrid
+          files={currentFiles}
+          onContextMenu={handleContextMenuOpen}
+          onFileClick={handleFilePreview}
+        />
+      )}
 
       {/* Modals */}
       <FilePreviewModal
