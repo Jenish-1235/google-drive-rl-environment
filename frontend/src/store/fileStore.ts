@@ -1,5 +1,11 @@
-import { create } from 'zustand';
-import type { DriveItem, SortField, SortOrder, ViewMode, BreadcrumbItem } from '../types/file.types';
+import { create } from "zustand";
+import type {
+  DriveItem,
+  SortField,
+  SortOrder,
+  ViewMode,
+  BreadcrumbItem,
+} from "../types/file.types";
 
 interface FileStore {
   files: DriveItem[];
@@ -44,11 +50,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
   files: [],
   selectedFiles: [],
   currentFolderId: null,
-  breadcrumbs: [{ id: 'root', name: 'My Drive' }],
-  viewMode: 'list',
-  sortField: 'name',
-  sortOrder: 'asc',
-  searchQuery: '',
+  breadcrumbs: [{ id: "root", name: "My Drive" }],
+  viewMode: "list",
+  sortField: "name",
+  sortOrder: "asc",
+  searchQuery: "",
   isLoading: false,
 
   // Actions
@@ -67,7 +73,9 @@ export const useFileStore = create<FileStore>((set, get) => ({
   deleteFile: (id) =>
     set((state) => ({
       files: state.files.filter((file) => file.id !== id),
-      selectedFiles: state.selectedFiles.filter((selectedId) => selectedId !== id),
+      selectedFiles: state.selectedFiles.filter(
+        (selectedId) => selectedId !== id
+      ),
     })),
 
   setSelectedFiles: (ids) => set({ selectedFiles: ids }),
@@ -81,12 +89,15 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   selectAll: () =>
     set(() => ({
-      selectedFiles: get().getCurrentFolderFiles().map((file) => file.id),
+      selectedFiles: get()
+        .getCurrentFolderFiles()
+        .map((file) => file.id),
     })),
 
   clearSelection: () => set({ selectedFiles: [] }),
 
-  setCurrentFolder: (folderId) => set({ currentFolderId: folderId, selectedFiles: [] }),
+  setCurrentFolder: (folderId) =>
+    set({ currentFolderId: folderId, selectedFiles: [] }),
 
   setBreadcrumbs: (breadcrumbs) => set({ breadcrumbs }),
 
@@ -98,7 +109,7 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   toggleSortOrder: () =>
     set((state) => ({
-      sortOrder: state.sortOrder === 'asc' ? 'desc' : 'asc',
+      sortOrder: state.sortOrder === "asc" ? "desc" : "asc",
     })),
 
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -108,6 +119,13 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   getCurrentFolderFiles: () => {
     const state = get();
+    if (!state.currentFolderId) {
+      // Root folder: show files with no parent or parent === 'root'
+      return state.files.filter(
+        (file) =>
+          (!file.parentId || file.parentId === "root") && !file.isTrashed
+      );
+    }
     return state.files.filter(
       (file) => file.parentId === state.currentFolderId && !file.isTrashed
     );

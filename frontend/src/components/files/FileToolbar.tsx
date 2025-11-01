@@ -8,6 +8,9 @@ import {
   ButtonGroup,
   Menu,
   MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from "@mui/material";
 import {
   ChevronRight as ChevronRightIcon,
@@ -15,11 +18,14 @@ import {
   ViewList as ViewListIcon,
   ViewModule as ViewModuleIcon,
   Info as InfoIcon,
+  Folder as FolderIcon,
+  CreateNewFolder as CreateNewFolderIcon,
+  DriveFileMove as MoveIcon,
 } from "@mui/icons-material";
-import { Link as RouterLink, useParams } from "react-router-dom";
+import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
 import { useFileStore } from "../../store/fileStore";
 import { useEffect, useState } from "react";
-import { colors } from "../../theme/theme";
+import type { DriveItem } from "../../types/file.types";
 
 interface FilterButtonProps {
   label: string;
@@ -29,20 +35,21 @@ interface FilterButtonProps {
 const FilterButton = ({ label, onClick }: FilterButtonProps) => (
   <Button
     variant="outlined"
-    endIcon={<ArrowDownIcon />}
+    endIcon={<ArrowDownIcon sx={{ fontSize: 18 }} />}
     onClick={onClick}
     sx={{
       textTransform: "none",
-      color: "text.primary",
-      borderColor: colors.border,
-      borderRadius: 3,
+      color: "#202124",
+      borderColor: "#dadce0",
+      borderRadius: 1,
       px: 2,
-      py: 0.75,
+      py: 0.5,
       fontSize: 14,
-      fontWeight: 400,
+      fontWeight: 500,
+      minHeight: 36,
       "&:hover": {
-        borderColor: colors.border,
-        backgroundColor: colors.hover,
+        borderColor: "#dadce0",
+        backgroundColor: "#f8f9fa",
       },
     }}
   >
@@ -69,6 +76,17 @@ export const FileToolbar = () => {
   const [sourceMenuAnchor, setSourceMenuAnchor] = useState<null | HTMLElement>(
     null
   );
+  const [myDriveMenuAnchor, setMyDriveMenuAnchor] =
+    useState<null | HTMLElement>(null);
+
+  // Get all folders in current directory for "My Drive" dropdown
+  const currentFolderFiles = files.filter((file) => {
+    if (!folderId) {
+      return !file.parentId || file.parentId === "root";
+    }
+    return file.parentId === folderId;
+  });
+  const currentFolders = currentFolderFiles.filter((f) => f.type === "folder");
 
   useEffect(() => {
     const buildBreadcrumbs = () => {
@@ -89,78 +107,115 @@ export const FileToolbar = () => {
   }, [folderId, files, setBreadcrumbs]);
 
   return (
-    <Box sx={{ mb: 3 }}>
-      {/* Breadcrumbs */}
-      <Box sx={{ mb: 2 }}>
+    <Box sx={{ mb: 2.5 }}>
+      {/* Top Row: Breadcrumbs + View Controls */}
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          mb: 2,
+        }}
+      >
+        {/* Breadcrumbs */}
         <MuiBreadcrumbs
-          separator={<ChevronRightIcon fontSize="small" />}
+          separator={
+            <ChevronRightIcon sx={{ fontSize: 20, color: "#5f6368" }} />
+          }
           sx={{
             "& .MuiBreadcrumbs-separator": {
-              color: "text.secondary",
+              mx: 0.5,
             },
           }}
         >
           {breadcrumbs.map((crumb, index) => {
             const isLast = index === breadcrumbs.length - 1;
             const to = crumb.id === "root" ? "/drive" : `/folder/${crumb.id}`;
+            const isRoot = crumb.id === "root";
 
             return isLast ? (
-              <Typography
+              <Box
                 key={crumb.id}
-                color="text.primary"
-                fontSize={20}
-                fontWeight={400}
-              >
-                {crumb.name}
-              </Typography>
-            ) : (
-              <Link
-                key={crumb.id}
-                component={RouterLink}
-                to={to}
-                underline="hover"
-                color="text.secondary"
-                fontSize={14}
                 sx={{
-                  "&:hover": {
-                    color: "text.primary",
-                  },
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
                 }}
               >
-                {crumb.name}
-              </Link>
+                <Typography
+                  color="#202124"
+                  fontSize={22}
+                  fontWeight={500}
+                  sx={{
+                    cursor: isRoot ? "pointer" : "default",
+                  }}
+                  onClick={
+                    isRoot
+                      ? (e) => setMyDriveMenuAnchor(e.currentTarget)
+                      : undefined
+                  }
+                >
+                  {crumb.name}
+                </Typography>
+                {isRoot && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => setMyDriveMenuAnchor(e.currentTarget)}
+                    sx={{
+                      color: "#5f6368",
+                      padding: 0.5,
+                      "&:hover": {
+                        backgroundColor: "#f8f9fa",
+                      },
+                    }}
+                  >
+                    <ArrowDownIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                )}
+              </Box>
+            ) : (
+              <Box
+                key={crumb.id}
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.5,
+                }}
+              >
+                <Link
+                  component={RouterLink}
+                  to={to}
+                  underline="hover"
+                  color="#5f6368"
+                  fontSize={14}
+                  fontWeight={400}
+                  sx={{
+                    "&:hover": {
+                      color: "#202124",
+                    },
+                  }}
+                >
+                  {crumb.name}
+                </Link>
+                {isRoot && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => setMyDriveMenuAnchor(e.currentTarget)}
+                    sx={{
+                      color: "#5f6368",
+                      padding: 0.5,
+                      "&:hover": {
+                        backgroundColor: "#f8f9fa",
+                      },
+                    }}
+                  >
+                    <ArrowDownIcon sx={{ fontSize: 18 }} />
+                  </IconButton>
+                )}
+              </Box>
             );
           })}
         </MuiBreadcrumbs>
-      </Box>
-
-      {/* Filter Buttons and View Toggle */}
-      <Box
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        {/* Filter Buttons */}
-        <Box sx={{ display: "flex", gap: 1.5 }}>
-          <FilterButton
-            label="Type"
-            onClick={(e) => setTypeMenuAnchor(e.currentTarget)}
-          />
-          <FilterButton
-            label="People"
-            onClick={(e) => setPeopleMenuAnchor(e.currentTarget)}
-          />
-          <FilterButton
-            label="Modified"
-            onClick={(e) => setModifiedMenuAnchor(e.currentTarget)}
-          />
-          <FilterButton
-            label="Source"
-            onClick={(e) => setSourceMenuAnchor(e.currentTarget)}
-          />
-        </Box>
 
         {/* View Toggle and Info Button */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -168,11 +223,11 @@ export const FileToolbar = () => {
             variant="outlined"
             sx={{
               "& .MuiButtonGroup-grouped": {
-                borderColor: colors.border,
+                borderColor: "#dadce0",
                 minWidth: 40,
                 "&:hover": {
-                  borderColor: colors.border,
-                  backgroundColor: colors.hover,
+                  borderColor: "#dadce0",
+                  backgroundColor: "#f8f9fa",
                 },
               },
             }}
@@ -181,13 +236,12 @@ export const FileToolbar = () => {
               size="small"
               onClick={() => setViewMode("list")}
               sx={{
-                color: viewMode === "list" ? colors.primary : "text.secondary",
+                color: viewMode === "list" ? "#1a73e8" : "#5f6368",
                 backgroundColor:
-                  viewMode === "list" ? colors.selected : "transparent",
+                  viewMode === "list" ? "#e8f0fe" : "transparent",
                 borderRadius: "4px 0 0 4px",
                 "&:hover": {
-                  backgroundColor:
-                    viewMode === "list" ? colors.selected : colors.hover,
+                  backgroundColor: viewMode === "list" ? "#e8f0fe" : "#f8f9fa",
                 },
               }}
             >
@@ -197,13 +251,12 @@ export const FileToolbar = () => {
               size="small"
               onClick={() => setViewMode("grid")}
               sx={{
-                color: viewMode === "grid" ? colors.primary : "text.secondary",
+                color: viewMode === "grid" ? "#1a73e8" : "#5f6368",
                 backgroundColor:
-                  viewMode === "grid" ? colors.selected : "transparent",
+                  viewMode === "grid" ? "#e8f0fe" : "transparent",
                 borderRadius: "0 4px 4px 0",
                 "&:hover": {
-                  backgroundColor:
-                    viewMode === "grid" ? colors.selected : colors.hover,
+                  backgroundColor: viewMode === "grid" ? "#e8f0fe" : "#f8f9fa",
                 },
               }}
             >
@@ -214,17 +267,37 @@ export const FileToolbar = () => {
           <IconButton
             size="small"
             sx={{
-              color: "text.secondary",
-              border: `1px solid ${colors.border}`,
+              color: "#5f6368",
+              border: `1px solid #dadce0`,
               borderRadius: 1,
               "&:hover": {
-                backgroundColor: colors.hover,
+                backgroundColor: "#f8f9fa",
               },
             }}
           >
             <InfoIcon fontSize="small" />
           </IconButton>
         </Box>
+      </Box>
+
+      {/* Bottom Row: Filter Buttons */}
+      <Box sx={{ display: "flex", gap: 1.5 }}>
+        <FilterButton
+          label="Type"
+          onClick={(e) => setTypeMenuAnchor(e.currentTarget)}
+        />
+        <FilterButton
+          label="People"
+          onClick={(e) => setPeopleMenuAnchor(e.currentTarget)}
+        />
+        <FilterButton
+          label="Modified"
+          onClick={(e) => setModifiedMenuAnchor(e.currentTarget)}
+        />
+        <FilterButton
+          label="Source"
+          onClick={(e) => setSourceMenuAnchor(e.currentTarget)}
+        />
       </Box>
 
       {/* Filter Menus (Placeholder content) */}
@@ -292,6 +365,132 @@ export const FileToolbar = () => {
         </MenuItem>
         <MenuItem onClick={() => setSourceMenuAnchor(null)}>Starred</MenuItem>
       </Menu>
+
+      {/* My Drive Dropdown Menu */}
+      <MyDriveMenu
+        anchorEl={myDriveMenuAnchor}
+        open={Boolean(myDriveMenuAnchor)}
+        onClose={() => setMyDriveMenuAnchor(null)}
+        folders={currentFolders}
+      />
     </Box>
+  );
+};
+
+// My Drive Dropdown Menu Component
+interface MyDriveMenuProps {
+  anchorEl: HTMLElement | null;
+  open: boolean;
+  onClose: () => void;
+  folders: DriveItem[];
+}
+
+const MyDriveMenu = ({
+  anchorEl,
+  open,
+  onClose,
+  folders,
+}: MyDriveMenuProps) => {
+  const navigate = useNavigate();
+
+  const handleFolderClick = (folderId: string) => {
+    navigate(`/folder/${folderId}`);
+    onClose();
+  };
+
+  return (
+    <Menu
+      anchorEl={anchorEl}
+      open={open}
+      onClose={onClose}
+      PaperProps={{
+        sx: {
+          width: 320,
+          maxHeight: 480,
+          mt: 1,
+          boxShadow:
+            "0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12)",
+        },
+      }}
+    >
+      <Box sx={{ py: 1 }}>
+        {/* Action Items */}
+        <MenuItem
+          sx={{
+            py: 1.5,
+            px: 2,
+            "&:hover": {
+              backgroundColor: "#f8f9fa",
+            },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <CreateNewFolderIcon sx={{ fontSize: 20, color: "#5f6368" }} />
+          </ListItemIcon>
+          <ListItemText
+            primary="New folder"
+            primaryTypographyProps={{
+              fontSize: 14,
+              color: "#202124",
+            }}
+          />
+        </MenuItem>
+
+        <MenuItem
+          sx={{
+            py: 1.5,
+            px: 2,
+            "&:hover": {
+              backgroundColor: "#f8f9fa",
+            },
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <MoveIcon sx={{ fontSize: 20, color: "#5f6368" }} />
+          </ListItemIcon>
+          <ListItemText
+            primary="Move to folder"
+            primaryTypographyProps={{
+              fontSize: 14,
+              color: "#202124",
+            }}
+          />
+        </MenuItem>
+
+        {folders.length > 0 && (
+          <>
+            <Divider sx={{ my: 1 }} />
+
+            {/* Folders List */}
+            <Box sx={{ maxHeight: 320, overflowY: "auto" }}>
+              {folders.map((folder) => (
+                <MenuItem
+                  key={folder.id}
+                  onClick={() => handleFolderClick(folder.id)}
+                  sx={{
+                    py: 1.5,
+                    px: 2,
+                    "&:hover": {
+                      backgroundColor: "#f8f9fa",
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 40 }}>
+                    <FolderIcon sx={{ fontSize: 20, color: "#5f6368" }} />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={folder.name}
+                    primaryTypographyProps={{
+                      fontSize: 14,
+                      color: "#202124",
+                    }}
+                  />
+                </MenuItem>
+              ))}
+            </Box>
+          </>
+        )}
+      </Box>
+    </Menu>
   );
 };

@@ -1,5 +1,6 @@
 import { Box } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
@@ -21,11 +22,14 @@ import type {
 } from "../../components/modals/ShareModal";
 
 export const HomePage = () => {
+  const { folderId } = useParams<{ folderId: string }>();
   const files = useFileStore((state) => state.files);
   const setFiles = useFileStore((state) => state.setFiles);
   const viewMode = useFileStore((state) => state.viewMode);
   const isLoading = useFileStore((state) => state.isLoading);
   const setIsLoading = useFileStore((state) => state.setIsLoading);
+  const currentFolderId = useFileStore((state) => state.currentFolderId);
+  const setCurrentFolder = useFileStore((state) => state.setCurrentFolder);
   const getCurrentFolderFiles = useFileStore(
     (state) => state.getCurrentFolderFiles
   );
@@ -35,6 +39,11 @@ export const HomePage = () => {
   const clearSelection = useFileStore((state) => state.clearSelection);
   const selectedFiles = useFileStore((state) => state.selectedFiles);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
+
+  // Update current folder when route changes
+  useEffect(() => {
+    setCurrentFolder(folderId || null);
+  }, [folderId, setCurrentFolder]);
 
   const [previewFile, setPreviewFile] = useState<DriveItem | null>(null);
   const [contextMenu, setContextMenu] = useState<{
@@ -222,7 +231,15 @@ export const HomePage = () => {
   ]);
 
   return (
-    <Box sx={{ width: "100%", minHeight: "100%", py: 3, px: 3 }}>
+    <Box
+      sx={{
+        width: "100%",
+        minHeight: "100%",
+        py: 3,
+        px: 3,
+        backgroundColor: "#f9fafb",
+      }}
+    >
       <FileToolbar />
 
       {/* File Views */}

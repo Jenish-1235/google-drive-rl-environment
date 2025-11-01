@@ -15,7 +15,6 @@ import {
   ListItemText,
   Typography,
   Tooltip,
-  alpha,
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
@@ -31,7 +30,6 @@ import type { DriveItem, SortField } from "../../types/file.types";
 import { useFileStore } from "../../store/fileStore";
 import { getFileIcon } from "../../utils/fileIcons";
 import { formatDate, formatFileSize } from "../../utils/formatters";
-import { colors } from "../../theme/theme";
 import { animations, getStaggerDelay } from "../../utils/animations";
 import { EmptyState } from "../common/EmptyState";
 
@@ -99,22 +97,23 @@ export const FileList = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <TableContainer sx={{ width: "100%" }}>
+      <TableContainer sx={{ width: "100%", backgroundColor: "transparent" }}>
         <Table sx={{ width: "100%", tableLayout: "fixed" }}>
           <TableHead>
             <TableRow
               sx={{
-                borderBottom: `1px solid ${colors.border}`,
+                borderBottom: `1px solid #e8eaed`,
               }}
             >
               <TableCell
-                sx={{ width: 48, py: 0.75, borderBottom: "none", pl: 2 }}
+                sx={{ width: 52, py: 1, borderBottom: "none", pl: 2.5 }}
               />
               <TableCell
                 sx={{
                   width: "45%",
-                  py: 0.75,
+                  py: 1,
                   borderBottom: "none",
+                  pl: 0,
                 }}
               >
                 <TableSortLabel
@@ -123,17 +122,12 @@ export const FileList = ({
                   onClick={() => handleSort("name")}
                   sx={{
                     "& .MuiTableSortLabel-root": {
-                      fontSize: 14,
+                      fontSize: 12,
                       fontWeight: 500,
-                      color: "text.secondary",
                     },
                   }}
                 >
-                  <Typography
-                    fontSize={12}
-                    fontWeight={500}
-                    color="text.secondary"
-                  >
+                  <Typography fontSize={12} fontWeight={500} color="#5f6368">
                     Name
                   </Typography>
                 </TableSortLabel>
@@ -141,7 +135,7 @@ export const FileList = ({
               <TableCell
                 sx={{
                   width: "18%",
-                  py: 0.75,
+                  py: 1,
                   borderBottom: "none",
                 }}
               >
@@ -150,11 +144,7 @@ export const FileList = ({
                   direction={sortField === "owner" ? sortOrder : "asc"}
                   onClick={() => handleSort("owner")}
                 >
-                  <Typography
-                    fontSize={12}
-                    fontWeight={500}
-                    color="text.secondary"
-                  >
+                  <Typography fontSize={12} fontWeight={500} color="#5f6368">
                     Owner
                   </Typography>
                 </TableSortLabel>
@@ -162,7 +152,7 @@ export const FileList = ({
               <TableCell
                 sx={{
                   width: "18%",
-                  py: 0.75,
+                  py: 1,
                   borderBottom: "none",
                 }}
               >
@@ -171,11 +161,7 @@ export const FileList = ({
                   direction={sortField === "modifiedTime" ? sortOrder : "asc"}
                   onClick={() => handleSort("modifiedTime")}
                 >
-                  <Typography
-                    fontSize={12}
-                    fontWeight={500}
-                    color="text.secondary"
-                  >
+                  <Typography fontSize={12} fontWeight={500} color="#5f6368">
                     Date modified
                   </Typography>
                 </TableSortLabel>
@@ -183,7 +169,7 @@ export const FileList = ({
               <TableCell
                 sx={{
                   width: "12%",
-                  py: 0.75,
+                  py: 1,
                   borderBottom: "none",
                 }}
               >
@@ -192,11 +178,7 @@ export const FileList = ({
                   direction={sortField === "size" ? sortOrder : "asc"}
                   onClick={() => handleSort("size")}
                 >
-                  <Typography
-                    fontSize={12}
-                    fontWeight={500}
-                    color="text.secondary"
-                  >
+                  <Typography fontSize={12} fontWeight={500} color="#5f6368">
                     File size
                   </Typography>
                 </TableSortLabel>
@@ -204,17 +186,13 @@ export const FileList = ({
               <TableCell
                 sx={{
                   width: 80,
-                  py: 0.75,
+                  py: 1,
                   borderBottom: "none",
                   textAlign: "right",
                   pr: 2,
                 }}
               >
-                <Typography
-                  fontSize={12}
-                  fontWeight={500}
-                  color="text.secondary"
-                >
+                <Typography fontSize={12} fontWeight={500} color="#5f6368">
                   Sort
                 </Typography>
               </TableCell>
@@ -233,69 +211,67 @@ export const FileList = ({
                 }}
                 sx={{
                   cursor: "pointer",
-                  borderBottom: `1px solid ${colors.border}`,
+                  borderBottom: `1px solid #e8eaed`,
                   "&:hover": {
-                    backgroundColor: alpha(colors.primary, 0.04),
+                    backgroundColor: "#f6f9fc",
                   },
                   "&.Mui-selected": {
-                    backgroundColor: alpha(colors.primary, 0.08),
+                    backgroundColor: "#e8f0fe",
                     "&:hover": {
-                      backgroundColor: alpha(colors.primary, 0.12),
+                      backgroundColor: "#e8f0fe",
                     },
                   },
                   ...animations.fadeIn,
                   ...getStaggerDelay(index, 20),
                 }}
               >
-                <TableCell sx={{ py: 0.75, borderBottom: "none", pl: 2 }}>
+                <TableCell sx={{ py: 1, borderBottom: "none", pl: 2.5 }}>
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     {getFileIcon(file.type)}
                   </Box>
                 </TableCell>
-                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
+                <TableCell sx={{ py: 1, borderBottom: "none", pl: 0 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Typography fontSize={14} noWrap color="text.primary">
+                    <Typography fontSize={14} noWrap color="#202124">
                       {file.name}
                     </Typography>
                     {file.isShared && (
                       <Tooltip title="Shared">
-                        <ShareIcon
-                          sx={{ fontSize: 16, color: "text.secondary" }}
-                        />
+                        <ShareIcon sx={{ fontSize: 16, color: "#5f6368" }} />
                       </Tooltip>
                     )}
                   </Box>
                 </TableCell>
-                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
+                <TableCell sx={{ py: 1, borderBottom: "none" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Box
                       sx={{
-                        width: 24,
-                        height: 24,
+                        width: 28,
+                        height: 28,
                         borderRadius: "50%",
-                        backgroundColor: colors.primary,
+                        backgroundColor: "#1a73e8",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
-                        fontSize: 12,
+                        fontSize: 13,
                         color: "white",
                         fontWeight: 500,
                       }}
                     >
                       {file.ownerName?.charAt(0).toUpperCase() || "U"}
                     </Box>
-                    <Typography fontSize={14} color="text.secondary" noWrap>
+                    <Typography fontSize={14} color="#5f6368" noWrap>
                       me
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
-                  <Typography fontSize={14} color="text.secondary">
+                <TableCell sx={{ py: 1, borderBottom: "none" }}>
+                  <Typography fontSize={14} color="#5f6368">
                     {formatDate(file.modifiedTime)}
                   </Typography>
                 </TableCell>
-                <TableCell sx={{ py: 0.75, borderBottom: "none" }}>
-                  <Typography fontSize={14} color="text.secondary">
+                <TableCell sx={{ py: 1, borderBottom: "none" }}>
+                  <Typography fontSize={14} color="#5f6368">
                     {file.type === "folder"
                       ? "—"
                       : formatFileSize(file.size || 0)}
@@ -303,7 +279,7 @@ export const FileList = ({
                 </TableCell>
                 <TableCell
                   sx={{
-                    py: 0.75,
+                    py: 1,
                     borderBottom: "none",
                     textAlign: "right",
                     pr: 1,
@@ -313,13 +289,15 @@ export const FileList = ({
                     size="small"
                     onClick={(e) => handleActionMenuOpen(e, file.id)}
                     sx={{
-                      opacity: 0.6,
-                      "&:hover": {
+                      opacity: 0,
+                      transition: "opacity 0.2s",
+                      ".MuiTableRow-root:hover &": {
                         opacity: 1,
                       },
+                      color: "#5f6368",
                     }}
                   >
-                    <MoreVertIcon sx={{ fontSize: 20 }} />
+                    <MoreVertIcon sx={{ fontSize: 18 }} />
                   </IconButton>
                 </TableCell>
               </TableRow>

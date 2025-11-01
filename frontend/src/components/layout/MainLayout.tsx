@@ -34,7 +34,7 @@ export const MainLayout = () => {
           sx={{
             flexGrow: 1,
             overflow: "auto",
-            backgroundColor: "background.default",
+            backgroundColor: "#f9fafb",
             width: "100%",
             minWidth: 0, // Allows flex item to shrink below content size
             pr: "56px", // Add padding for fixed right sidebar
