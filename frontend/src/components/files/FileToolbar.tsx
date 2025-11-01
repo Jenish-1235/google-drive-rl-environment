@@ -145,6 +145,7 @@ export const FileToolbar = () => {
             const isLast = index === breadcrumbs.length - 1;
             const to = crumb.id === "root" ? "/drive" : `/folder/${crumb.id}`;
             const isRoot = crumb.id === "root";
+            const isAtRoot = !folderId; // Only show dropdown when at root
 
             return isLast ? (
               <Box
@@ -160,17 +161,17 @@ export const FileToolbar = () => {
                   fontSize={22}
                   fontWeight={500}
                   sx={{
-                    cursor: isRoot ? "pointer" : "default",
+                    cursor: isRoot && isAtRoot ? "pointer" : "default",
                   }}
                   onClick={
-                    isRoot
+                    isRoot && isAtRoot
                       ? (e) => setMyDriveMenuAnchor(e.currentTarget)
                       : undefined
                   }
                 >
                   {crumb.name}
                 </Typography>
-                {isRoot && (
+                {isRoot && isAtRoot && (
                   <IconButton
                     size="small"
                     onClick={(e) => setMyDriveMenuAnchor(e.currentTarget)}
@@ -200,8 +201,8 @@ export const FileToolbar = () => {
                   to={to}
                   underline="hover"
                   color="#5f6368"
-                  fontSize={14}
-                  fontWeight={400}
+                  fontSize={22}
+                  fontWeight={500}
                   sx={{
                     "&:hover": {
                       color: "#202124",
@@ -210,21 +211,6 @@ export const FileToolbar = () => {
                 >
                   {crumb.name}
                 </Link>
-                {isRoot && (
-                  <IconButton
-                    size="small"
-                    onClick={(e) => setMyDriveMenuAnchor(e.currentTarget)}
-                    sx={{
-                      color: "#5f6368",
-                      padding: 0.5,
-                      "&:hover": {
-                        backgroundColor: "#f8f9fa",
-                      },
-                    }}
-                  >
-                    <ArrowDownIcon sx={{ fontSize: 18 }} />
-                  </IconButton>
-                )}
               </Box>
             );
           })}
@@ -516,6 +502,7 @@ const MyDriveMenu = ({
   folders,
 }: MyDriveMenuProps) => {
   const navigate = useNavigate();
+
   const openModal = useUIStore((state) => state.openModal);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
 

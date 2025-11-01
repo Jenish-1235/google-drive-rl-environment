@@ -214,7 +214,7 @@ export const FileList = ({
                 }}
                 sx={{
                   cursor: "pointer",
-                  borderBottom: `1px solid #e8eaed`,
+                  borderBottom: `1px solid #dadce0`,
                   "&:hover": {
                     backgroundColor: "#f6f9fc",
                   },
@@ -228,12 +228,12 @@ export const FileList = ({
                   ...getStaggerDelay(index, 20),
                 }}
               >
-                <TableCell sx={{ py: 1, borderBottom: "none", pl: 2.5 }}>
+                <TableCell sx={{ py: 0.5, borderBottom: "none", pl: 2.5 }}>
                   <Box sx={{ display: "flex", alignItems: "center" }}>
                     {getFileIcon(file.type)}
                   </Box>
                 </TableCell>
-                <TableCell sx={{ py: 1, borderBottom: "none", pl: 0 }}>
+                <TableCell sx={{ py: 0.5, borderBottom: "none", pl: 0 }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Typography fontSize={14} noWrap color="#202124">
                       {file.name}
@@ -245,7 +245,7 @@ export const FileList = ({
                     )}
                   </Box>
                 </TableCell>
-                <TableCell sx={{ py: 1, borderBottom: "none" }}>
+                <TableCell sx={{ py: 0.5, borderBottom: "none" }}>
                   <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                     <Box
                       sx={{
@@ -268,12 +268,12 @@ export const FileList = ({
                     </Typography>
                   </Box>
                 </TableCell>
-                <TableCell sx={{ py: 1, borderBottom: "none" }}>
+                <TableCell sx={{ py: 0.5, borderBottom: "none" }}>
                   <Typography fontSize={14} color="#5f6368">
                     {formatDate(file.modifiedTime)}
                   </Typography>
                 </TableCell>
-                <TableCell sx={{ py: 1, borderBottom: "none" }}>
+                <TableCell sx={{ py: 0.5, borderBottom: "none" }}>
                   <Typography fontSize={14} color="#5f6368">
                     {file.type === "folder"
                       ? "—"
@@ -282,7 +282,7 @@ export const FileList = ({
                 </TableCell>
                 <TableCell
                   sx={{
-                    py: 1,
+                    py: 0.5,
                     borderBottom: "none",
                     textAlign: "right",
                     pr: 1,
