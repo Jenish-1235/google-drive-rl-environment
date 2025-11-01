@@ -25,7 +25,7 @@ export const MainLayout = () => {
     >
       <TopBar />
       <Box
-        sx={{ display: "flex", flexGrow: 1, overflow: "hidden", pt: "64px" }}
+        sx={{ display: "flex", flexGrow: 1, overflow: "hidden", pt: "56px" }}
       >
         <Sidebar />
         <Box

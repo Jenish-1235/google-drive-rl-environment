@@ -81,7 +81,7 @@ export const TopBar = () => {
             display: "flex",
             alignItems: "center",
             gap: 2,
-            width: { xs: "auto", md: "256px" }, // Match sidebar width on desktop
+            width: { xs: "auto", md: "230px" }, // Match sidebar width on desktop
             flexShrink: 0,
           }}
         >
@@ -128,8 +128,6 @@ export const TopBar = () => {
         {/* Search Bar */}
         <Box
           sx={{
-            flexGrow: 1,
-            maxWidth: 720,
             ml: { xs: 1, md: 0 },
             mr: { xs: 1, md: 2 },
           }}
@@ -137,7 +135,7 @@ export const TopBar = () => {
           <Box
             sx={{
               position: "relative",
-              borderRadius: 2,
+              borderRadius: 8,
               backgroundColor: searchFocused
                 ? colors.surface
                 : colors.backgroundGray,
@@ -158,7 +156,8 @@ export const TopBar = () => {
                 display: "flex",
                 alignItems: "center",
                 px: 2,
-                height: 48,
+                height: 44,
+                width: { xs: 200, sm: 300, md: 820 },
               }}
             >
               <SearchIcon sx={{ color: "text.secondary", mr: 1 }} />
