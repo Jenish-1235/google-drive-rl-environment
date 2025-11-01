@@ -24,23 +24,31 @@ import {
 } from "@mui/icons-material";
 import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
 import { useFileStore } from "../../store/fileStore";
+import type {
+  FileTypeFilter,
+  PeopleFilter,
+  ModifiedFilter,
+} from "../../store/fileStore";
+import { useUIStore } from "../../store/uiStore";
 import { useEffect, useState } from "react";
 import type { DriveItem } from "../../types/file.types";
 
 interface FilterButtonProps {
   label: string;
   onClick: (event: React.MouseEvent<HTMLElement>) => void;
+  isActive?: boolean;
 }
 
-const FilterButton = ({ label, onClick }: FilterButtonProps) => (
+const FilterButton = ({ label, onClick, isActive }: FilterButtonProps) => (
   <Button
     variant="outlined"
     endIcon={<ArrowDownIcon sx={{ fontSize: 18 }} />}
     onClick={onClick}
     sx={{
       textTransform: "none",
-      color: "#202124",
-      borderColor: "#dadce0",
+      color: isActive ? "#1a73e8" : "#202124",
+      borderColor: isActive ? "#1a73e8" : "#dadce0",
+      backgroundColor: isActive ? "#e8f0fe" : "transparent",
       borderRadius: 1,
       px: 2,
       py: 0.5,
@@ -48,8 +56,8 @@ const FilterButton = ({ label, onClick }: FilterButtonProps) => (
       fontWeight: 500,
       minHeight: 36,
       "&:hover": {
-        borderColor: "#dadce0",
-        backgroundColor: "#f8f9fa",
+        borderColor: isActive ? "#1a73e8" : "#dadce0",
+        backgroundColor: isActive ? "#e8f0fe" : "#f8f9fa",
       },
     }}
   >
@@ -65,6 +73,14 @@ export const FileToolbar = () => {
   const viewMode = useFileStore((state) => state.viewMode);
   const setViewMode = useFileStore((state) => state.setViewMode);
 
+  // Filters
+  const typeFilter = useFileStore((state) => state.typeFilter);
+  const setTypeFilter = useFileStore((state) => state.setTypeFilter);
+  const peopleFilter = useFileStore((state) => state.peopleFilter);
+  const setPeopleFilter = useFileStore((state) => state.setPeopleFilter);
+  const modifiedFilter = useFileStore((state) => state.modifiedFilter);
+  const setModifiedFilter = useFileStore((state) => state.setModifiedFilter);
+
   const [typeMenuAnchor, setTypeMenuAnchor] = useState<null | HTMLElement>(
     null
   );
@@ -73,9 +89,6 @@ export const FileToolbar = () => {
   );
   const [modifiedMenuAnchor, setModifiedMenuAnchor] =
     useState<null | HTMLElement>(null);
-  const [sourceMenuAnchor, setSourceMenuAnchor] = useState<null | HTMLElement>(
-    null
-  );
   const [myDriveMenuAnchor, setMyDriveMenuAnchor] =
     useState<null | HTMLElement>(null);
 
@@ -283,39 +296,112 @@ export const FileToolbar = () => {
       {/* Bottom Row: Filter Buttons */}
       <Box sx={{ display: "flex", gap: 1.5 }}>
         <FilterButton
-          label="Type"
+          label={typeFilter === "all" ? "Type" : `Type: ${typeFilter}`}
           onClick={(e) => setTypeMenuAnchor(e.currentTarget)}
+          isActive={typeFilter !== "all"}
         />
         <FilterButton
-          label="People"
+          label={
+            peopleFilter === "all"
+              ? "People"
+              : `People: ${
+                  peopleFilter === "owned-by-me"
+                    ? "Owned by me"
+                    : "Not owned by me"
+                }`
+          }
           onClick={(e) => setPeopleMenuAnchor(e.currentTarget)}
+          isActive={peopleFilter !== "all"}
         />
         <FilterButton
-          label="Modified"
+          label={
+            modifiedFilter === "all"
+              ? "Modified"
+              : `Modified: ${modifiedFilter.replace(/-/g, " ")}`
+          }
           onClick={(e) => setModifiedMenuAnchor(e.currentTarget)}
-        />
-        <FilterButton
-          label="Source"
-          onClick={(e) => setSourceMenuAnchor(e.currentTarget)}
+          isActive={modifiedFilter !== "all"}
         />
       </Box>
 
-      {/* Filter Menus (Placeholder content) */}
+      {/* Filter Menus */}
       <Menu
         anchorEl={typeMenuAnchor}
         open={Boolean(typeMenuAnchor)}
         onClose={() => setTypeMenuAnchor(null)}
       >
-        <MenuItem onClick={() => setTypeMenuAnchor(null)}>Folders</MenuItem>
-        <MenuItem onClick={() => setTypeMenuAnchor(null)}>Documents</MenuItem>
-        <MenuItem onClick={() => setTypeMenuAnchor(null)}>
+        <MenuItem
+          selected={typeFilter === "all"}
+          onClick={() => {
+            setTypeFilter("all");
+            setTypeMenuAnchor(null);
+          }}
+        >
+          All
+        </MenuItem>
+        <MenuItem
+          selected={typeFilter === "folders"}
+          onClick={() => {
+            setTypeFilter("folders");
+            setTypeMenuAnchor(null);
+          }}
+        >
+          Folders
+        </MenuItem>
+        <MenuItem
+          selected={typeFilter === "documents"}
+          onClick={() => {
+            setTypeFilter("documents");
+            setTypeMenuAnchor(null);
+          }}
+        >
+          Documents
+        </MenuItem>
+        <MenuItem
+          selected={typeFilter === "spreadsheets"}
+          onClick={() => {
+            setTypeFilter("spreadsheets");
+            setTypeMenuAnchor(null);
+          }}
+        >
           Spreadsheets
         </MenuItem>
-        <MenuItem onClick={() => setTypeMenuAnchor(null)}>
+        <MenuItem
+          selected={typeFilter === "presentations"}
+          onClick={() => {
+            setTypeFilter("presentations");
+            setTypeMenuAnchor(null);
+          }}
+        >
           Presentations
         </MenuItem>
-        <MenuItem onClick={() => setTypeMenuAnchor(null)}>Images</MenuItem>
-        <MenuItem onClick={() => setTypeMenuAnchor(null)}>Videos</MenuItem>
+        <MenuItem
+          selected={typeFilter === "images"}
+          onClick={() => {
+            setTypeFilter("images");
+            setTypeMenuAnchor(null);
+          }}
+        >
+          Images
+        </MenuItem>
+        <MenuItem
+          selected={typeFilter === "videos"}
+          onClick={() => {
+            setTypeFilter("videos");
+            setTypeMenuAnchor(null);
+          }}
+        >
+          Videos
+        </MenuItem>
+        <MenuItem
+          selected={typeFilter === "pdfs"}
+          onClick={() => {
+            setTypeFilter("pdfs");
+            setTypeMenuAnchor(null);
+          }}
+        >
+          PDFs
+        </MenuItem>
       </Menu>
 
       <Menu
@@ -323,14 +409,32 @@ export const FileToolbar = () => {
         open={Boolean(peopleMenuAnchor)}
         onClose={() => setPeopleMenuAnchor(null)}
       >
-        <MenuItem onClick={() => setPeopleMenuAnchor(null)}>
+        <MenuItem
+          selected={peopleFilter === "all"}
+          onClick={() => {
+            setPeopleFilter("all");
+            setPeopleMenuAnchor(null);
+          }}
+        >
+          Anyone
+        </MenuItem>
+        <MenuItem
+          selected={peopleFilter === "owned-by-me"}
+          onClick={() => {
+            setPeopleFilter("owned-by-me");
+            setPeopleMenuAnchor(null);
+          }}
+        >
           Owned by me
         </MenuItem>
-        <MenuItem onClick={() => setPeopleMenuAnchor(null)}>
+        <MenuItem
+          selected={peopleFilter === "not-owned-by-me"}
+          onClick={() => {
+            setPeopleFilter("not-owned-by-me");
+            setPeopleMenuAnchor(null);
+          }}
+        >
           Not owned by me
-        </MenuItem>
-        <MenuItem onClick={() => setPeopleMenuAnchor(null)}>
-          Specific person
         </MenuItem>
       </Menu>
 
@@ -339,31 +443,51 @@ export const FileToolbar = () => {
         open={Boolean(modifiedMenuAnchor)}
         onClose={() => setModifiedMenuAnchor(null)}
       >
-        <MenuItem onClick={() => setModifiedMenuAnchor(null)}>Today</MenuItem>
-        <MenuItem onClick={() => setModifiedMenuAnchor(null)}>
+        <MenuItem
+          selected={modifiedFilter === "all"}
+          onClick={() => {
+            setModifiedFilter("all");
+            setModifiedMenuAnchor(null);
+          }}
+        >
+          Any time
+        </MenuItem>
+        <MenuItem
+          selected={modifiedFilter === "today"}
+          onClick={() => {
+            setModifiedFilter("today");
+            setModifiedMenuAnchor(null);
+          }}
+        >
+          Today
+        </MenuItem>
+        <MenuItem
+          selected={modifiedFilter === "last-7-days"}
+          onClick={() => {
+            setModifiedFilter("last-7-days");
+            setModifiedMenuAnchor(null);
+          }}
+        >
           Last 7 days
         </MenuItem>
-        <MenuItem onClick={() => setModifiedMenuAnchor(null)}>
+        <MenuItem
+          selected={modifiedFilter === "last-30-days"}
+          onClick={() => {
+            setModifiedFilter("last-30-days");
+            setModifiedMenuAnchor(null);
+          }}
+        >
           Last 30 days
         </MenuItem>
-        <MenuItem onClick={() => setModifiedMenuAnchor(null)}>
+        <MenuItem
+          selected={modifiedFilter === "this-year"}
+          onClick={() => {
+            setModifiedFilter("this-year");
+            setModifiedMenuAnchor(null);
+          }}
+        >
           This year
         </MenuItem>
-        <MenuItem onClick={() => setModifiedMenuAnchor(null)}>
-          Custom date
-        </MenuItem>
-      </Menu>
-
-      <Menu
-        anchorEl={sourceMenuAnchor}
-        open={Boolean(sourceMenuAnchor)}
-        onClose={() => setSourceMenuAnchor(null)}
-      >
-        <MenuItem onClick={() => setSourceMenuAnchor(null)}>My Drive</MenuItem>
-        <MenuItem onClick={() => setSourceMenuAnchor(null)}>
-          Shared with me
-        </MenuItem>
-        <MenuItem onClick={() => setSourceMenuAnchor(null)}>Starred</MenuItem>
       </Menu>
 
       {/* My Drive Dropdown Menu */}
@@ -392,9 +516,20 @@ const MyDriveMenu = ({
   folders,
 }: MyDriveMenuProps) => {
   const navigate = useNavigate();
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
 
   const handleFolderClick = (folderId: string) => {
     navigate(`/folder/${folderId}`);
+    onClose();
+  };
+
+  const handleNewFolder = () => {
+    showSnackbar("New folder feature coming soon!", "info");
+    onClose();
+  };
+
+  const handleMoveToFolder = () => {
+    showSnackbar("Move to folder feature coming soon!", "info");
     onClose();
   };
 
@@ -416,6 +551,7 @@ const MyDriveMenu = ({
       <Box sx={{ py: 1 }}>
         {/* Action Items */}
         <MenuItem
+          onClick={handleNewFolder}
           sx={{
             py: 1.5,
             px: 2,
@@ -437,6 +573,7 @@ const MyDriveMenu = ({
         </MenuItem>
 
         <MenuItem
+          onClick={handleMoveToFolder}
           sx={{
             py: 1.5,
             px: 2,

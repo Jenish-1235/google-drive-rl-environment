@@ -55,11 +55,14 @@ export const FileGrid = ({ files, onContextMenu, onFileClick }: FileGridProps) =
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
   const handleFileClick = (file: DriveItem) => {
-    if (onFileClick) {
-      onFileClick(file);
-    } else if (file.type === 'folder') {
+    if (file.type === 'folder') {
+      // Always navigate for folders
       navigate(`/folder/${file.id}`);
+    } else if (onFileClick) {
+      // Use custom handler for files if provided
+      onFileClick(file);
     }
+    // If no custom handler and not a folder, do nothing
   };
 
   const handleActionMenuOpen = (event: React.MouseEvent<HTMLElement>, fileId: string) => {

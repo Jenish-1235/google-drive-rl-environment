@@ -7,6 +7,23 @@ import type {
   BreadcrumbItem,
 } from "../types/file.types";
 
+export type FileTypeFilter =
+  | "all"
+  | "folders"
+  | "documents"
+  | "spreadsheets"
+  | "presentations"
+  | "images"
+  | "videos"
+  | "pdfs";
+export type PeopleFilter = "all" | "owned-by-me" | "not-owned-by-me";
+export type ModifiedFilter =
+  | "all"
+  | "today"
+  | "last-7-days"
+  | "last-30-days"
+  | "this-year";
+
 interface FileStore {
   files: DriveItem[];
   selectedFiles: string[];
@@ -17,6 +34,11 @@ interface FileStore {
   sortOrder: SortOrder;
   searchQuery: string;
   isLoading: boolean;
+
+  // Filters
+  typeFilter: FileTypeFilter;
+  peopleFilter: PeopleFilter;
+  modifiedFilter: ModifiedFilter;
 
   // Actions
   setFiles: (files: DriveItem[]) => void;
@@ -40,6 +62,12 @@ interface FileStore {
 
   setSearchQuery: (query: string) => void;
 
+  // Filter actions
+  setTypeFilter: (filter: FileTypeFilter) => void;
+  setPeopleFilter: (filter: PeopleFilter) => void;
+  setModifiedFilter: (filter: ModifiedFilter) => void;
+  clearFilters: () => void;
+
   // Computed
   getFileById: (id: string) => DriveItem | undefined;
   getCurrentFolderFiles: () => DriveItem[];
@@ -56,6 +84,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
   sortOrder: "asc",
   searchQuery: "",
   isLoading: false,
+
+  // Filters
+  typeFilter: "all",
+  peopleFilter: "all",
+  modifiedFilter: "all",
 
   // Actions
   setFiles: (files) => set({ files }),
@@ -114,21 +147,104 @@ export const useFileStore = create<FileStore>((set, get) => ({
 
   setSearchQuery: (query) => set({ searchQuery: query }),
 
+  // Filter actions
+  setTypeFilter: (filter) => set({ typeFilter: filter }),
+  setPeopleFilter: (filter) => set({ peopleFilter: filter }),
+  setModifiedFilter: (filter) => set({ modifiedFilter: filter }),
+  clearFilters: () =>
+    set({ typeFilter: "all", peopleFilter: "all", modifiedFilter: "all" }),
+
   // Computed
   getFileById: (id) => get().files.find((file) => file.id === id),
 
   getCurrentFolderFiles: () => {
     const state = get();
+    let filteredFiles: DriveItem[];
+
+    // First, filter by current folder
     if (!state.currentFolderId) {
       // Root folder: show files with no parent or parent === 'root'
-      return state.files.filter(
+      filteredFiles = state.files.filter(
         (file) =>
           (!file.parentId || file.parentId === "root") && !file.isTrashed
       );
+    } else {
+      filteredFiles = state.files.filter(
+        (file) => file.parentId === state.currentFolderId && !file.isTrashed
+      );
     }
-    return state.files.filter(
-      (file) => file.parentId === state.currentFolderId && !file.isTrashed
-    );
+
+    // Apply type filter
+    if (state.typeFilter !== "all") {
+      filteredFiles = filteredFiles.filter((file) => {
+        switch (state.typeFilter) {
+          case "folders":
+            return file.type === "folder";
+          case "documents":
+            return file.type === "document";
+          case "spreadsheets":
+            return file.type === "spreadsheet";
+          case "presentations":
+            return file.type === "presentation";
+          case "images":
+            return file.type === "image";
+          case "videos":
+            return file.type === "video";
+          case "pdfs":
+            return file.type === "pdf";
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply people filter
+    if (state.peopleFilter !== "all") {
+      filteredFiles = filteredFiles.filter((file) => {
+        const currentUserId = "current-user"; // This should come from auth store
+        switch (state.peopleFilter) {
+          case "owned-by-me":
+            return file.ownerId === currentUserId;
+          case "not-owned-by-me":
+            return file.ownerId !== currentUserId;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Apply modified filter
+    if (state.modifiedFilter !== "all") {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      filteredFiles = filteredFiles.filter((file) => {
+        const modifiedDate = new Date(file.modifiedTime);
+
+        switch (state.modifiedFilter) {
+          case "today":
+            return modifiedDate >= today;
+          case "last-7-days": {
+            const sevenDaysAgo = new Date(today);
+            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+            return modifiedDate >= sevenDaysAgo;
+          }
+          case "last-30-days": {
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+            return modifiedDate >= thirtyDaysAgo;
+          }
+          case "this-year": {
+            const startOfYear = new Date(now.getFullYear(), 0, 1);
+            return modifiedDate >= startOfYear;
+          }
+          default:
+            return true;
+        }
+      });
+    }
+
+    return filteredFiles;
   },
 
   getSelectedFilesData: () => {

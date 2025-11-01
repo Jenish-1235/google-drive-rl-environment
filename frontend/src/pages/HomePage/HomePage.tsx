@@ -39,6 +39,13 @@ export const HomePage = () => {
   const clearSelection = useFileStore((state) => state.clearSelection);
   const selectedFiles = useFileStore((state) => state.selectedFiles);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
+  
+  // Subscribe to filter changes to trigger re-render when filters change
+  // These variables are intentionally "unused" - they exist to make the component
+  // reactive to filter state changes in Zustand store
+  useFileStore((state) => state.typeFilter);
+  useFileStore((state) => state.peopleFilter);
+  useFileStore((state) => state.modifiedFilter);
 
   // Update current folder when route changes
   useEffect(() => {
