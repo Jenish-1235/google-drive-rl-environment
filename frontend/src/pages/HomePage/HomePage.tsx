@@ -1,0 +1,306 @@
+import { Box } from "@mui/material";
+import { useEffect, useState } from "react";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { useFileStore } from "../../store/fileStore";
+import { useUIStore } from "../../store/uiStore";
+import { mockFiles } from "../../utils/mockData";
+import { Breadcrumbs } from "../../components/common/Breadcrumbs";
+import { FileList } from "../../components/files/FileList";
+import { FileGrid } from "../../components/files/FileGrid";
+import { FileListSkeleton } from "../../components/loading/FileListSkeleton";
+import { FileGridSkeleton } from "../../components/loading/FileGridSkeleton";
+import { FilePreviewModal } from "../../components/modals/FilePreviewModal";
+import { ContextMenu } from "../../components/common/ContextMenu";
+import { RenameModal } from "../../components/modals/RenameModal";
+import { DeleteModal } from "../../components/modals/DeleteModal";
+import { ShareModal } from "../../components/modals/ShareModal";
+import type { DriveItem } from "../../types/file.types";
+import type {
+  SharePermission,
+  GeneralAccess,
+} from "../../components/modals/ShareModal";
+
+export const HomePage = () => {
+  const files = useFileStore((state) => state.files);
+  const setFiles = useFileStore((state) => state.setFiles);
+  const viewMode = useFileStore((state) => state.viewMode);
+  const isLoading = useFileStore((state) => state.isLoading);
+  const setIsLoading = useFileStore((state) => state.setIsLoading);
+  const getCurrentFolderFiles = useFileStore(
+    (state) => state.getCurrentFolderFiles
+  );
+  const updateFile = useFileStore((state) => state.updateFile);
+  const deleteFile = useFileStore((state) => state.deleteFile);
+  const selectAll = useFileStore((state) => state.selectAll);
+  const clearSelection = useFileStore((state) => state.clearSelection);
+  const selectedFiles = useFileStore((state) => state.selectedFiles);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
+
+  const [previewFile, setPreviewFile] = useState<DriveItem | null>(null);
+  const [contextMenu, setContextMenu] = useState<{
+    position: { top: number; left: number } | null;
+    file: DriveItem | null;
+  }>({ position: null, file: null });
+  const [renameFile, setRenameFile] = useState<DriveItem | null>(null);
+  const [deleteFiles, setDeleteFiles] = useState<DriveItem[]>([]);
+  const [shareFile, setShareFile] = useState<DriveItem | null>(null);
+
+  useEffect(() => {
+    // Simulate loading state on mount
+    if (files.length === 0) {
+      setIsLoading(true);
+      // Simulate API delay
+      setTimeout(() => {
+        setFiles(mockFiles);
+        setIsLoading(false);
+      }, 800);
+    }
+  }, [files.length, setFiles, setIsLoading]);
+
+  // Add context menu handler
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      // This will be handled by individual file items
+    };
+
+    document.addEventListener("contextmenu", handleContextMenu);
+    return () => document.removeEventListener("contextmenu", handleContextMenu);
+  }, []);
+
+  const currentFiles = getCurrentFolderFiles();
+
+  const handleFilePreview = (file: DriveItem) => {
+    if (file.type !== "folder") {
+      setPreviewFile(file);
+    }
+  };
+
+  const handleContextMenuOpen = (event: React.MouseEvent, file: DriveItem) => {
+    event.preventDefault();
+    setContextMenu({
+      position: { top: event.clientY, left: event.clientX },
+      file,
+    });
+  };
+
+  const handleContextMenuClose = () => {
+    setContextMenu({ position: null, file: null });
+  };
+
+  const handleRename = (file: DriveItem) => {
+    setRenameFile(file);
+  };
+
+  const handleRenameSubmit = (newName: string) => {
+    if (renameFile) {
+      updateFile(renameFile.id, { name: newName });
+      showSnackbar(`Renamed to "${newName}"`, "success");
+    }
+  };
+
+  const handleDelete = (filesToDelete: DriveItem[]) => {
+    setDeleteFiles(filesToDelete);
+  };
+
+  const handleDeleteConfirm = () => {
+    deleteFiles.forEach((file) => {
+      updateFile(file.id, { isTrashed: true });
+    });
+    showSnackbar(
+      `Moved ${deleteFiles.length} item${
+        deleteFiles.length > 1 ? "s" : ""
+      } to trash`,
+      "success"
+    );
+    setDeleteFiles([]);
+  };
+
+  const handleToggleStar = (file: DriveItem) => {
+    updateFile(file.id, { isStarred: !file.isStarred });
+    showSnackbar(
+      file.isStarred ? "Removed from starred" : "Added to starred",
+      "success"
+    );
+  };
+
+  const handleNextPreview = () => {
+    if (!previewFile) return;
+    const currentIndex = currentFiles.findIndex((f) => f.id === previewFile.id);
+    if (currentIndex < currentFiles.length - 1) {
+      setPreviewFile(currentFiles[currentIndex + 1]);
+    }
+  };
+
+  const handlePreviousPreview = () => {
+    if (!previewFile) return;
+    const currentIndex = currentFiles.findIndex((f) => f.id === previewFile.id);
+    if (currentIndex > 0) {
+      setPreviewFile(currentFiles[currentIndex - 1]);
+    }
+  };
+
+  const handleShare = (file: DriveItem) => {
+    setShareFile(file);
+  };
+
+  const handleShareSubmit = (emails: string[], permission: SharePermission) => {
+    showSnackbar(
+      `Shared with ${emails.length} ${
+        emails.length === 1 ? "person" : "people"
+      } as ${permission}`,
+      "success"
+    );
+  };
+
+  const handleUpdatePermission = (
+    collaboratorId: string,
+    permission: SharePermission
+  ) => {
+    showSnackbar(`Updated permission to ${permission}`, "success");
+  };
+
+  const handleRemoveAccess = (collaboratorId: string) => {
+    showSnackbar("Removed access", "success");
+  };
+
+  const handleCopyLink = () => {
+    // In real app, this would generate and copy the actual share link
+    navigator.clipboard.writeText(
+      `https://drive.google.com/file/${shareFile?.id}`
+    );
+    showSnackbar("Link copied to clipboard", "success");
+  };
+
+  const handleChangeGeneralAccess = (
+    access: GeneralAccess,
+    permission?: SharePermission
+  ) => {
+    showSnackbar(
+      access === "restricted"
+        ? "Changed to restricted access"
+        : `Anyone with the link can ${permission || "view"}`,
+      "success"
+    );
+  };
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts([
+    {
+      key: "a",
+      ctrl: true,
+      callback: (e) => {
+        e.preventDefault();
+        selectAll();
+        showSnackbar("All files selected", "info");
+      },
+      description: "Select all files",
+    },
+    {
+      key: "Escape",
+      callback: () => {
+        if (previewFile) {
+          setPreviewFile(null);
+        } else if (selectedFiles.length > 0) {
+          clearSelection();
+          showSnackbar("Selection cleared", "info");
+        }
+      },
+      description: "Close preview or clear selection",
+    },
+    {
+      key: "Delete",
+      callback: () => {
+        if (selectedFiles.length > 0 && !previewFile) {
+          const filesToDelete = currentFiles.filter((f) =>
+            selectedFiles.includes(f.id)
+          );
+          handleDelete(filesToDelete);
+        }
+      },
+      description: "Delete selected files",
+    },
+  ]);
+
+  return (
+    <Box sx={{ width: "100%", minHeight: "100%", py: 3 }}>
+      <Box sx={{ px: viewMode === "grid" ? 3 : 2 }}>
+        <Breadcrumbs />
+
+        {/* File Views */}
+        {isLoading ? (
+          viewMode === "list" ? (
+            <FileListSkeleton />
+          ) : (
+            <FileGridSkeleton />
+          )
+        ) : viewMode === "list" ? (
+          <FileList
+            files={currentFiles}
+            onContextMenu={handleContextMenuOpen}
+            onFileClick={handleFilePreview}
+          />
+        ) : (
+          <FileGrid
+            files={currentFiles}
+            onContextMenu={handleContextMenuOpen}
+            onFileClick={handleFilePreview}
+          />
+        )}
+      </Box>
+
+      {/* Modals */}
+      <FilePreviewModal
+        open={!!previewFile}
+        file={previewFile}
+        files={currentFiles}
+        onClose={() => setPreviewFile(null)}
+        onNext={handleNextPreview}
+        onPrevious={handlePreviousPreview}
+        onShare={() => previewFile && handleShare(previewFile)}
+      />
+
+      <ContextMenu
+        anchorPosition={contextMenu.position}
+        file={contextMenu.file}
+        open={!!contextMenu.file}
+        onClose={handleContextMenuClose}
+        onOpen={() => contextMenu.file && handleFilePreview(contextMenu.file)}
+        onShare={() => contextMenu.file && handleShare(contextMenu.file)}
+        onDownload={() => showSnackbar("Download feature coming soon", "info")}
+        onMove={() => showSnackbar("Move feature coming soon", "info")}
+        onRename={() => contextMenu.file && handleRename(contextMenu.file)}
+        onCopy={() => showSnackbar("Copy feature coming soon", "info")}
+        onToggleStar={() =>
+          contextMenu.file && handleToggleStar(contextMenu.file)
+        }
+        onDelete={() => contextMenu.file && handleDelete([contextMenu.file])}
+        onDetails={() => showSnackbar("Details feature coming soon", "info")}
+      />
+
+      <RenameModal
+        open={!!renameFile}
+        file={renameFile}
+        onClose={() => setRenameFile(null)}
+        onRename={handleRenameSubmit}
+      />
+
+      <DeleteModal
+        open={deleteFiles.length > 0}
+        files={deleteFiles}
+        onClose={() => setDeleteFiles([])}
+        onDelete={handleDeleteConfirm}
+      />
+
+      <ShareModal
+        open={!!shareFile}
+        file={shareFile}
+        onClose={() => setShareFile(null)}
+        onShare={handleShareSubmit}
+        onUpdatePermission={handleUpdatePermission}
+        onRemoveAccess={handleRemoveAccess}
+        onCopyLink={handleCopyLink}
+        onChangeGeneralAccess={handleChangeGeneralAccess}
+      />
+    </Box>
+  );
+};
