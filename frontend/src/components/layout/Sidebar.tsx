@@ -30,6 +30,7 @@ import {
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUIStore } from "../../store/uiStore";
 import { useUploadStore } from "../../store/uploadStore";
+import { useFileStore } from "../../store/fileStore";
 import { colors } from "../../theme/theme";
 import {
   formatFileSize,
@@ -94,6 +95,8 @@ export const Sidebar = () => {
   const addUpload = useUploadStore((state) => state.addUpload);
   const updateUpload = useUploadStore((state) => state.updateUpload);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
+  const openModal = useUIStore((state) => state.openModal);
+  const currentFolderId = useFileStore((state) => state.currentFolderId);
 
   // Ensure sidebar is always open on desktop
   useEffect(() => {
@@ -123,8 +126,7 @@ export const Sidebar = () => {
 
   const handleNewFolder = () => {
     handleNewMenuClose();
-    // TODO: Open new folder modal
-    showSnackbar("New folder feature coming soon", "info");
+    openModal("createFolder");
   };
 
   const handleFileUpload = () => {
@@ -160,7 +162,7 @@ export const Sidebar = () => {
         fileSize: file.size,
         progress: 0,
         status: "pending",
-        parentId: null,
+        parentId: currentFolderId || null,
       });
 
       // Simulate upload

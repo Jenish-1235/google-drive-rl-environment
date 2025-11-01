@@ -1,7 +1,15 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface Modal {
-  type: 'share' | 'details' | 'move' | 'rename' | 'delete' | 'upload' | null;
+  type:
+    | "share"
+    | "details"
+    | "move"
+    | "rename"
+    | "delete"
+    | "upload"
+    | "createFolder"
+    | null;
   data?: any;
 }
 
@@ -19,7 +27,7 @@ interface UIStore {
   snackbar: {
     open: boolean;
     message: string;
-    severity: 'success' | 'error' | 'warning' | 'info';
+    severity: "success" | "error" | "warning" | "info";
   };
 
   // Sidebar
@@ -27,7 +35,7 @@ interface UIStore {
   setSidebarOpen: (open: boolean) => void;
 
   // Modal
-  openModal: (type: Modal['type'], data?: any) => void;
+  openModal: (type: Modal["type"], data?: any) => void;
   closeModal: () => void;
 
   // Context Menu
@@ -35,7 +43,10 @@ interface UIStore {
   closeContextMenu: () => void;
 
   // Snackbar
-  showSnackbar: (message: string, severity?: 'success' | 'error' | 'warning' | 'info') => void;
+  showSnackbar: (
+    message: string,
+    severity?: "success" | "error" | "warning" | "info"
+  ) => void;
   hideSnackbar: () => void;
 }
 
@@ -50,8 +61,8 @@ export const useUIStore = create<UIStore>((set) => ({
   },
   snackbar: {
     open: false,
-    message: '',
-    severity: 'info',
+    message: "",
+    severity: "info",
   },
 
   // Sidebar
@@ -69,7 +80,7 @@ export const useUIStore = create<UIStore>((set) => ({
     set({ contextMenu: { isOpen: false, x: 0, y: 0, fileId: null } }),
 
   // Snackbar
-  showSnackbar: (message, severity = 'info') =>
+  showSnackbar: (message, severity = "info") =>
     set({ snackbar: { open: true, message, severity } }),
   hideSnackbar: () =>
     set((state) => ({ snackbar: { ...state.snackbar, open: false } })),

@@ -15,7 +15,8 @@ import { ContextMenu } from "../../components/common/ContextMenu";
 import { RenameModal } from "../../components/modals/RenameModal";
 import { DeleteModal } from "../../components/modals/DeleteModal";
 import { ShareModal } from "../../components/modals/ShareModal";
-import type { DriveItem } from "../../types/file.types";
+import { CreateFolderModal } from "../../components/modals/CreateFolderModal";
+import type { DriveItem, FolderItem } from "../../types/file.types";
 import type {
   SharePermission,
   GeneralAccess,
@@ -33,13 +34,16 @@ export const HomePage = () => {
   const getCurrentFolderFiles = useFileStore(
     (state) => state.getCurrentFolderFiles
   );
+  const addFile = useFileStore((state) => state.addFile);
   const updateFile = useFileStore((state) => state.updateFile);
   const deleteFile = useFileStore((state) => state.deleteFile);
   const selectAll = useFileStore((state) => state.selectAll);
   const clearSelection = useFileStore((state) => state.clearSelection);
   const selectedFiles = useFileStore((state) => state.selectedFiles);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
-  
+  const modal = useUIStore((state) => state.modal);
+  const closeModal = useUIStore((state) => state.closeModal);
+
   // Subscribe to filter changes to trigger re-render when filters change
   // These variables are intentionally "unused" - they exist to make the component
   // reactive to filter state changes in Zustand store
@@ -60,7 +64,6 @@ export const HomePage = () => {
   const [renameFile, setRenameFile] = useState<DriveItem | null>(null);
   const [deleteFiles, setDeleteFiles] = useState<DriveItem[]>([]);
   const [shareFile, setShareFile] = useState<DriveItem | null>(null);
-
   useEffect(() => {
     // Simulate loading state on mount
     if (files.length === 0) {
@@ -137,6 +140,29 @@ export const HomePage = () => {
       file.isStarred ? "Removed from starred" : "Added to starred",
       "success"
     );
+  };
+
+  const handleCreateFolder = (folderName: string) => {
+    const newFolder: FolderItem = {
+      id: `folder-${Date.now()}`,
+      name: folderName,
+      type: "folder",
+      childrenCount: 0,
+      ownerId: "current-user", // This should come from auth store
+      ownerName: "You",
+      ownerEmail: "user@example.com",
+      createdTime: new Date(),
+      modifiedTime: new Date(),
+      parentId: currentFolderId || null,
+      path: currentFolderId ? [currentFolderId] : [],
+      isStarred: false,
+      isTrashed: false,
+      isShared: false,
+      permissions: [],
+    };
+
+    addFile(newFolder);
+    showSnackbar(`Created folder "${folderName}"`, "success");
   };
 
   const handleNextPreview = () => {
@@ -322,6 +348,12 @@ export const HomePage = () => {
         onRemoveAccess={handleRemoveAccess}
         onCopyLink={handleCopyLink}
         onChangeGeneralAccess={handleChangeGeneralAccess}
+      />
+
+      <CreateFolderModal
+        open={modal.type === "createFolder"}
+        onClose={closeModal}
+        onCreate={handleCreateFolder}
       />
     </Box>
   );

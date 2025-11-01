@@ -516,6 +516,7 @@ const MyDriveMenu = ({
   folders,
 }: MyDriveMenuProps) => {
   const navigate = useNavigate();
+  const openModal = useUIStore((state) => state.openModal);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
 
   const handleFolderClick = (folderId: string) => {
@@ -524,7 +525,7 @@ const MyDriveMenu = ({
   };
 
   const handleNewFolder = () => {
-    showSnackbar("New folder feature coming soon!", "info");
+    openModal("createFolder");
     onClose();
   };
 
