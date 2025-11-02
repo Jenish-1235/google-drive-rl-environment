@@ -197,6 +197,7 @@ export const UploadProgress = () => {
                         )}
                       </Box>
                     }
+                    secondaryTypographyProps={{ component: 'div' }}
                   />
                   {(upload.status === 'uploading' || upload.status === 'pending') && (
                     <Tooltip title="Cancel">

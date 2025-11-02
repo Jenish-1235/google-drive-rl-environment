@@ -1,0 +1,170 @@
+/* Business Account Page Container */
+.business-account-page-container {
+  background-color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px 60px;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+}
+
+/* Google Logo */
+.business-logo-container {
+  margin-bottom: 40px;
+}
+
+/* Main Heading */
+.business-main-heading {
+  color: #202124;
+  font-size: 28px;
+  font-weight: 400;
+  line-height: 36px;
+  text-align: center;
+  margin: 0 0 48px 0;
+  max-width: 800px;
+}
+
+/* Cards Container */
+.business-cards-container {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+  max-width: 1000px;
+  width: 100%;
+}
+
+/* Business Card */
+.business-card {
+  background-color: #fff;
+  border: 1px solid #dadce0;
+  border-radius: 8px;
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.2s;
+}
+
+.business-card:hover {
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 2px 6px 2px rgba(60, 64, 67, 0.15);
+}
+
+/* Card Header */
+.business-card-header {
+  margin-bottom: 16px;
+  min-height: 24px;
+}
+
+.business-badge {
+  color: #1967D2;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 16px;
+  display: inline-block;
+}
+
+.business-badge.no-cost {
+  color: #1967D2;
+}
+
+/* Card Title */
+.business-card-title {
+  color: #202124;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 28px;
+  margin: 0 0 24px 0;
+  min-height: 56px;
+}
+
+/* Action Button */
+.business-action-btn {
+  background-color: #1a73e8;
+  border: none;
+  border-radius: 4px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 24px;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  align-self: flex-start;
+  margin-bottom: 32px;
+}
+
+.business-action-btn:hover {
+  background-color: #1765cc;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
+.business-action-btn:active {
+  background-color: #1557b0;
+}
+
+/* Features List */
+.business-features {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.business-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.checkmark-icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.business-feature-text {
+  color: #5f6368;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  flex: 1;
+}
+
+.business-feature-text strong {
+  color: #202124;
+  font-weight: 500;
+}
+
+.business-email-example {
+  color: #1967D2;
+  font-weight: 400;
+}
+
+/* Illustration */
+.business-illustration {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 140px;
+}
+
+.workspace-illustration,
+.gmail-illustration {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
+  border-radius: 8px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .business-cards-container {
+    grid-template-columns: 1fr;
+    max-width: 450px;
+  }
+
+  .business-main-heading {
+    font-size: 24px;
+    line-height: 32px;
+  }
+}

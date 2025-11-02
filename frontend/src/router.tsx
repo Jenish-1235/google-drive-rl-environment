@@ -9,6 +9,10 @@ import { ComputersPage } from "./pages/ComputersPage/ComputersPage";
 import { SharedDrivesPage } from "./pages/SharedDrivesPage/SharedDrivesPage";
 import { SpamPage } from "./pages/SpamPage/SpamPage";
 import { AuthPage } from "./pages/AuthPage/AuthPage";
+import { ForgotEmailPage } from "./pages/AuthPage/ForgotEmailPage";
+import { CreateAccountPage } from "./pages/AuthPage/CreateAccountPage";
+import { CreateChildAccountPage } from "./pages/AuthPage/CreateChildAccountPage";
+import { BusinessAccountPage } from "./pages/AuthPage/BusinessAccountPage";
 import { ROUTES } from "./utils/constants";
 import { MainLayout } from "./components/layout/MainLayout";
 import { HomePage } from "./pages/HomePage/HomePage";
@@ -24,6 +28,22 @@ export const router = createBrowserRouter([
       {
         path: "signup",
         element: <AuthPage mode="signup" />,
+      },
+      {
+        path: "forgot-email",
+        element: <ForgotEmailPage />,
+      },
+      {
+        path: "create-account",
+        element: <CreateAccountPage />,
+      },
+      {
+        path: "create-child-account",
+        element: <CreateChildAccountPage />,
+      },
+      {
+        path: "business-account",
+        element: <BusinessAccountPage />,
       },
     ],
   },

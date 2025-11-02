@@ -5,7 +5,10 @@ import type {
   SortOrder,
   ViewMode,
   BreadcrumbItem,
+  BackendFile,
 } from "../types/file.types";
+import { fileService } from "../services/fileService";
+import { mapBackendFile as mapFile } from "../types/file.types";
 
 export type FileTypeFilter =
   | "all"
@@ -34,15 +37,32 @@ interface FileStore {
   sortOrder: SortOrder;
   searchQuery: string;
   isLoading: boolean;
+  error: string | null;
 
   // Filters
   typeFilter: FileTypeFilter;
   peopleFilter: PeopleFilter;
   modifiedFilter: ModifiedFilter;
 
-  // Actions
+  // API Actions
+  fetchFiles: (folderId?: string | null) => Promise<void>;
+  createFolder: (name: string, parentId?: string | null) => Promise<DriveItem>;
+  uploadFile: (file: File, parentId?: string | null, onProgress?: (progress: number) => void) => Promise<DriveItem>;
+  renameFile: (id: string, newName: string) => Promise<void>;
+  moveFile: (id: string, newParentId: string | null) => Promise<void>;
+  toggleStar: (id: string) => Promise<void>;
+  moveToTrash: (id: string) => Promise<void>;
+  restoreFromTrash: (id: string) => Promise<void>;
+  permanentlyDelete: (id: string) => Promise<void>;
+  downloadFile: (id: string, name: string) => Promise<void>;
+  fetchStarredFiles: () => Promise<void>;
+  fetchTrashedFiles: () => Promise<void>;
+  fetchRecentFiles: () => Promise<void>;
+
+  // State Actions
   setFiles: (files: DriveItem[]) => void;
   setIsLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   addFile: (file: DriveItem) => void;
   updateFile: (id: string, updates: Partial<DriveItem>) => void;
   deleteFile: (id: string) => void;
@@ -84,15 +104,211 @@ export const useFileStore = create<FileStore>((set, get) => ({
   sortOrder: "asc",
   searchQuery: "",
   isLoading: false,
+  error: null,
 
   // Filters
   typeFilter: "all",
   peopleFilter: "all",
   modifiedFilter: "all",
 
-  // Actions
+  // API Actions
+  fetchFiles: async (folderId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.listFiles({
+        parent_id: folderId,
+      });
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  createFolder: async (name, parentId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.createFolder(name, parentId);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: [...state.files, mappedFile],
+        isLoading: false,
+      }));
+      return mappedFile;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create folder';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  uploadFile: async (file, parentId, onProgress) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.uploadFile(file, parentId, onProgress);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: [...state.files, mappedFile],
+        isLoading: false,
+      }));
+      return mappedFile;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to upload file';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  renameFile: async (id, newName) => {
+    set({ error: null });
+    try {
+      const response = await fileService.renameFile(id, newName);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: state.files.map((file) => (file.id === id ? mappedFile : file)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to rename file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  moveFile: async (id, newParentId) => {
+    set({ error: null });
+    try {
+      const response = await fileService.moveFile(id, newParentId);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: state.files.map((file) => (file.id === id ? mappedFile : file)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to move file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  toggleStar: async (id) => {
+    const file = get().files.find((f) => f.id === id);
+    if (!file) return;
+
+    set({ error: null });
+    try {
+      const response = await fileService.starFile(id, !file.isStarred);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: state.files.map((f) => (f.id === id ? mappedFile : f)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to toggle star';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  moveToTrash: async (id) => {
+    set({ error: null });
+    try {
+      await fileService.deleteFile(id);
+      set((state) => ({
+        files: state.files.map((file) =>
+          file.id === id ? ({ ...file, isTrashed: true } as DriveItem) : file
+        ),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to move to trash';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  restoreFromTrash: async (id) => {
+    set({ error: null });
+    try {
+      const response = await fileService.restoreFile(id);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: state.files.map((file) => (file.id === id ? mappedFile : file)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to restore file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  permanentlyDelete: async (id) => {
+    set({ error: null });
+    try {
+      await fileService.permanentDelete(id);
+      set((state) => ({
+        files: state.files.filter((file) => file.id !== id),
+        selectedFiles: state.selectedFiles.filter((selectedId) => selectedId !== id),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  downloadFile: async (id, name) => {
+    set({ error: null });
+    try {
+      await fileService.downloadFile(id, name);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to download file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  fetchStarredFiles: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.getStarredFiles();
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch starred files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  fetchTrashedFiles: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.getTrashFiles();
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch trashed files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  fetchRecentFiles: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.getRecentFiles();
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch recent files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  // State Actions
   setFiles: (files) => set({ files }),
   setIsLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
 
   addFile: (file) => set((state) => ({ files: [...state.files, file] })),
 

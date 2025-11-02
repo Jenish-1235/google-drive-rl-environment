@@ -1,22 +1,44 @@
 import { useEffect } from "react";
-import { Outlet } from "react-router-dom";
-import { Box } from "@mui/material";
+import { Outlet, useNavigate } from "react-router-dom";
+import { Box, CircularProgress } from "@mui/material";
 import { TopBar } from "./TopBar";
 import { Sidebar } from "./Sidebar";
 import { RightSidebar } from "./RightSidebar";
 import { DragDropOverlay } from "../files/DragDropOverlay";
 import { UploadProgress } from "../files/UploadProgress";
 import { Snackbar } from "../common/Snackbar";
-import { initMockUser } from "../../utils/initMockUser";
-import { useUIStore } from "../../store/uiStore";
+import { useAuthStore } from "../../store/authStore";
 
 export const MainLayout = () => {
-  const detailsPanelOpen = useUIStore((state) => state.detailsPanelOpen);
-
+  const { isAuthenticated, isLoading } = useAuthStore();
+  const navigate = useNavigate();
   useEffect(() => {
-    // Initialize mock user for development
-    initMockUser();
-  }, []);
+    if (!isLoading && !isAuthenticated) {
+      navigate('/auth/login');
+    }
+  }, [isAuthenticated, isLoading, navigate]);
+
+  // Show loading spinner while checking auth
+  if (isLoading) {
+    return (
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
+          width: '100vw',
+        }}
+      >
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  // Don't render layout if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <Box
