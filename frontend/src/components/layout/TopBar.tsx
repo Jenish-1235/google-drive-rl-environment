@@ -16,29 +16,34 @@ import {
 import {
   Menu as MenuIcon,
   Search as SearchIcon,
-  ViewList as ViewListIcon,
-  ViewModule as ViewModuleIcon,
-  Settings as SettingsIcon,
-  HelpOutline as HelpIcon,
   FilterList as FilterListIcon,
+  HelpOutline as HelpIcon,
+  Settings as SettingsIcon,
+  Apps as AppsIcon,
+  CheckCircleOutline as CheckIcon,
+  AutoAwesome as SparkleIcon,
   AccountCircle as AccountCircleIcon,
   Logout as LogoutIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
-import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
 import { colors } from "../../theme/theme";
-import { AdvancedSearchModal, type AdvancedSearchFilters } from "../modals/AdvancedSearchModal";
+import {
+  AdvancedSearchModal,
+  type AdvancedSearchFilters,
+} from "../modals/AdvancedSearchModal";
 import { SearchSuggestions } from "../modals/SearchSuggestions";
+import { useFileStore } from "../../store/fileStore";
+
 
 export const TopBar = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const viewMode = useFileStore((state) => state.viewMode);
-  const setViewMode = useFileStore((state) => state.setViewMode);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const [anchorElHelp, setAnchorElHelp] = useState<null | HTMLElement>(null);
 
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -47,6 +52,13 @@ export const TopBar = () => {
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
+  };
+  const handleOpenHelpMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElHelp(event.currentTarget);
+  };
+
+  const handleCloseHelpMenu = () => {
+    setAnchorElHelp(null);
   };
 
   const handleCloseUserMenu = () => {
@@ -59,10 +71,6 @@ export const TopBar = () => {
     navigate("/auth/login");
   };
 
-  const handleViewModeToggle = () => {
-    setViewMode(viewMode === "list" ? "grid" : "list");
-  };
-
   const handleAdvancedSearchOpen = () => {
     setAdvancedSearchOpen(true);
   };
@@ -73,13 +81,11 @@ export const TopBar = () => {
 
   const handleAdvancedSearch = (filters: AdvancedSearchFilters) => {
     console.log("Advanced search filters:", filters);
-    // TODO: Implement search logic with filters
   };
 
   const handleSuggestionClick = (suggestion: string) => {
     setSearchValue(suggestion);
     setSearchFocused(false);
-    // TODO: Implement search with suggestion
   };
 
   const handleAdvancedSearchFromSuggestions = () => {
@@ -100,17 +106,16 @@ export const TopBar = () => {
         right: 0,
       }}
     >
-      <Toolbar
-        sx={{ gap: 0, minHeight: 64, width: "100%", px: { xs: 2, md: 3 } }}
-      >
+      <Toolbar sx={{ gap: 0, minHeight: 64, width: "100%", px: { xs: 2, md: 3 } }}>
         {/* Menu button & Logo */}
         <Box
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 2,
-            width: { xs: "auto", md: "230px" }, // Match sidebar width on desktop
+            gap: 1, // smaller gap
+            width: { xs: "auto", md: "200px" }, // narrower
             flexShrink: 0,
+            ml: -1, // shift left
           }}
         >
           <IconButton
@@ -118,17 +123,18 @@ export const TopBar = () => {
             onClick={toggleSidebar}
             sx={{
               color: "text.secondary",
-              display: { xs: "inline-flex", md: "none" }, // Hide on desktop (md and up)
+              display: { xs: "inline-flex", md: "none" },
+              p: 0.5, // smaller button
             }}
           >
-            <MenuIcon />
+            <MenuIcon fontSize="small" />
           </IconButton>
 
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              gap: 1,
+              gap: 0.5, // smaller gap
               cursor: "pointer",
             }}
             onClick={() => navigate("/home")}
@@ -137,12 +143,12 @@ export const TopBar = () => {
               component="img"
               src="https://ssl.gstatic.com/images/branding/product/1x/drive_2020q4_48dp.png"
               alt="Drive"
-              sx={{ width: 40, height: 40 }}
+              sx={{ width: 32, height: 32 }} // smaller logo
             />
             <Typography
               variant="h3"
               sx={{
-                fontSize: 22,
+                fontSize: 20,
                 fontWeight: 400,
                 color: "text.secondary",
                 display: { xs: "none", sm: "block" },
@@ -154,22 +160,13 @@ export const TopBar = () => {
         </Box>
 
         {/* Search Bar */}
-        <Box
-          sx={{
-            ml: { xs: 1, md: 0 },
-            mr: { xs: 1, md: 2 },
-          }}
-        >
+        <Box sx={{ ml: { xs: 1, md: 0 }, mr: { xs: 1, md: 2 } }}>
           <Box
             sx={{
               position: "relative",
               borderRadius: 8,
-              backgroundColor: searchFocused
-                ? colors.surface
-                : colors.backgroundGray,
-              border: searchFocused
-                ? `1px solid ${colors.primary}`
-                : "1px solid transparent",
+              backgroundColor: searchFocused ? colors.surface : colors.backgroundGray,
+              border: searchFocused ? `1px solid ${colors.primary}` : "1px solid transparent",
               "&:hover": {
                 backgroundColor: colors.surface,
                 boxShadow: searchFocused
@@ -201,17 +198,10 @@ export const TopBar = () => {
                   },
                 }}
                 onFocus={() => setSearchFocused(true)}
-                onBlur={() => {
-                  // Delay to allow clicking on suggestions
-                  setTimeout(() => setSearchFocused(false), 200);
-                }}
+                onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
               />
               <Tooltip title="Advanced search">
-                <IconButton
-                  size="small"
-                  sx={{ color: "text.secondary" }}
-                  onClick={handleAdvancedSearchOpen}
-                >
+                <IconButton size="small" sx={{ color: "text.secondary" }} onClick={handleAdvancedSearchOpen}>
                   <FilterListIcon />
                 </IconButton>
               </Tooltip>
@@ -237,39 +227,103 @@ export const TopBar = () => {
             ml: "auto",
           }}
         >
-          {/* View Mode Toggle */}
-          <Tooltip title={viewMode === "list" ? "Grid view" : "List view"}>
-            <IconButton
-              onClick={handleViewModeToggle}
-              sx={{ color: "text.secondary" }}
-            >
-              {viewMode === "list" ? <ViewModuleIcon /> : <ViewListIcon />}
+          <Tooltip title="Tasks">
+            <IconButton sx={{ color: "text.secondary" }}>
+              <CheckIcon />
             </IconButton>
           </Tooltip>
 
-          {/* Help */}
           <Tooltip title="Help">
-            <IconButton sx={{ color: "text.secondary" }}>
+            <IconButton
+              sx={{ color: "text.secondary" }}
+              onClick={handleOpenHelpMenu}
+            >
               <HelpIcon />
             </IconButton>
           </Tooltip>
 
-          {/* Settings */}
+          <Menu
+            anchorEl={anchorElHelp}
+            open={Boolean(anchorElHelp)}
+            onClose={handleCloseHelpMenu}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                borderRadius: 0, // square edges
+                minWidth: 280,
+                boxShadow: "0px 2px 8px rgba(0,0,0,0.15)",
+                border: "1px solid #e0e0e0",
+              },
+            }}
+          >
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Help
+            </MenuItem>
+
+            {/* Divider after Help removed */}
+
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Training
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Terms and Policy
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Send feedback to Google
+            </MenuItem>
+          </Menu>
+
           <Tooltip title="Settings">
             <IconButton sx={{ color: "text.secondary" }}>
               <SettingsIcon />
             </IconButton>
           </Tooltip>
 
-          {/* User Menu */}
+          <Tooltip title="Ask Gemini">
+            <IconButton sx={{ color: "text.secondary" }}>
+              <SparkleIcon />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Google apps">
+            <IconButton sx={{ color: "text.secondary" }}>
+              <AppsIcon />
+            </IconButton>
+          </Tooltip>
+
+          {/* User Avatar */}
           <Tooltip title="Account">
             <IconButton onClick={handleOpenUserMenu} sx={{ ml: 0.5 }}>
               {user?.photoUrl ? (
-                <Avatar
-                  src={user.photoUrl}
-                  alt={user.name}
-                  sx={{ width: 32, height: 32 }}
-                />
+                <Avatar src={user.photoUrl} alt={user.name} sx={{ width: 32, height: 32 }} />
               ) : (
                 <Avatar sx={{ width: 32, height: 32, bgcolor: colors.primary }}>
                   {user?.name?.charAt(0).toUpperCase() || "U"}
@@ -278,11 +332,11 @@ export const TopBar = () => {
             </IconButton>
           </Tooltip>
 
+          {/* User Menu */}
           <Menu
             anchorEl={anchorElUser}
             open={Boolean(anchorElUser)}
             onClose={handleCloseUserMenu}
-            onClick={handleCloseUserMenu}
             transformOrigin={{ horizontal: "right", vertical: "top" }}
             anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
             PaperProps={{
@@ -296,11 +350,7 @@ export const TopBar = () => {
               <Box key="user-info" sx={{ px: 2, py: 2 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                   <Avatar
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      bgcolor: colors.primary,
-                    }}
+                    sx={{ width: 40, height: 40, bgcolor: colors.primary }}
                   >
                     {user.name.charAt(0).toUpperCase()}
                   </Avatar>
@@ -333,7 +383,6 @@ export const TopBar = () => {
         </Box>
       </Toolbar>
 
-      {/* Advanced Search Modal */}
       <AdvancedSearchModal
         open={advancedSearchOpen}
         onClose={handleAdvancedSearchClose}

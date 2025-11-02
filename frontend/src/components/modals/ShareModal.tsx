@@ -15,9 +15,7 @@ import {
   Chip,
   Divider,
   FormControl,
-  InputLabel,
   InputAdornment,
-  Tooltip,
   List,
   ListItem,
   ListItemAvatar,
@@ -30,7 +28,6 @@ import {
   PersonAdd as PersonAddIcon,
   Check as CheckIcon,
   ContentCopy as ContentCopyIcon,
-  MoreVert as MoreVertIcon,
 } from '@mui/icons-material';
 import type { DriveItem } from '../../types/file.types';
 import { colors } from '../../theme/theme';

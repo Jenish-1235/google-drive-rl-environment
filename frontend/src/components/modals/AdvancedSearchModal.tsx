@@ -107,7 +107,7 @@ export const AdvancedSearchModal = ({
       }}
       PaperProps={{
         sx: {
-          borderRadius: 3,
+          borderRadius: 2,
           maxWidth: 720,
           position: 'absolute',
           left: '20%',
@@ -546,9 +546,9 @@ export const AdvancedSearchModal = ({
             {/* Learn more link - left side */}
             <Button
               sx={{
-                color: colors.primary,
+                color: '#1a73e8',
                 textTransform: 'none',
-                fontSize: '0.875rem',
+                fontSize: 14,
                 '&:hover': {
                   bgcolor: 'transparent',
                   textDecoration: 'underline',
@@ -559,13 +559,18 @@ export const AdvancedSearchModal = ({
             </Button>
 
             {/* Action buttons - right side */}
-            <Box sx={{ display: 'flex', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1 }}>
               <Button
                 onClick={handleReset}
                 sx={{
-                  color: colors.primary,
                   textTransform: 'none',
+                  color: '#5f6368',
+                  fontSize: 14,
                   fontWeight: 500,
+                  px: 3,
+                  '&:hover': {
+                    backgroundColor: '#f8f9fa',
+                  },
                 }}
               >
                 Reset
@@ -575,11 +580,14 @@ export const AdvancedSearchModal = ({
                 onClick={handleSearch}
                 sx={{
                   textTransform: 'none',
+                  backgroundColor: '#1a73e8',
+                  fontSize: 14,
                   fontWeight: 500,
                   px: 3,
-                  bgcolor: colors.primary,
+                  boxShadow: 'none',
                   '&:hover': {
-                    bgcolor: colors.primaryDark,
+                    backgroundColor: '#1557b0',
+                    boxShadow: 'none',
                   },
                 }}
               >

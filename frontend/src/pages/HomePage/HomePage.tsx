@@ -15,6 +15,7 @@ import { RenameModal } from "../../components/modals/RenameModal";
 import { DeleteModal } from "../../components/modals/DeleteModal";
 import { ShareModal } from "../../components/modals/ShareModal";
 import { CreateFolderModal } from "../../components/modals/CreateFolderModal";
+import { MoveModal } from "../../components/modals/MoveModal";
 import type { DriveItem } from "../../types/file.types";
 import type {
   SharePermission,
@@ -37,6 +38,8 @@ export const HomePage = () => {
   const renameFileAPI = useFileStore((state) => state.renameFile);
   const toggleStar = useFileStore((state) => state.toggleStar);
   const moveToTrash = useFileStore((state) => state.moveToTrash);
+  const moveFileAPI = useFileStore((state) => state.moveFile);
+  const batchMoveFiles = useFileStore((state) => state.batchMoveFiles);
 
   const selectAll = useFileStore((state) => state.selectAll);
   const clearSelection = useFileStore((state) => state.clearSelection);
@@ -65,6 +68,8 @@ export const HomePage = () => {
   const [renameFile, setRenameFile] = useState<DriveItem | null>(null);
   const [deleteFiles, setDeleteFiles] = useState<DriveItem[]>([]);
   const [shareFile, setShareFile] = useState<DriveItem | null>(null);
+  const [moveFiles, setMoveFiles] = useState<DriveItem[]>([]);
+
   // Fetch files on mount and when folder changes
   useEffect(() => {
     fetchFiles(currentFolderId).catch((error) => {
@@ -74,7 +79,7 @@ export const HomePage = () => {
 
   // Add context menu handler
   useEffect(() => {
-    const handleContextMenu = (e: MouseEvent) => {
+    const handleContextMenu = (_e: MouseEvent) => {
       // This will be handled by individual file items
     };
 
@@ -159,6 +164,56 @@ export const HomePage = () => {
     }
   };
 
+  const handleMove = (filesToMove: DriveItem[]) => {
+    setMoveFiles(filesToMove);
+  };
+
+  const handleMoveConfirm = async (targetFolderId: string | null) => {
+    if (moveFiles.length === 0) return;
+
+    try {
+      if (moveFiles.length === 1) {
+        await moveFileAPI(moveFiles[0].id, targetFolderId);
+      } else {
+        await batchMoveFiles(
+          moveFiles.map((f) => f.id),
+          targetFolderId
+        );
+      }
+
+      const targetName = targetFolderId ? "folder" : "My Drive";
+      showSnackbar(
+        `Moved ${moveFiles.length} item${
+          moveFiles.length > 1 ? "s" : ""
+        } to ${targetName}`,
+        "success"
+      );
+      setMoveFiles([]);
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to move", "error");
+    }
+  };
+
+  const handleDragMove = async (fileIds: string[], targetFolderId: string) => {
+    try {
+      if (fileIds.length === 1) {
+        await moveFileAPI(fileIds[0], targetFolderId);
+      } else {
+        await batchMoveFiles(fileIds, targetFolderId);
+      }
+
+      showSnackbar(
+        `Moved ${fileIds.length} item${fileIds.length > 1 ? "s" : ""} to folder`,
+        "success"
+      );
+
+      // Clear selection after move
+      clearSelection();
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to move files", "error");
+    }
+  };
+
   const handleNextPreview = () => {
     if (!previewFile) return;
     const currentIndex = currentFiles.findIndex((f) => f.id === previewFile.id);
@@ -189,13 +244,13 @@ export const HomePage = () => {
   };
 
   const handleUpdatePermission = (
-    collaboratorId: string,
+    _collaboratorId: string,
     permission: SharePermission
   ) => {
     showSnackbar(`Updated permission to ${permission}`, "success");
   };
 
-  const handleRemoveAccess = (collaboratorId: string) => {
+  const handleRemoveAccess = (_collaboratorId: string) => {
     showSnackbar("Removed access", "success");
   };
 
@@ -281,6 +336,7 @@ export const HomePage = () => {
           files={currentFiles}
           onContextMenu={handleContextMenuOpen}
           onFileClick={handleFilePreview}
+          onMove={handleDragMove}
         />
       ) : (
         <FileGrid
@@ -309,7 +365,7 @@ export const HomePage = () => {
         onOpen={() => contextMenu.file && handleFilePreview(contextMenu.file)}
         onShare={() => contextMenu.file && handleShare(contextMenu.file)}
         onDownload={() => showSnackbar("Download feature coming soon", "info")}
-        onMove={() => showSnackbar("Move feature coming soon", "info")}
+        onMove={() => contextMenu.file && handleMove([contextMenu.file])}
         onRename={() => contextMenu.file && handleRename(contextMenu.file)}
         onCopy={() => showSnackbar("Copy feature coming soon", "info")}
         onToggleStar={() =>
@@ -317,6 +373,9 @@ export const HomePage = () => {
         }
         onDelete={() => contextMenu.file && handleDelete([contextMenu.file])}
         onDetails={() => showSnackbar("Details feature coming soon", "info")}
+        onOrganize={() => showSnackbar("Organize feature coming soon", "info")}
+        onMakeOffline={() => showSnackbar("Make offline feature coming soon", "info")}
+        onSummarize={() => showSnackbar("AI summarization coming soon", "info")}
       />
 
       <RenameModal
@@ -348,6 +407,13 @@ export const HomePage = () => {
         open={modal.type === "createFolder"}
         onClose={closeModal}
         onCreate={handleCreateFolder}
+      />
+
+      <MoveModal
+        open={moveFiles.length > 0}
+        files={moveFiles}
+        onClose={() => setMoveFiles([])}
+        onMove={handleMoveConfirm}
       />
     </Box>
   );

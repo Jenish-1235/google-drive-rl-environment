@@ -65,6 +65,11 @@ export const activityLogger = {
       `Shared "${fileName}" with ${sharedWith}`
     );
   },
+
+  // Log comment
+  logComment: (userId: number, fileId: string, fileName: string) => {
+    activityModel.create(userId, fileId, "comment", `Commented on "${fileName}"`);
+  },
 };
 
 export default activityLogger;

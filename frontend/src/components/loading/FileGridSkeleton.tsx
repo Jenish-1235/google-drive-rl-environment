@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, CardMedia, Grid, Skeleton } from '@mui/material';
+import { Box, Card, CardContent, CardMedia, Skeleton } from '@mui/material';
 import { colors } from '../../theme/theme';
 
 interface FileGridSkeletonProps {
@@ -8,9 +8,9 @@ interface FileGridSkeletonProps {
 export const FileGridSkeleton = ({ count = 12 }: FileGridSkeletonProps) => {
   return (
     <Box sx={{ p: 3 }}>
-      <Grid container spacing={2}>
+      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 2 }}>
         {Array.from({ length: count }).map((_, index) => (
-          <Grid item xs={6} sm={4} md={3} lg={2} key={index}>
+          <Box key={index}>
             <Card
               sx={{
                 height: 220,
@@ -52,9 +52,9 @@ export const FileGridSkeleton = ({ count = 12 }: FileGridSkeletonProps) => {
                 </Box>
               </CardContent>
             </Card>
-          </Grid>
+          </Box>
         ))}
-      </Grid>
+      </Box>
     </Box>
   );
 };

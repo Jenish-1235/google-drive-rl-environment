@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { config } from "../config/env";
+import db from "../config/database";
 
 export const storageService = {
   // Delete file from filesystem
@@ -20,6 +21,16 @@ export const storageService = {
   // Get file path
   getFilePath: (filePath: string): string => {
     return path.join(config.upload.dir, "files", filePath);
+  },
+
+  // Get upload directory
+  getUploadDir: (): string => {
+    return config.upload.dir;
+  },
+
+  // Get database instance
+  getDatabase: () => {
+    return db;
   },
 
   // Create directory if not exists

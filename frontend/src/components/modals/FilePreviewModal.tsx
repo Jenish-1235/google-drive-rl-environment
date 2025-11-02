@@ -233,18 +233,29 @@ export const FilePreviewModal = ({
         sx: {
           height: '90vh',
           maxHeight: 900,
+          borderRadius: 2,
         },
       }}
     >
       {/* Top Toolbar */}
       <Toolbar
         sx={{
-          borderBottom: `1px solid ${colors.border}`,
+          borderBottom: '1px solid #e8eaed',
           justifyContent: 'space-between',
+          backgroundColor: '#f8f9fa',
+          minHeight: 64,
         }}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
-          <Typography variant="body1" noWrap sx={{ fontWeight: 500 }}>
+          <Typography
+            variant="body1"
+            noWrap
+            sx={{
+              fontWeight: 500,
+              fontSize: 16,
+              color: '#202124',
+            }}
+          >
             {file.name}
           </Typography>
         </Box>
@@ -253,8 +264,21 @@ export const FilePreviewModal = ({
           {file.type === 'image' && (
             <>
               <Tooltip title="Zoom out">
-                <IconButton size="small" onClick={handleZoomOut} disabled={zoom <= 50}>
-                  <ZoomOutIcon />
+                <IconButton
+                  size="small"
+                  onClick={handleZoomOut}
+                  disabled={zoom <= 50}
+                  sx={{
+                    color: '#5f6368',
+                    '&:hover': {
+                      backgroundColor: '#e8eaed',
+                    },
+                    '&:disabled': {
+                      color: '#dadce0',
+                    },
+                  }}
+                >
+                  <ZoomOutIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
               <Typography
@@ -263,46 +287,102 @@ export const FilePreviewModal = ({
                   display: 'flex',
                   alignItems: 'center',
                   px: 1,
-                  color: 'text.secondary',
+                  color: '#5f6368',
+                  fontSize: 14,
                 }}
               >
                 {zoom}%
               </Typography>
               <Tooltip title="Zoom in">
-                <IconButton size="small" onClick={handleZoomIn} disabled={zoom >= 200}>
-                  <ZoomInIcon />
+                <IconButton
+                  size="small"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 200}
+                  sx={{
+                    color: '#5f6368',
+                    '&:hover': {
+                      backgroundColor: '#e8eaed',
+                    },
+                    '&:disabled': {
+                      color: '#dadce0',
+                    },
+                  }}
+                >
+                  <ZoomInIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
             </>
           )}
 
           <Tooltip title="Download">
-            <IconButton size="small">
-              <DownloadIcon />
+            <IconButton
+              size="small"
+              sx={{
+                color: '#5f6368',
+                '&:hover': {
+                  backgroundColor: '#e8eaed',
+                },
+              }}
+            >
+              <DownloadIcon fontSize="small" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Share">
-            <IconButton size="small" onClick={onShare}>
-              <ShareIcon />
+            <IconButton
+              size="small"
+              onClick={onShare}
+              sx={{
+                color: '#5f6368',
+                '&:hover': {
+                  backgroundColor: '#e8eaed',
+                },
+              }}
+            >
+              <ShareIcon fontSize="small" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Open in new tab">
-            <IconButton size="small">
-              <OpenInNewIcon />
+            <IconButton
+              size="small"
+              sx={{
+                color: '#5f6368',
+                '&:hover': {
+                  backgroundColor: '#e8eaed',
+                },
+              }}
+            >
+              <OpenInNewIcon fontSize="small" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="More actions">
-            <IconButton size="small">
-              <MoreVertIcon />
+            <IconButton
+              size="small"
+              sx={{
+                color: '#5f6368',
+                '&:hover': {
+                  backgroundColor: '#e8eaed',
+                },
+              }}
+            >
+              <MoreVertIcon fontSize="small" />
             </IconButton>
           </Tooltip>
 
           <Tooltip title="Close">
-            <IconButton size="small" onClick={onClose}>
-              <CloseIcon />
+            <IconButton
+              size="small"
+              onClick={onClose}
+              sx={{
+                color: '#5f6368',
+                '&:hover': {
+                  backgroundColor: '#e8eaed',
+                },
+              }}
+            >
+              <CloseIcon fontSize="small" />
             </IconButton>
           </Tooltip>
         </Box>
@@ -328,16 +408,19 @@ export const FilePreviewModal = ({
               left: 16,
               top: '50%',
               transform: 'translateY(-50%)',
-              backgroundColor: 'background.paper',
-              boxShadow: 2,
+              backgroundColor: '#fff',
+              color: '#5f6368',
+              width: 48,
+              height: 48,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               '&:hover': {
-                backgroundColor: 'background.paper',
-                boxShadow: 4,
+                backgroundColor: '#f8f9fa',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
               },
               zIndex: 1,
             }}
           >
-            <PrevIcon />
+            <PrevIcon sx={{ fontSize: 32 }} />
           </IconButton>
         )}
 
@@ -353,16 +436,19 @@ export const FilePreviewModal = ({
               right: 16,
               top: '50%',
               transform: 'translateY(-50%)',
-              backgroundColor: 'background.paper',
-              boxShadow: 2,
+              backgroundColor: '#fff',
+              color: '#5f6368',
+              width: 48,
+              height: 48,
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
               '&:hover': {
-                backgroundColor: 'background.paper',
-                boxShadow: 4,
+                backgroundColor: '#f8f9fa',
+                boxShadow: '0 4px 8px rgba(0,0,0,0.15)',
               },
               zIndex: 1,
             }}
           >
-            <NextIcon />
+            <NextIcon sx={{ fontSize: 32 }} />
           </IconButton>
         )}
       </DialogContent>
@@ -370,20 +456,35 @@ export const FilePreviewModal = ({
       {/* Bottom info bar */}
       <DialogActions
         sx={{
-          borderTop: `1px solid ${colors.border}`,
+          borderTop: '1px solid #e8eaed',
           justifyContent: 'space-between',
+          backgroundColor: '#f8f9fa',
           px: 3,
           py: 1.5,
+          minHeight: 52,
         }}
       >
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: '#5f6368',
+              fontSize: 13,
+            }}
+          >
             {file.ownerName} • {formatDate(file.modifiedTime)}
             {file.type !== 'folder' && ` • ${formatFileSize((file as any).size || 0)}`}
           </Typography>
         </Box>
         <Box>
-          <Typography variant="caption" color="text.secondary">
+          <Typography
+            variant="caption"
+            sx={{
+              color: '#5f6368',
+              fontSize: 13,
+              fontWeight: 500,
+            }}
+          >
             {currentIndex + 1} of {files.length}
           </Typography>
         </Box>

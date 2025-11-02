@@ -49,6 +49,9 @@ export const ContextMenu = ({
   onRename,
   onCopy,
   onDelete,
+  onDetails,
+  onMakeOffline,
+  onSummarize,
 }: ContextMenuProps) => {
   const [openWithAnchor, setOpenWithAnchor] = useState<HTMLElement | null>(null);
   const [shareAnchor, setShareAnchor] = useState<HTMLElement | null>(null);
@@ -326,7 +329,7 @@ export const ContextMenu = ({
         <ChevronRightIcon fontSize="small" sx={{ color: '#5f6368', ml: 'auto' }} />
       </MenuItem>
 
-      <Divider />
+      <Divider sx={{ my: 0.5 }} />
 
       <MenuItem onClick={() => handleAction(onDelete)} onMouseEnter={handleRegularItemHover}>
         <ListItemIcon>

@@ -9,6 +9,15 @@ export interface FileFilters {
   isTrashed?: boolean;
   type?: "file" | "folder";
   search?: string;
+  mimeType?: string;
+  createdAfter?: string;
+  createdBefore?: string;
+  modifiedAfter?: string;
+  modifiedBefore?: string;
+  sizeMin?: number;
+  sizeMax?: number;
+  sortBy?: "name" | "created_at" | "updated_at" | "size";
+  sortOrder?: "asc" | "desc";
 }
 
 export const fileModel = {
@@ -86,14 +95,61 @@ export const fileModel = {
       params.push(filters.type);
     }
 
-    // Search by name
+    // Filter by mime type
+    if (filters.mimeType) {
+      query += " AND mime_type LIKE ?";
+      params.push(`%${filters.mimeType}%`);
+    }
+
+    // Search by name (case-insensitive)
     if (filters.search) {
       query += " AND name LIKE ?";
       params.push(`%${filters.search}%`);
     }
 
-    // Order by type (folders first) then name
-    query += " ORDER BY type DESC, name ASC";
+    // Filter by creation date range
+    if (filters.createdAfter) {
+      query += " AND created_at >= ?";
+      params.push(filters.createdAfter);
+    }
+
+    if (filters.createdBefore) {
+      query += " AND created_at <= ?";
+      params.push(filters.createdBefore);
+    }
+
+    // Filter by modification date range
+    if (filters.modifiedAfter) {
+      query += " AND updated_at >= ?";
+      params.push(filters.modifiedAfter);
+    }
+
+    if (filters.modifiedBefore) {
+      query += " AND updated_at <= ?";
+      params.push(filters.modifiedBefore);
+    }
+
+    // Filter by file size range
+    if (filters.sizeMin !== undefined) {
+      query += " AND size >= ?";
+      params.push(filters.sizeMin);
+    }
+
+    if (filters.sizeMax !== undefined) {
+      query += " AND size <= ?";
+      params.push(filters.sizeMax);
+    }
+
+    // Sorting
+    const sortBy = filters.sortBy || "name";
+    const sortOrder = filters.sortOrder || "asc";
+
+    // Special handling for default sort (folders first, then by name)
+    if (!filters.sortBy) {
+      query += " ORDER BY type DESC, name ASC";
+    } else {
+      query += ` ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
+    }
 
     const stmt = db.prepare(query);
     return stmt.all(...params) as File[];
@@ -235,6 +291,38 @@ export const fileModel = {
     `);
     const result = stmt.get(userId) as { total: number | null };
     return result.total || 0;
+  },
+
+  // Get folder path (breadcrumb trail) for a given folder
+  getFolderPath: (folderId: string | null): Array<{ id: string; name: string }> => {
+    if (!folderId) {
+      // Root folder - return just "My Drive"
+      return [{ id: 'root', name: 'My Drive' }];
+    }
+
+    const path: Array<{ id: string; name: string }> = [];
+    let currentId: string | null = folderId;
+
+    // Recursively build path from folder to root
+    while (currentId) {
+      const folder = fileModel.findById(currentId);
+
+      if (!folder) {
+        // Folder not found, return root
+        return [{ id: 'root', name: 'My Drive' }];
+      }
+
+      // Add folder to beginning of path
+      path.unshift({ id: folder.id, name: folder.name });
+
+      // Move to parent folder
+      currentId = folder.parent_id;
+    }
+
+    // Add root folder at the beginning
+    path.unshift({ id: 'root', name: 'My Drive' });
+
+    return path;
   },
 };
 

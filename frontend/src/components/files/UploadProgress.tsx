@@ -43,7 +43,6 @@ export const UploadProgress = () => {
     (u) => u.status === 'uploading' || u.status === 'pending'
   );
   const completedUploads = uploads.filter((u) => u.status === 'completed');
-  const failedUploads = uploads.filter((u) => u.status === 'error');
 
   const totalProgress = uploads.length > 0
     ? uploads.reduce((sum, upload) => sum + upload.progress, 0) / uploads.length
