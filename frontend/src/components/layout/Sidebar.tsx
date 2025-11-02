@@ -523,7 +523,7 @@ export const Sidebar = () => {
                   mb: 1,
                 }}
               />
-              
+
               <Typography fontSize={13} color="#5f6368" sx={{ mb: 1 }}>
                 {formatFileSize(mockStorageQuota.usage)} of{" "}
                 {formatFileSize(mockStorageQuota.limit)} used
