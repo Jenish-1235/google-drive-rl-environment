@@ -12,8 +12,6 @@ import { useAuthStore } from "../../store/authStore";
 export const MainLayout = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
   const navigate = useNavigate();
-
-  // Redirect to login if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate('/auth/login');
@@ -65,6 +63,28 @@ export const MainLayout = () => {
             width: "100%",
             minWidth: 0, // Allows flex item to shrink below content size
             pr: "56px", // Add padding for fixed right sidebar
+            marginRight: detailsPanelOpen ? "360px" : "0px", // Make space for details panel
+            transition: "margin-right 0.225s cubic-bezier(0.4, 0.0, 0.2, 1)",
+            // Reserve scrollbar gutter to avoid any flicker when content size changes
+            scrollbarGutter: "stable both-edges",
+            // Hide scrollbar while keeping scroll functionality
+            "&::-webkit-scrollbar": {
+              display: "none",
+            },
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+            // Ensure no child shows a scrollbar during view toggles
+            "& *::-webkit-scrollbar": {
+              width: 0,
+              height: 0,
+              display: "none",
+            },
+            "& *": {
+              scrollbarWidth: "none",
+              WebkitOverflowScrolling: "touch",
+            },
+            // Avoid browser overscroll effects
+            overscrollBehavior: "contain",
           }}
         >
           <Outlet />

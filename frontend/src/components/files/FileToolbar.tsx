@@ -5,7 +5,6 @@ import {
   Typography,
   Button,
   IconButton,
-  ButtonGroup,
   Menu,
   MenuItem,
   ListItemIcon,
@@ -15,25 +14,17 @@ import {
 import {
   ChevronRight as ChevronRightIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  ViewList as ViewListIcon,
-  ViewModule as ViewModuleIcon,
-  Info as InfoIcon,
   Folder as FolderIcon,
   CreateNewFolder as CreateNewFolderIcon,
   DriveFileMove as MoveIcon,
-  Check as CheckIcon,
 } from "@mui/icons-material";
 import { Link as RouterLink, useParams, useNavigate } from "react-router-dom";
 import { useFileStore } from "../../store/fileStore";
-import type {
-  FileTypeFilter,
-  PeopleFilter,
-  ModifiedFilter,
-} from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
 import { useEffect, useState } from "react";
 import type { DriveItem } from "../../types/file.types";
 import { SelectionToolbar } from "./SelectionToolbar";
+import { DetailsPanel } from "../layout/DetailsPanel";
 
 interface FilterButtonProps {
   label: string;
@@ -95,6 +86,9 @@ export const FileToolbar = () => {
     useState<null | HTMLElement>(null);
   const [myDriveMenuAnchor, setMyDriveMenuAnchor] =
     useState<null | HTMLElement>(null);
+  
+  const detailsPanelOpen = useUIStore((state) => state.detailsPanelOpen);
+  const toggleDetailsPanel = useUIStore((state) => state.toggleDetailsPanel);
 
   // Get all folders in current directory for "My Drive" dropdown
   const currentFolderFiles = files.filter((file) => {
@@ -382,6 +376,7 @@ export const FileToolbar = () => {
           <IconButton
             size="small"
             disableRipple
+            onClick={toggleDetailsPanel}
             sx={{
               color: "#5f6368",
               padding: 0.5,
@@ -602,6 +597,12 @@ export const FileToolbar = () => {
         open={Boolean(myDriveMenuAnchor)}
         onClose={() => setMyDriveMenuAnchor(null)}
         folders={currentFolders}
+      />
+
+      {/* Details Panel */}
+      <DetailsPanel 
+        open={detailsPanelOpen} 
+        onClose={toggleDetailsPanel} 
       />
     </Box>
   );
