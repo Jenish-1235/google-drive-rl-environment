@@ -28,6 +28,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import type { DriveItem, SortField } from "../../types/file.types";
 import { useFileStore } from "../../store/fileStore";
+import { useUIStore } from "../../store/uiStore";
 import { getFileIcon } from "../../utils/fileIcons";
 import { formatDate, formatFileSize } from "../../utils/formatters";
 import { animations, getStaggerDelay } from "../../utils/animations";
@@ -53,6 +54,7 @@ export const FileList = ({
   const toggleSortOrder = useFileStore((state) => state.toggleSortOrder);
   const setSortField = useFileStore((state) => state.setSortField);
   const setSelectedFiles = useFileStore((state) => state.setSelectedFiles);
+  const detailsPanelOpen = useUIStore((state) => state.detailsPanelOpen);
 
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{
     element: HTMLElement;
@@ -131,7 +133,18 @@ export const FileList = ({
 
   return (
     <Box sx={{ width: "100%" }}>
-      <TableContainer sx={{ width: "100%", backgroundColor: "transparent" }}>
+      <TableContainer
+        sx={{
+          width: "100%",
+          backgroundColor: "transparent",
+          // Prevent TableContainer from introducing its own scrollbar
+          overflowY: "visible",
+          // Hide any potential scrollbar artifacts just in case
+          "&::-webkit-scrollbar": { display: "none" },
+          scrollbarWidth: "none",
+          msOverflowStyle: "none",
+        }}
+      >
         <Table sx={{ width: "100%", tableLayout: "fixed" }}>
           <TableHead>
             <TableRow
@@ -166,28 +179,33 @@ export const FileList = ({
                   </Typography>
                 </TableSortLabel>
               </TableCell>
-              <TableCell
-                sx={{
-                  width: "18%",
-                  py: 1,
-                  borderBottom: "none",
-                }}
-              >
-                <TableSortLabel
-                  active={sortField === "owner"}
-                  direction={sortField === "owner" ? sortOrder : "asc"}
-                  onClick={() => handleSort("owner")}
+              {!detailsPanelOpen && (
+                <TableCell
+                  sx={{
+                    width: "18%",
+                    py: 1,
+                    borderBottom: "none",
+                    opacity: detailsPanelOpen ? 0 : 1,
+                    transition: "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                  }}
                 >
-                  <Typography fontSize={12} fontWeight={500} color="#5f6368">
-                    Owner
-                  </Typography>
-                </TableSortLabel>
-              </TableCell>
+                  <TableSortLabel
+                    active={sortField === "owner"}
+                    direction={sortField === "owner" ? sortOrder : "asc"}
+                    onClick={() => handleSort("owner")}
+                  >
+                    <Typography fontSize={12} fontWeight={500} color="#5f6368">
+                      Owner
+                    </Typography>
+                  </TableSortLabel>
+                </TableCell>
+              )}
               <TableCell
                 sx={{
-                  width: "18%",
+                  width: detailsPanelOpen ? "40%" : "18%",
                   py: 1,
                   borderBottom: "none",
+                  transition: "width 0.225s cubic-bezier(0.4, 0.0, 0.2, 1)",
                 }}
               >
                 <TableSortLabel
@@ -200,23 +218,27 @@ export const FileList = ({
                   </Typography>
                 </TableSortLabel>
               </TableCell>
-              <TableCell
-                sx={{
-                  width: "12%",
-                  py: 1,
-                  borderBottom: "none",
-                }}
-              >
-                <TableSortLabel
-                  active={sortField === "size"}
-                  direction={sortField === "size" ? sortOrder : "asc"}
-                  onClick={() => handleSort("size")}
+              {!detailsPanelOpen && (
+                <TableCell
+                  sx={{
+                    width: "12%",
+                    py: 1,
+                    borderBottom: "none",
+                    opacity: detailsPanelOpen ? 0 : 1,
+                    transition: "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                  }}
                 >
-                  <Typography fontSize={12} fontWeight={500} color="#5f6368">
-                    File size
-                  </Typography>
-                </TableSortLabel>
-              </TableCell>
+                  <TableSortLabel
+                    active={sortField === "size"}
+                    direction={sortField === "size" ? sortOrder : "asc"}
+                    onClick={() => handleSort("size")}
+                  >
+                    <Typography fontSize={12} fontWeight={500} color="#5f6368">
+                      File size
+                    </Typography>
+                  </TableSortLabel>
+                </TableCell>
+              )}
               <TableCell
                 sx={{
                   width: 80,
@@ -276,41 +298,59 @@ export const FileList = ({
                     )}
                   </Box>
                 </TableCell>
-                <TableCell sx={{ py: 0.5, borderBottom: "none" }}>
-                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Box
-                      sx={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: "50%",
-                        backgroundColor: "#1a73e8",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: 13,
-                        color: "white",
-                        fontWeight: 500,
-                      }}
-                    >
-                      {file.ownerName?.charAt(0).toUpperCase() || "U"}
+                {!detailsPanelOpen && (
+                  <TableCell 
+                    sx={{ 
+                      py: 0.5, 
+                      borderBottom: "none",
+                      opacity: detailsPanelOpen ? 0 : 1,
+                      transition: "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                    }}
+                  >
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{
+                          width: 28,
+                          height: 28,
+                          borderRadius: "50%",
+                          backgroundColor: "#1a73e8",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          fontSize: 13,
+                          color: "white",
+                          fontWeight: 500,
+                        }}
+                      >
+                        {file.ownerName?.charAt(0).toUpperCase() || "U"}
+                      </Box>
+                      <Typography fontSize={14} color="#5f6368" noWrap>
+                        me
+                      </Typography>
                     </Box>
-                    <Typography fontSize={14} color="#5f6368" noWrap>
-                      me
-                    </Typography>
-                  </Box>
-                </TableCell>
+                  </TableCell>
+                )}
                 <TableCell sx={{ py: 0.5, borderBottom: "none" }}>
                   <Typography fontSize={14} color="#5f6368">
                     {formatDate(file.modifiedTime)}
                   </Typography>
                 </TableCell>
-                <TableCell sx={{ py: 0.5, borderBottom: "none" }}>
-                  <Typography fontSize={14} color="#5f6368">
-                    {file.type === "folder"
-                      ? "—"
-                      : formatFileSize(file.size || 0)}
-                  </Typography>
-                </TableCell>
+                {!detailsPanelOpen && (
+                  <TableCell 
+                    sx={{ 
+                      py: 0.5, 
+                      borderBottom: "none",
+                      opacity: detailsPanelOpen ? 0 : 1,
+                      transition: "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                    }}
+                  >
+                    <Typography fontSize={14} color="#5f6368">
+                      {file.type === "folder"
+                        ? "—"
+                        : formatFileSize(file.size || 0)}
+                    </Typography>
+                  </TableCell>
+                )}
                 <TableCell
                   sx={{
                     py: 0.5,

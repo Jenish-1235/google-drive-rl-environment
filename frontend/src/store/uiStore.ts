@@ -22,6 +22,7 @@ interface ContextMenu {
 
 interface UIStore {
   sidebarOpen: boolean;
+  detailsPanelOpen: boolean;
   modal: Modal;
   contextMenu: ContextMenu;
   snackbar: {
@@ -33,6 +34,10 @@ interface UIStore {
   // Sidebar
   toggleSidebar: () => void;
   setSidebarOpen: (open: boolean) => void;
+
+  // Details Panel
+  toggleDetailsPanel: () => void;
+  setDetailsPanelOpen: (open: boolean) => void;
 
   // Modal
   openModal: (type: Modal["type"], data?: any) => void;
@@ -52,6 +57,7 @@ interface UIStore {
 
 export const useUIStore = create<UIStore>((set) => ({
   sidebarOpen: true,
+  detailsPanelOpen: false,
   modal: { type: null },
   contextMenu: {
     isOpen: false,
@@ -68,6 +74,10 @@ export const useUIStore = create<UIStore>((set) => ({
   // Sidebar
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
+
+  // Details Panel
+  toggleDetailsPanel: () => set((state) => ({ detailsPanelOpen: !state.detailsPanelOpen })),
+  setDetailsPanelOpen: (open) => set({ detailsPanelOpen: open }),
 
   // Modal
   openModal: (type, data) => set({ modal: { type, data } }),
