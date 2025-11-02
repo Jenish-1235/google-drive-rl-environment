@@ -30,7 +30,10 @@ import { useAuthStore } from "../../store/authStore";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
 import { colors } from "../../theme/theme";
-import { AdvancedSearchModal, type AdvancedSearchFilters } from "../modals/AdvancedSearchModal";
+import {
+  AdvancedSearchModal,
+  type AdvancedSearchFilters,
+} from "../modals/AdvancedSearchModal";
 import { SearchSuggestions } from "../modals/SearchSuggestions";
 
 export const TopBar = () => {
@@ -39,6 +42,7 @@ export const TopBar = () => {
   const logout = useAuthStore((state) => state.logout);
   const viewMode = useFileStore((state) => state.viewMode);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
+  const [anchorElHelp, setAnchorElHelp] = useState<null | HTMLElement>(null);
 
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
@@ -47,6 +51,13 @@ export const TopBar = () => {
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
+  };
+  const handleOpenHelpMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElHelp(event.currentTarget);
+  };
+
+  const handleCloseHelpMenu = () => {
+    setAnchorElHelp(null);
   };
 
   const handleCloseUserMenu = () => {
@@ -94,7 +105,9 @@ export const TopBar = () => {
         right: 0,
       }}
     >
-      <Toolbar sx={{ gap: 0, minHeight: 64, width: "100%", px: { xs: 2, md: 3 } }}>
+      <Toolbar
+        sx={{ gap: 0, minHeight: 64, width: "100%", px: { xs: 2, md: 3 } }}
+      >
         {/* Menu button & Logo */}
         <Box
           sx={{
@@ -153,8 +166,12 @@ export const TopBar = () => {
             sx={{
               position: "relative",
               borderRadius: 8,
-              backgroundColor: searchFocused ? colors.surface : colors.backgroundGray,
-              border: searchFocused ? `1px solid ${colors.primary}` : "1px solid transparent",
+              backgroundColor: searchFocused
+                ? colors.surface
+                : colors.backgroundGray,
+              border: searchFocused
+                ? `1px solid ${colors.primary}`
+                : "1px solid transparent",
               "&:hover": {
                 backgroundColor: colors.surface,
                 boxShadow: searchFocused
@@ -189,7 +206,11 @@ export const TopBar = () => {
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
               />
               <Tooltip title="Advanced search">
-                <IconButton size="small" sx={{ color: "text.secondary" }} onClick={handleAdvancedSearchOpen}>
+                <IconButton
+                  size="small"
+                  sx={{ color: "text.secondary" }}
+                  onClick={handleAdvancedSearchOpen}
+                >
                   <FilterListIcon />
                 </IconButton>
               </Tooltip>
@@ -222,10 +243,72 @@ export const TopBar = () => {
           </Tooltip>
 
           <Tooltip title="Help">
-            <IconButton sx={{ color: "text.secondary" }}>
+            <IconButton
+              sx={{ color: "text.secondary" }}
+              onClick={handleOpenHelpMenu}
+            >
               <HelpIcon />
             </IconButton>
           </Tooltip>
+
+          <Menu
+            anchorEl={anchorElHelp}
+            open={Boolean(anchorElHelp)}
+            onClose={handleCloseHelpMenu}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                borderRadius: 0, // square edges
+                minWidth: 280,
+                boxShadow: "0px 2px 8px rgba(0,0,0,0.15)",
+                border: "1px solid #e0e0e0",
+              },
+            }}
+          >
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Help
+            </MenuItem>
+
+            {/* Divider after Help removed */}
+
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Training
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Terms and Policy
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              onClick={handleCloseHelpMenu}
+              sx={{
+                py: 1,
+                "&:hover": { backgroundColor: "#f8f9fa" },
+              }}
+            >
+              Send feedback to Google
+            </MenuItem>
+          </Menu>
 
           <Tooltip title="Settings">
             <IconButton sx={{ color: "text.secondary" }}>
@@ -249,7 +332,11 @@ export const TopBar = () => {
           <Tooltip title="Account">
             <IconButton onClick={handleOpenUserMenu} sx={{ ml: 0.5 }}>
               {user?.photoUrl ? (
-                <Avatar src={user.photoUrl} alt={user.name} sx={{ width: 32, height: 32 }} />
+                <Avatar
+                  src={user.photoUrl}
+                  alt={user.name}
+                  sx={{ width: 32, height: 32 }}
+                />
               ) : (
                 <Avatar sx={{ width: 32, height: 32, bgcolor: colors.primary }}>
                   {user?.name?.charAt(0).toUpperCase() || "U"}
@@ -275,7 +362,9 @@ export const TopBar = () => {
             {user && [
               <Box key="user-info" sx={{ px: 2, py: 2 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                  <Avatar sx={{ width: 40, height: 40, bgcolor: colors.primary }}>
+                  <Avatar
+                    sx={{ width: 40, height: 40, bgcolor: colors.primary }}
+                  >
                     {user.name.charAt(0).toUpperCase()}
                   </Avatar>
                   <Box>
