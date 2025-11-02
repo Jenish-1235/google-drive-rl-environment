@@ -10,7 +10,6 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
-  Skeleton,
 } from "@mui/material";
 import {
   ChevronRight as ChevronRightIcon,
@@ -101,8 +100,6 @@ export const FileToolbar = () => {
   });
   const currentFolders = currentFolderFiles.filter((f) => f.type === "folder");
 
-  const [loadingBreadcrumbs, setLoadingBreadcrumbs] = useState(false);
-
   useEffect(() => {
     const buildBreadcrumbs = async () => {
       // Root folder - just show "My Drive"
@@ -123,7 +120,6 @@ export const FileToolbar = () => {
 
       // Fetch complete folder path from backend API
       try {
-        setLoadingBreadcrumbs(true);
         const response = await fileService.getFolderPath(folderId);
         const pathBreadcrumbs = response.path.map((folder: any) => ({
           id: folder.id,
@@ -143,8 +139,6 @@ export const FileToolbar = () => {
             { id: folderId, name: "..." },
           ]);
         }
-      } finally {
-        setLoadingBreadcrumbs(false);
       }
     };
 

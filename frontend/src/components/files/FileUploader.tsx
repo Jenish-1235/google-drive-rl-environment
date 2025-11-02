@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Box, Typography, Paper, alpha } from '@mui/material';
+import { Typography, Paper, alpha } from '@mui/material';
 import { CloudUpload as UploadIcon } from '@mui/icons-material';
 import { colors } from '../../theme/theme';
 import { useUploadStore } from '../../store/uploadStore';

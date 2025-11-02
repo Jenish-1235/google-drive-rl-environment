@@ -1,4 +1,4 @@
-import { Menu, MenuItem, ListItemIcon, ListItemText, Divider, Box, Typography, Chip } from '@mui/material';
+import { Menu, MenuItem, ListItemIcon, ListItemText, Divider, Typography, Chip } from '@mui/material';
 import {
   OpenWith,
   GetApp,
@@ -46,7 +46,6 @@ export const ContextMenu = ({
   onCopy,
   onDelete,
   onDetails,
-  onOrganize,
   onMakeOffline,
   onSummarize,
 }: ContextMenuProps) => {
@@ -273,9 +272,9 @@ export const ContextMenu = ({
         <ChevronRight sx={{ fontSize: 20, color: '#5f6368', ml: 1 }} />
       </MenuItem>
 
-      {/* Organize */}
+      {/* Move */}
       <MenuItem
-        onClick={() => handleAction(onOrganize)}
+        onClick={() => handleAction(onMove)}
         sx={{
           px: 2,
           py: 1,
@@ -289,14 +288,13 @@ export const ContextMenu = ({
           <DriveFileMove sx={{ fontSize: 20, color: '#5f6368' }} />
         </ListItemIcon>
         <ListItemText
-          primary="Organize"
+          primary="Move"
           primaryTypographyProps={{
             fontSize: 14,
             fontWeight: 400,
             color: '#3c4043',
           }}
         />
-        <ChevronRight sx={{ fontSize: 20, color: '#5f6368', ml: 1 }} />
       </MenuItem>
 
       {/* File information */}

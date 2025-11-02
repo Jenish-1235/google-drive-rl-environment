@@ -30,7 +30,6 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[], enabled = tr
         const ctrlMatches = shortcut.ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey && !event.metaKey;
         const shiftMatches = shortcut.shift ? event.shiftKey : !event.shiftKey;
         const altMatches = shortcut.alt ? event.altKey : !event.altKey;
-        const metaMatches = shortcut.meta ? event.metaKey : !event.metaKey;
 
         if (keyMatches && ctrlMatches && shiftMatches && altMatches) {
           event.preventDefault();

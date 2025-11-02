@@ -34,6 +34,8 @@ import {
   type AdvancedSearchFilters,
 } from "../modals/AdvancedSearchModal";
 import { SearchSuggestions } from "../modals/SearchSuggestions";
+import { useFileStore } from "../../store/fileStore";
+
 
 export const TopBar = () => {
   const navigate = useNavigate();

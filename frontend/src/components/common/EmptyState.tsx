@@ -32,7 +32,7 @@ export const EmptyState = ({
     switch (type) {
       case 'no-files':
         return {
-          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.textSecondary, opacity: 0.5 }} />,
+          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.text.secondary, opacity: 0.5 }} />,
           title: title || 'No files or folders',
           description:
             description ||
@@ -42,7 +42,7 @@ export const EmptyState = ({
         };
       case 'no-search-results':
         return {
-          icon: <SearchIcon sx={{ fontSize: 120, color: colors.textSecondary, opacity: 0.5 }} />,
+          icon: <SearchIcon sx={{ fontSize: 120, color: colors.text.secondary, opacity: 0.5 }} />,
           title: title || 'No results found',
           description:
             description || 'Try different keywords or check your spelling. You can also clear the search to see all files.',
@@ -51,7 +51,7 @@ export const EmptyState = ({
         };
       case 'empty-folder':
         return {
-          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.textSecondary, opacity: 0.5 }} />,
+          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.text.secondary, opacity: 0.5 }} />,
           title: title || 'This folder is empty',
           description:
             description || 'Drag and drop files here, or use the New button to add content to this folder.',
@@ -60,7 +60,7 @@ export const EmptyState = ({
         };
       case 'no-trash':
         return {
-          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.textSecondary, opacity: 0.5 }} />,
+          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.text.secondary, opacity: 0.5 }} />,
           title: title || 'Trash is empty',
           description:
             description || 'Items you trash will appear here. You can restore them within 30 days.',
@@ -69,7 +69,7 @@ export const EmptyState = ({
         };
       default:
         return {
-          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.textSecondary, opacity: 0.5 }} />,
+          icon: <EmptyFolderIcon sx={{ fontSize: 120, color: colors.text.secondary, opacity: 0.5 }} />,
           title: title || 'Nothing here',
           description: description || '',
           actionLabel: actionLabel,
@@ -100,7 +100,7 @@ export const EmptyState = ({
       <Typography
         variant="h3"
         sx={{
-          color: colors.textPrimary,
+          color: colors.text.primary,
           fontWeight: 400,
           mb: 1,
         }}
@@ -113,7 +113,7 @@ export const EmptyState = ({
         <Typography
           variant="body1"
           sx={{
-            color: colors.textSecondary,
+            color: colors.text.secondary,
             mb: 4,
             maxWidth: 500,
           }}

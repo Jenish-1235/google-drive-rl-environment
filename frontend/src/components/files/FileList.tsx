@@ -39,6 +39,7 @@ interface FileListProps {
   onSort?: (field: SortField) => void;
   onContextMenu?: (event: React.MouseEvent, file: DriveItem) => void;
   onFileClick?: (file: DriveItem) => void;
+  onMove?: (fileIds: string[], targetFolderId: string) => void;
 }
 
 export const FileList = ({
@@ -46,6 +47,7 @@ export const FileList = ({
   onSort,
   onContextMenu,
   onFileClick,
+  onMove,
 }: FileListProps) => {
   const navigate = useNavigate();
   const selectedFiles = useFileStore((state) => state.selectedFiles);
@@ -61,6 +63,8 @@ export const FileList = ({
     fileId: string;
   } | null>(null);
   const [clickTimeout, setClickTimeout] = useState<number | null>(null);
+  const [draggedFiles, setDraggedFiles] = useState<string[]>([]);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -130,6 +134,78 @@ export const FileList = ({
   };
 
   const isSelected = (fileId: string) => selectedFiles.includes(fileId);
+
+  // Drag and drop handlers
+  const handleDragStart = (event: React.DragEvent, file: DriveItem) => {
+    // If file is already selected, drag all selected files, otherwise just this file
+    const filesToDrag = isSelected(file.id)
+      ? selectedFiles
+      : [file.id];
+
+    setDraggedFiles(filesToDrag);
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', JSON.stringify(filesToDrag));
+
+    // Add visual feedback
+    if (event.dataTransfer.setDragImage) {
+      const dragImage = document.createElement('div');
+      dragImage.textContent = filesToDrag.length === 1
+        ? file.name
+        : `${filesToDrag.length} items`;
+      dragImage.style.padding = '8px 12px';
+      dragImage.style.background = '#1a73e8';
+      dragImage.style.color = 'white';
+      dragImage.style.borderRadius = '4px';
+      dragImage.style.fontSize = '14px';
+      dragImage.style.position = 'absolute';
+      dragImage.style.top = '-1000px';
+      document.body.appendChild(dragImage);
+      event.dataTransfer.setDragImage(dragImage, 0, 0);
+      setTimeout(() => document.body.removeChild(dragImage), 0);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent, file: DriveItem) => {
+    // Only allow drop on folders that aren't being dragged
+    if (file.type === 'folder' && !draggedFiles.includes(file.id)) {
+      event.preventDefault();
+      event.dataTransfer.dropEffect = 'move';
+      setDropTarget(file.id);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDropTarget(null);
+  };
+
+  const handleDrop = (event: React.DragEvent, targetFolder: DriveItem) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    if (targetFolder.type !== 'folder') return;
+
+    try {
+      const fileIds = JSON.parse(event.dataTransfer.getData('text/plain'));
+
+      // Don't allow dropping into itself
+      if (fileIds.includes(targetFolder.id)) return;
+
+      // Call the move handler
+      if (onMove && fileIds.length > 0) {
+        onMove(fileIds, targetFolder.id);
+      }
+    } catch (error) {
+      console.error('Drop error:', error);
+    } finally {
+      setDraggedFiles([]);
+      setDropTarget(null);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedFiles([]);
+    setDropTarget(null);
+  };
 
   return (
     <Box sx={{ width: "100%" }}>
@@ -265,11 +341,19 @@ export const FileList = ({
                   e.preventDefault();
                   onContextMenu?.(e, file);
                 }}
+                draggable
+                onDragStart={(e) => handleDragStart(e, file)}
+                onDragOver={(e) => handleDragOver(e, file)}
+                onDragLeave={handleDragLeave}
+                onDrop={(e) => handleDrop(e, file)}
+                onDragEnd={handleDragEnd}
                 sx={{
-                  cursor: "pointer",
+                  cursor: draggedFiles.includes(file.id) ? 'grabbing' : 'pointer',
                   borderBottom: `1px solid #dadce0`,
+                  backgroundColor: dropTarget === file.id ? '#e8f0fe' : 'transparent',
+                  opacity: draggedFiles.includes(file.id) ? 0.5 : 1,
                   "&:hover": {
-                    backgroundColor: "#f6f9fc",
+                    backgroundColor: dropTarget === file.id ? '#e8f0fe' : "#f6f9fc",
                   },
                   "&.Mui-selected": {
                     backgroundColor: "#e8f0fe",

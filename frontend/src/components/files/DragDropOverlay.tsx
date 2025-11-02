@@ -12,7 +12,7 @@ interface DragDropOverlayProps {
 
 export const DragDropOverlay = ({ folderId = null }: DragDropOverlayProps) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [dragCounter, setDragCounter] = useState(0);
+  const [_dragCounter, setDragCounter] = useState(0);
   const addUpload = useUploadStore((state) => state.addUpload);
   const updateUpload = useUploadStore((state) => state.updateUpload);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
