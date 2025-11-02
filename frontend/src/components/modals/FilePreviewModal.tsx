@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import {
 import type { DriveItem } from '../../types/file.types';
 import { formatFileSize, formatDate } from '../../utils/formatters';
 import { colors } from '../../theme/theme';
+import api from '../../services/api';
 
 interface FilePreviewModalProps {
   open: boolean;
@@ -46,6 +47,55 @@ export const FilePreviewModal = ({
 }: FilePreviewModalProps) => {
   const [zoom, setZoom] = useState(100);
   const [loading, setLoading] = useState(true);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch file content when file changes
+  useEffect(() => {
+    if (!file || !open || file.type === 'folder') {
+      setPreviewUrl(null);
+      setLoading(false);
+      return;
+    }
+
+    // Expanded list of previewable file types
+    const previewableTypes = ['image', 'video', 'audio', 'pdf', 'document', 'spreadsheet', 'presentation', 'other'];
+    if (!previewableTypes.includes(file.type)) {
+      setPreviewUrl(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    // Fetch file as blob using the new PREVIEW endpoint
+    api
+      .get(`/files/${file.id}/preview`, {
+        responseType: 'blob',
+      })
+      .then((response) => {
+        const blob = new Blob([response.data]);
+        const url = window.URL.createObjectURL(blob);
+        setPreviewUrl(url);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load file preview:', err);
+        setError('Failed to load preview');
+        setLoading(false);
+      });
+
+    // Cleanup function to revoke object URL when component unmounts or file changes
+    return () => {
+      setPreviewUrl((currentUrl) => {
+        if (currentUrl) {
+          window.URL.revokeObjectURL(currentUrl);
+        }
+        return null;
+      });
+    };
+  }, [file?.id, open]);
 
   if (!file) return null;
 
@@ -55,6 +105,28 @@ export const FilePreviewModal = ({
 
   const handleZoomIn = () => setZoom((prev) => Math.min(prev + 25, 200));
   const handleZoomOut = () => setZoom((prev) => Math.max(prev - 25, 50));
+
+  const handleDownload = async () => {
+    if (!file) return;
+
+    try {
+      const response = await api.get(`/files/${file.id}/download`, {
+        responseType: 'blob',
+      });
+
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', file.name);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Download failed:', error);
+    }
+  };
 
   const renderPreview = () => {
     if (file.type === 'folder') {
@@ -92,17 +164,23 @@ export const FilePreviewModal = ({
                 sx={{ position: 'absolute' }}
               />
             )}
-            <img
-              src={`https://via.placeholder.com/800x600?text=${encodeURIComponent(file.name)}`}
-              alt={file.name}
-              style={{
-                maxWidth: '100%',
-                maxHeight: '70vh',
-                transform: `scale(${zoom / 100})`,
-                transition: 'transform 0.2s',
-              }}
-              onLoad={() => setLoading(false)}
-            />
+            {error && (
+              <Typography variant="body1" color="error">
+                {error}
+              </Typography>
+            )}
+            {!loading && !error && previewUrl && (
+              <img
+                src={previewUrl}
+                alt={file.name}
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                  transform: `scale(${zoom / 100})`,
+                  transition: 'transform 0.2s',
+                }}
+              />
+            )}
           </Box>
         );
 
@@ -115,19 +193,26 @@ export const FilePreviewModal = ({
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: colors.surfaceVariant,
+              position: 'relative',
             }}
           >
-            <Box sx={{ textAlign: 'center' }}>
-              <Typography variant="h3" gutterBottom>
-                PDF Preview
+            {loading && <CircularProgress />}
+            {error && (
+              <Typography variant="body1" color="error">
+                {error}
               </Typography>
-              <Typography variant="body1" color="text.secondary" paragraph>
-                {file.name}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                PDF preview coming soon
-              </Typography>
-            </Box>
+            )}
+            {!loading && !error && previewUrl && (
+              <iframe
+                src={previewUrl}
+                title={file.name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                }}
+              />
+            )}
           </Box>
         );
 
@@ -140,18 +225,27 @@ export const FilePreviewModal = ({
               justifyContent: 'center',
               minHeight: 400,
               backgroundColor: '#000',
+              position: 'relative',
             }}
           >
-            <video
-              controls
-              style={{
-                maxWidth: '100%',
-                maxHeight: '70vh',
-              }}
-            >
-              <source src="#" type="video/mp4" />
-              Your browser does not support the video tag.
-            </video>
+            {loading && <CircularProgress sx={{ color: '#fff' }} />}
+            {error && (
+              <Typography variant="body1" color="error">
+                {error}
+              </Typography>
+            )}
+            {!loading && !error && previewUrl && (
+              <video
+                controls
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '70vh',
+                }}
+                src={previewUrl}
+              >
+                Your browser does not support the video tag.
+              </video>
+            )}
           </Box>
         );
 
@@ -165,19 +259,71 @@ export const FilePreviewModal = ({
               minHeight: 400,
               flexDirection: 'column',
               gap: 2,
+              position: 'relative',
             }}
           >
             <Typography variant="h3">{file.name}</Typography>
-            <audio controls style={{ width: '100%', maxWidth: 500 }}>
-              <source src="#" type="audio/mpeg" />
-              Your browser does not support the audio tag.
-            </audio>
+            {loading && <CircularProgress />}
+            {error && (
+              <Typography variant="body1" color="error">
+                {error}
+              </Typography>
+            )}
+            {!loading && !error && previewUrl && (
+              <audio controls style={{ width: '100%', maxWidth: 500 }} src={previewUrl}>
+                Your browser does not support the audio tag.
+              </audio>
+            )}
           </Box>
         );
 
       case 'document':
       case 'spreadsheet':
       case 'presentation':
+        // Check if it's a text-based document that can be previewed
+        const isTextBased = file.mimeType?.includes('text') ||
+                           file.mimeType?.includes('json') ||
+                           file.mimeType?.includes('xml') ||
+                           file.mimeType?.includes('html') ||
+                           file.mimeType?.includes('css') ||
+                           file.mimeType?.includes('javascript');
+
+        if (isTextBased && previewUrl) {
+          return (
+            <Box
+              sx={{
+                height: '70vh',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#fff',
+                position: 'relative',
+              }}
+            >
+              {loading && <CircularProgress />}
+              {error && (
+                <Typography variant="body1" color="error">
+                  {error}
+                </Typography>
+              )}
+              {!loading && !error && (
+                <iframe
+                  src={previewUrl}
+                  title={file.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    backgroundColor: '#fff',
+                  }}
+                  sandbox="allow-same-origin"
+                />
+              )}
+            </Box>
+          );
+        }
+
         return (
           <Box
             sx={{
@@ -194,12 +340,133 @@ export const FilePreviewModal = ({
               {file.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Document preview requires Google Drive API integration
+              {file.mimeType}
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Full document preview requires additional integration
             </Typography>
           </Box>
         );
 
       default:
+        // For 'other' file types, try to detect if they can be previewed
+        const canPreviewAsText = file.mimeType?.includes('text') ||
+                                 file.mimeType?.includes('json') ||
+                                 file.mimeType?.includes('xml') ||
+                                 file.mimeType?.includes('javascript') ||
+                                 file.mimeType?.includes('css') ||
+                                 file.mimeType?.includes('html') ||
+                                 file.name?.match(/\.(txt|md|log|csv|json|xml|html|css|js|ts|tsx|jsx|py|java|c|cpp|h|sh|yaml|yml|ini|conf|config)$/i);
+
+        const canPreviewAsImage = file.mimeType?.includes('image') ||
+                                  file.name?.match(/\.(jpg|jpeg|png|gif|bmp|svg|webp|ico)$/i);
+
+        const canPreviewAsPdf = file.mimeType?.includes('pdf') ||
+                                file.name?.match(/\.pdf$/i);
+
+        if (canPreviewAsImage && previewUrl) {
+          return (
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: 400,
+                overflow: 'auto',
+                position: 'relative',
+              }}
+            >
+              {loading && <CircularProgress sx={{ position: 'absolute' }} />}
+              {error && (
+                <Typography variant="body1" color="error">
+                  {error}
+                </Typography>
+              )}
+              {!loading && !error && (
+                <img
+                  src={previewUrl}
+                  alt={file.name}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '70vh',
+                    transform: `scale(${zoom / 100})`,
+                    transition: 'transform 0.2s',
+                  }}
+                />
+              )}
+            </Box>
+          );
+        }
+
+        if (canPreviewAsPdf && previewUrl) {
+          return (
+            <Box
+              sx={{
+                height: '70vh',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: colors.surfaceVariant,
+                position: 'relative',
+              }}
+            >
+              {loading && <CircularProgress />}
+              {error && (
+                <Typography variant="body1" color="error">
+                  {error}
+                </Typography>
+              )}
+              {!loading && !error && (
+                <iframe
+                  src={previewUrl}
+                  title={file.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                  }}
+                />
+              )}
+            </Box>
+          );
+        }
+
+        if (canPreviewAsText && previewUrl) {
+          return (
+            <Box
+              sx={{
+                height: '70vh',
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: '#fff',
+                position: 'relative',
+              }}
+            >
+              {loading && <CircularProgress />}
+              {error && (
+                <Typography variant="body1" color="error">
+                  {error}
+                </Typography>
+              )}
+              {!loading && !error && (
+                <iframe
+                  src={previewUrl}
+                  title={file.name}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    border: 'none',
+                    backgroundColor: '#fff',
+                  }}
+                  sandbox="allow-same-origin"
+                />
+              )}
+            </Box>
+          );
+        }
+
         return (
           <Box
             sx={{
@@ -216,7 +483,13 @@ export const FilePreviewModal = ({
               {file.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
+              {file.mimeType || 'Unknown type'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
               {formatFileSize((file as any).size || 0)} • {formatDate(file.modifiedTime)}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              Download the file to view its contents
             </Typography>
           </Box>
         );
@@ -317,6 +590,7 @@ export const FilePreviewModal = ({
           <Tooltip title="Download">
             <IconButton
               size="small"
+              onClick={handleDownload}
               sx={{
                 color: '#5f6368',
                 '&:hover': {

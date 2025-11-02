@@ -34,14 +34,11 @@ import {
   type AdvancedSearchFilters,
 } from "../modals/AdvancedSearchModal";
 import { SearchSuggestions } from "../modals/SearchSuggestions";
-import { useFileStore } from "../../store/fileStore";
-
 
 export const TopBar = () => {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  const viewMode = useFileStore((state) => state.viewMode);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const [anchorElHelp, setAnchorElHelp] = useState<null | HTMLElement>(null);
 

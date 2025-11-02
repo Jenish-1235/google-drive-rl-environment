@@ -5,6 +5,7 @@ import { activityLogger } from "../services/activityLogger";
 import { storageService } from "../services/storageService";
 import { getMimeType } from "../utils/fileHelpers";
 import fs from "fs";
+import path from "path";
 
 export const fileController = {
   // List files with filters
@@ -328,6 +329,59 @@ export const fileController = {
       fileModel.permanentDelete(id);
 
       res.json({ success: true, message: "File permanently deleted" });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Preview file (returns file content for in-browser preview)
+  previewFile: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const userId = req.user!.userId;
+
+      const file = fileModel.findById(id);
+
+      if (!file) {
+        return res.status(404).json({ error: "File not found" });
+      }
+
+      // Check ownership (TODO: add share check)
+      if (!fileModel.isOwner(id, userId)) {
+        return res.status(403).json({ error: "Access denied" });
+      }
+
+      if (file.type === "folder") {
+        return res.status(400).json({ error: "Cannot preview a folder" });
+      }
+
+      if (!file.file_path) {
+        return res.status(404).json({ error: "File not found on server" });
+      }
+
+      const filePath = storageService.getFilePath(file.file_path);
+      const absolutePath = path.resolve(filePath);
+
+      if (!fs.existsSync(absolutePath)) {
+        return res.status(404).json({ error: "File not found on server" });
+      }
+
+      // Update last opened
+      fileModel.updateLastOpened(id);
+
+      // Set proper content type based on file mime type
+      if (file.mime_type) {
+        res.set("Content-Type", file.mime_type);
+      }
+
+      // Set content length
+      res.set("Content-Length", file.size.toString());
+
+      // Enable CORS for preview
+      res.set("Access-Control-Allow-Origin", "*");
+
+      // Send file content (not as download) - must use absolute path
+      res.sendFile(absolutePath);
     } catch (error) {
       next(error);
     }

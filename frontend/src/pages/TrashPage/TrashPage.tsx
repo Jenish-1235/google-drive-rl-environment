@@ -2,16 +2,33 @@ import { Box, Typography, Button, IconButton } from "@mui/material";
 import {
   InfoOutlined as InfoIcon,
   KeyboardArrowDown as ArrowDownIcon,
+  RestoreFromTrash as RestoreIcon,
+  DeleteForever as DeleteForeverIcon,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
+import { FileList } from "../../components/files/FileList";
+import { FileGrid } from "../../components/files/FileGrid";
+import { FileListSkeleton } from "../../components/loading/FileListSkeleton";
+import { FileGridSkeleton } from "../../components/loading/FileGridSkeleton";
+import { RestoreModal } from "../../components/modals/RestoreModal";
+import { DeleteModal } from "../../components/modals/DeleteModal";
+import type { DriveItem } from "../../types/file.types";
 
 export const TrashPage = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const files = useFileStore((state) => state.files);
+  const isLoading = useFileStore((state) => state.isLoading);
   const fetchTrashedFiles = useFileStore((state) => state.fetchTrashedFiles);
+  const restoreFromTrash = useFileStore((state) => state.restoreFromTrash);
+  const permanentlyDelete = useFileStore((state) => state.permanentlyDelete);
+  const selectedFiles = useFileStore((state) => state.selectedFiles);
+  const clearSelection = useFileStore((state) => state.clearSelection);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
+
+  const [restoreFiles, setRestoreFiles] = useState<DriveItem[]>([]);
+  const [deleteFiles, setDeleteFiles] = useState<DriveItem[]>([]);
 
   // Fetch trashed files on mount
   useEffect(() => {
@@ -22,6 +39,54 @@ export const TrashPage = () => {
 
   // Get trashed files
   const trashedFiles = files.filter((file) => file.isTrashed);
+  const selectedTrashedFiles = trashedFiles.filter((f) =>
+    selectedFiles.includes(f.id)
+  );
+
+  const handleRestore = (filesToRestore: DriveItem[]) => {
+    setRestoreFiles(filesToRestore);
+  };
+
+  const handleRestoreConfirm = async () => {
+    try {
+      await Promise.all(restoreFiles.map((file) => restoreFromTrash(file.id)));
+      showSnackbar(
+        `Restored ${restoreFiles.length} item${
+          restoreFiles.length > 1 ? "s" : ""
+        }`,
+        "success"
+      );
+      setRestoreFiles([]);
+      clearSelection();
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to restore", "error");
+    }
+  };
+
+  const handleDelete = (filesToDelete: DriveItem[]) => {
+    setDeleteFiles(filesToDelete);
+  };
+
+  const handleDeleteConfirm = async () => {
+    try {
+      await Promise.all(deleteFiles.map((file) => permanentlyDelete(file.id)));
+      showSnackbar(
+        `Permanently deleted ${deleteFiles.length} item${
+          deleteFiles.length > 1 ? "s" : ""
+        }`,
+        "success"
+      );
+      setDeleteFiles([]);
+      clearSelection();
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to delete permanently", "error");
+    }
+  };
+
+  const handleEmptyTrash = async () => {
+    if (trashedFiles.length === 0) return;
+    handleDelete(trashedFiles);
+  };
 
   return (
     <Box
@@ -249,37 +314,84 @@ export const TrashPage = () => {
         </Box>
       </Box>
 
-      {/* Filter Buttons */}
-      <Box sx={{ display: "flex", gap: 1, mb: 3 }}>
-        {["Type", "Modified", "Source"].map((filter) => (
+      {/* Action Buttons (when files are selected) */}
+      {selectedTrashedFiles.length > 0 && (
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1.5,
+            mb: 2,
+            backgroundColor: "#e8f0fe",
+            borderRadius: 2,
+            p: 1.5,
+            alignItems: "center",
+          }}
+        >
+          <Typography sx={{ fontSize: 14, fontWeight: 500, mr: 1 }}>
+            {selectedTrashedFiles.length} selected
+          </Typography>
           <Button
-            key={filter}
-            variant="outlined"
-            endIcon={<ArrowDownIcon sx={{ fontSize: 18 }} />}
+            startIcon={<RestoreIcon />}
+            onClick={() => handleRestore(selectedTrashedFiles)}
             sx={{
               textTransform: "none",
-              color: "#202124",
-              borderColor: "#dadce0",
-              backgroundColor: "transparent",
-              borderRadius: 1,
-              px: 2,
-              py: 0.5,
+              color: "#1a73e8",
               fontSize: 14,
               fontWeight: 500,
-              minHeight: 36,
               "&:hover": {
-                borderColor: "#dadce0",
-                backgroundColor: "#f8f9fa",
+                backgroundColor: "rgba(26, 115, 232, 0.1)",
               },
             }}
           >
-            {filter}
+            Restore
           </Button>
-        ))}
-      </Box>
+          <Button
+            startIcon={<DeleteForeverIcon />}
+            onClick={() => handleDelete(selectedTrashedFiles)}
+            sx={{
+              textTransform: "none",
+              color: "#d93025",
+              fontSize: 14,
+              fontWeight: 500,
+              "&:hover": {
+                backgroundColor: "rgba(217, 48, 37, 0.1)",
+              },
+            }}
+          >
+            Delete forever
+          </Button>
+        </Box>
+      )}
+
+      {/* Empty Trash Button (when not empty and no selection) */}
+      {trashedFiles.length > 0 && selectedTrashedFiles.length === 0 && (
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+          <Button
+            startIcon={<DeleteForeverIcon />}
+            onClick={handleEmptyTrash}
+            sx={{
+              textTransform: "none",
+              color: "#d93025",
+              fontSize: 14,
+              fontWeight: 500,
+              "&:hover": {
+                backgroundColor: "rgba(217, 48, 37, 0.1)",
+              },
+            }}
+          >
+            Empty trash
+          </Button>
+        </Box>
+      )}
 
       {/* Content Area */}
-      {trashedFiles.length === 0 ? (
+      {isLoading ? (
+        viewMode === "list" ? (
+          <FileListSkeleton />
+        ) : (
+          <FileGridSkeleton />
+        )
+      ) : trashedFiles.length === 0 ? (
         <Box
           sx={{
             width: "100%",
@@ -394,12 +506,39 @@ export const TrashPage = () => {
             </Typography>
           </Box>
         </Box>
+      ) : viewMode === "list" ? (
+        <FileList
+          files={trashedFiles}
+          onRename={undefined}
+          onDelete={handleDelete}
+          onShare={undefined}
+          onDownload={undefined}
+        />
       ) : (
-        // TODO: Add list/grid view for trashed files when data is available
-        <Box sx={{ width: "100%" }}>
-          {/* Trashed files list/grid will go here */}
-        </Box>
+        <FileGrid
+          files={trashedFiles}
+          onRename={undefined}
+          onDelete={handleDelete}
+          onShare={undefined}
+          onDownload={undefined}
+        />
       )}
+
+      {/* Modals */}
+      <RestoreModal
+        open={restoreFiles.length > 0}
+        files={restoreFiles}
+        onClose={() => setRestoreFiles([])}
+        onRestore={handleRestoreConfirm}
+      />
+
+      <DeleteModal
+        open={deleteFiles.length > 0}
+        files={deleteFiles}
+        onClose={() => setDeleteFiles([])}
+        onDelete={handleDeleteConfirm}
+        permanent={true}
+      />
     </Box>
   );
 };

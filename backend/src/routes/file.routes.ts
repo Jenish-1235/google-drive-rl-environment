@@ -28,11 +28,14 @@ router.get("/trash", fileController.getTrashFiles);
 // GET /api/files/:folderId/path - Get folder path (for breadcrumbs)
 router.get("/:folderId/path", fileController.getFolderPath);
 
-// GET /api/files/:id - Get file by ID
-router.get("/:id", fileController.getFileById);
+// GET /api/files/:id/preview - Preview file (returns file content for browser preview)
+router.get("/:id/preview", fileController.previewFile);
 
 // GET /api/files/:id/download - Download file
 router.get("/:id/download", fileController.downloadFile);
+
+// GET /api/files/:id - Get file by ID
+router.get("/:id", fileController.getFileById);
 
 // POST /api/files - Create folder
 router.post(

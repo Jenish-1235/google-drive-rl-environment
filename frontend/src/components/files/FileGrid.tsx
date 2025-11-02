@@ -30,12 +30,20 @@ interface FileGridProps {
   files: DriveItem[];
   onContextMenu?: (event: React.MouseEvent, file: DriveItem) => void;
   onFileClick?: (file: DriveItem) => void;
+  onRename?: (file: DriveItem) => void;
+  onDelete?: (files: DriveItem[]) => void;
+  onShare?: (file: DriveItem) => void;
+  onDownload?: (file: DriveItem) => void;
 }
 
 export const FileGrid = ({
   files,
   onContextMenu,
   onFileClick,
+  onRename,
+  onDelete,
+  onShare,
+  onDownload,
 }: FileGridProps) => {
   const navigate = useNavigate();
   const selectedFiles = useFileStore((state) => state.selectedFiles);
@@ -105,8 +113,33 @@ export const FileGrid = ({
   };
 
   const handleAction = (action: string) => {
-    console.log(`Action: ${action} on file:`, actionMenuAnchor?.fileId);
+    if (!actionMenuAnchor) return;
+
+    const file = files.find((f) => f.id === actionMenuAnchor.fileId);
+    if (!file) return;
+
     handleActionMenuClose();
+
+    switch (action) {
+      case "rename":
+        onRename?.(file);
+        break;
+      case "delete":
+        onDelete?.([file]);
+        break;
+      case "share":
+        onShare?.(file);
+        break;
+      case "download":
+        onDownload?.(file);
+        break;
+      case "move":
+        // Move is handled via drag-drop or context menu
+        break;
+      case "details":
+        // Details panel - to be implemented
+        break;
+    }
   };
 
   const isSelected = (fileId: string) => selectedFiles.includes(fileId);

@@ -76,6 +76,7 @@ export const FileUploader = ({ folderId = null, onFilesSelected }: FileUploaderP
 
       updateUpload(uploadId, { progress: 100, status: 'completed' });
       useUIStore.getState().showSnackbar(`${file.name} uploaded successfully`, 'success');
+      // State automatically updates - no manual refetch needed!
     } catch (error: any) {
       updateUpload(uploadId, { status: 'error', error: error.message || 'Upload failed' });
       useUIStore.getState().showSnackbar(`Failed to upload ${file.name}`, 'error');

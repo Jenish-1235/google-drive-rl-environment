@@ -1,5 +1,5 @@
 import { Box } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useFileStore } from "../../store/fileStore";
@@ -21,6 +21,7 @@ import type {
   SharePermission,
   GeneralAccess,
 } from "../../components/modals/ShareModal";
+import { fileService } from "../../services/fileService";
 
 export const HomePage = () => {
   const { folderId } = useParams<{ folderId: string }>();
@@ -28,9 +29,21 @@ export const HomePage = () => {
   const isLoading = useFileStore((state) => state.isLoading);
   const currentFolderId = useFileStore((state) => state.currentFolderId);
   const setCurrentFolder = useFileStore((state) => state.setCurrentFolder);
-  const getCurrentFolderFiles = useFileStore(
-    (state) => state.getCurrentFolderFiles
-  );
+
+  // Subscribe to all state that affects file list - ensures re-render on changes
+  const files = useFileStore((state) => state.files);
+  const typeFilter = useFileStore((state) => state.typeFilter);
+  const peopleFilter = useFileStore((state) => state.peopleFilter);
+  const modifiedFilter = useFileStore((state) => state.modifiedFilter);
+  const sortField = useFileStore((state) => state.sortField);
+  const sortOrder = useFileStore((state) => state.sortOrder);
+  const searchQuery = useFileStore((state) => state.searchQuery);
+  const getCurrentFolderFiles = useFileStore((state) => state.getCurrentFolderFiles);
+
+  // Compute filtered files with useMemo to prevent infinite loops
+  const currentFiles = useMemo(() => {
+    return getCurrentFolderFiles();
+  }, [files, currentFolderId, typeFilter, peopleFilter, modifiedFilter, sortField, sortOrder, searchQuery, getCurrentFolderFiles]);
 
   // API methods
   const fetchFiles = useFileStore((state) => state.fetchFiles);
@@ -47,13 +60,6 @@ export const HomePage = () => {
   const showSnackbar = useUIStore((state) => state.showSnackbar);
   const modal = useUIStore((state) => state.modal);
   const closeModal = useUIStore((state) => state.closeModal);
-
-  // Subscribe to filter changes to trigger re-render when filters change
-  // These variables are intentionally "unused" - they exist to make the component
-  // reactive to filter state changes in Zustand store
-  useFileStore((state) => state.typeFilter);
-  useFileStore((state) => state.peopleFilter);
-  useFileStore((state) => state.modifiedFilter);
 
   // Update current folder when route changes
   useEffect(() => {
@@ -87,8 +93,6 @@ export const HomePage = () => {
     return () => document.removeEventListener("contextmenu", handleContextMenu);
   }, []);
 
-  const currentFiles = getCurrentFolderFiles();
-
   const handleFilePreview = (file: DriveItem) => {
     if (file.type !== "folder") {
       setPreviewFile(file);
@@ -117,6 +121,8 @@ export const HomePage = () => {
         await renameFileAPI(renameFile.id, newName);
         showSnackbar(`Renamed to "${newName}"`, "success");
         setRenameFile(null);
+        // Refetch files to get updated data from server
+        await fetchFiles(currentFolderId);
       } catch (error: any) {
         showSnackbar(error.message || "Failed to rename", "error");
       }
@@ -137,6 +143,7 @@ export const HomePage = () => {
         "success"
       );
       setDeleteFiles([]);
+      // State automatically updates - no manual refetch needed!
     } catch (error: any) {
       showSnackbar(error.message || "Failed to move to trash", "error");
     }
@@ -149,6 +156,7 @@ export const HomePage = () => {
         file.isStarred ? "Removed from starred" : "Added to starred",
         "success"
       );
+      // State automatically updates - no manual refetch needed!
     } catch (error: any) {
       showSnackbar(error.message || "Failed to toggle star", "error");
     }
@@ -159,6 +167,7 @@ export const HomePage = () => {
       await createFolder(folderName, currentFolderId);
       showSnackbar(`Created folder "${folderName}"`, "success");
       closeModal();
+      // State automatically updates - no manual refetch needed!
     } catch (error: any) {
       showSnackbar(error.message || "Failed to create folder", "error");
     }
@@ -189,6 +198,7 @@ export const HomePage = () => {
         "success"
       );
       setMoveFiles([]);
+      // State automatically updates - no manual refetch needed!
     } catch (error: any) {
       showSnackbar(error.message || "Failed to move", "error");
     }
@@ -209,6 +219,7 @@ export const HomePage = () => {
 
       // Clear selection after move
       clearSelection();
+      // State automatically updates - no manual refetch needed!
     } catch (error: any) {
       showSnackbar(error.message || "Failed to move files", "error");
     }
@@ -232,6 +243,15 @@ export const HomePage = () => {
 
   const handleShare = (file: DriveItem) => {
     setShareFile(file);
+  };
+
+  const handleDownload = async (file: DriveItem) => {
+    try {
+      await fileService.downloadFile(file.id, file.name);
+      showSnackbar(`Downloading ${file.name}`, 'success');
+    } catch (error: any) {
+      showSnackbar(error.message || 'Failed to download file', 'error');
+    }
   };
 
   const handleShareSubmit = (emails: string[], permission: SharePermission) => {
@@ -310,6 +330,18 @@ export const HomePage = () => {
       },
       description: "Delete selected files",
     },
+    {
+      key: "F2",
+      callback: () => {
+        if (selectedFiles.length === 1 && !previewFile) {
+          const fileToRename = currentFiles.find((f) => f.id === selectedFiles[0]);
+          if (fileToRename) {
+            handleRename(fileToRename);
+          }
+        }
+      },
+      description: "Rename selected file",
+    },
   ]);
 
   return (
@@ -337,12 +369,20 @@ export const HomePage = () => {
           onContextMenu={handleContextMenuOpen}
           onFileClick={handleFilePreview}
           onMove={handleDragMove}
+          onRename={handleRename}
+          onDelete={handleDelete}
+          onShare={handleShare}
+          onDownload={handleDownload}
         />
       ) : (
         <FileGrid
           files={currentFiles}
           onContextMenu={handleContextMenuOpen}
           onFileClick={handleFilePreview}
+          onRename={handleRename}
+          onDelete={handleDelete}
+          onShare={handleShare}
+          onDownload={handleDownload}
         />
       )}
 
@@ -364,7 +404,7 @@ export const HomePage = () => {
         onClose={handleContextMenuClose}
         onOpen={() => contextMenu.file && handleFilePreview(contextMenu.file)}
         onShare={() => contextMenu.file && handleShare(contextMenu.file)}
-        onDownload={() => showSnackbar("Download feature coming soon", "info")}
+        onDownload={() => contextMenu.file && handleDownload(contextMenu.file)}
         onMove={() => contextMenu.file && handleMove([contextMenu.file])}
         onRename={() => contextMenu.file && handleRename(contextMenu.file)}
         onCopy={() => showSnackbar("Copy feature coming soon", "info")}

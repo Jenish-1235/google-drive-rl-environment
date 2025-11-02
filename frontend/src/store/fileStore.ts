@@ -27,8 +27,21 @@ export type ModifiedFilter =
   | "last-30-days"
   | "this-year";
 
+// Cache configuration
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+interface CacheEntry {
+  data: DriveItem[];
+  timestamp: number;
+}
+
+interface FileCache {
+  [key: string]: CacheEntry;
+}
+
 interface FileStore {
   files: DriveItem[];
+  cache: FileCache;
   selectedFiles: string[];
   currentFolderId: string | null;
   breadcrumbs: BreadcrumbItem[];
@@ -95,6 +108,12 @@ interface FileStore {
   setModifiedFilter: (filter: ModifiedFilter) => void;
   clearFilters: () => void;
 
+  // Cache management
+  getCacheKey: (view: string, folderId?: string | null) => string;
+  getCachedData: (cacheKey: string) => DriveItem[] | null;
+  setCachedData: (cacheKey: string, data: DriveItem[]) => void;
+  invalidateCache: (pattern?: string) => void;
+
   // Computed
   getFileById: (id: string) => DriveItem | undefined;
   getCurrentFolderFiles: () => DriveItem[];
@@ -103,6 +122,7 @@ interface FileStore {
 
 export const useFileStore = create<FileStore>((set, get) => ({
   files: [],
+  cache: {},
   selectedFiles: [],
   currentFolderId: null,
   breadcrumbs: [{ id: "root", name: "My Drive" }],
@@ -118,18 +138,90 @@ export const useFileStore = create<FileStore>((set, get) => ({
   peopleFilter: "all",
   modifiedFilter: "all",
 
+  // Cache management
+  getCacheKey: (view: string, folderId = null) => {
+    return `${view}:${folderId || 'root'}`;
+  },
+
+  getCachedData: (cacheKey: string) => {
+    const entry = get().cache[cacheKey];
+    if (!entry) return null;
+
+    const now = Date.now();
+    const age = now - entry.timestamp;
+
+    // Return cache if it's still valid
+    if (age < CACHE_DURATION) {
+      return entry.data;
+    }
+
+    // Cache expired
+    return null;
+  },
+
+  setCachedData: (cacheKey: string, data: DriveItem[]) => {
+    set((state) => ({
+      cache: {
+        ...state.cache,
+        [cacheKey]: {
+          data,
+          timestamp: Date.now(),
+        },
+      },
+    }));
+  },
+
+  invalidateCache: (pattern?: string) => {
+    if (!pattern) {
+      // Clear all cache
+      set({ cache: {} });
+      return;
+    }
+
+    // Clear cache entries matching pattern
+    set((state) => {
+      const newCache: FileCache = {};
+      Object.keys(state.cache).forEach((key) => {
+        if (!key.includes(pattern)) {
+          newCache[key] = state.cache[key];
+        }
+      });
+      return { cache: newCache };
+    });
+  },
+
   // API Actions
   fetchFiles: async (folderId) => {
-    set({ isLoading: true, error: null });
+    const cacheKey = get().getCacheKey('files', folderId);
+    const cachedData = get().getCachedData(cacheKey);
+
+    // If we have cached data, use it immediately for fast rendering
+    if (cachedData) {
+      set({ files: cachedData, isLoading: false });
+    } else {
+      set({ isLoading: true, error: null });
+    }
+
+    // Always fetch from API to ensure fresh data
     try {
       const response = await fileService.listFiles({
         parent_id: folderId,
       });
       const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+
+      // Update cache
+      get().setCachedData(cacheKey, mappedFiles);
+
+      // Update state
       set({ files: mappedFiles, isLoading: false });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch files';
-      set({ error: errorMessage, isLoading: false });
+      // Only set error if we don't have cached data
+      if (!cachedData) {
+        set({ error: errorMessage, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
       throw error;
     }
   },
@@ -143,6 +235,10 @@ export const useFileStore = create<FileStore>((set, get) => ({
       // Only add to state if creating in current folder
       const currentFolderId = get().currentFolderId;
       const targetParentId = parentId === undefined ? currentFolderId : parentId;
+
+      // Invalidate cache for the target folder
+      const cacheKey = get().getCacheKey('files', targetParentId);
+      get().invalidateCache(cacheKey);
 
       if (targetParentId === currentFolderId) {
         set((state) => ({
@@ -171,6 +267,11 @@ export const useFileStore = create<FileStore>((set, get) => ({
       const currentFolderId = get().currentFolderId;
       const targetParentId = parentId === undefined ? currentFolderId : parentId;
 
+      // Invalidate cache for the target folder and recent files
+      const cacheKey = get().getCacheKey('files', targetParentId);
+      get().invalidateCache(cacheKey);
+      get().invalidateCache('recent');
+
       if (targetParentId === currentFolderId) {
         set((state) => ({
           files: [...state.files, mappedFile],
@@ -193,6 +294,10 @@ export const useFileStore = create<FileStore>((set, get) => ({
     try {
       const response = await fileService.renameFile(id, newName);
       const mappedFile = mapFile(response.file);
+
+      // Invalidate all caches as the file could appear in multiple views
+      get().invalidateCache();
+
       set((state) => ({
         files: state.files.map((file) => (file.id === id ? mappedFile : file)),
       }));
@@ -206,9 +311,18 @@ export const useFileStore = create<FileStore>((set, get) => ({
   moveFile: async (id, newParentId) => {
     set({ error: null });
     try {
+      const file = get().files.find((f) => f.id === id);
       const response = await fileService.moveFile(id, newParentId);
       const mappedFile = mapFile(response.file);
       const currentFolderId = get().currentFolderId;
+
+      // Invalidate cache for old and new parent folders
+      if (file) {
+        const oldCacheKey = get().getCacheKey('files', file.parentId);
+        get().invalidateCache(oldCacheKey);
+      }
+      const newCacheKey = get().getCacheKey('files', newParentId);
+      get().invalidateCache(newCacheKey);
 
       // If moving file out of current folder, remove from state
       // If moving within current folder (no parent change), update the file
@@ -236,6 +350,10 @@ export const useFileStore = create<FileStore>((set, get) => ({
     try {
       const response = await fileService.starFile(id, !file.isStarred);
       const mappedFile = mapFile(response.file);
+
+      // Invalidate starred files cache
+      get().invalidateCache('starred');
+
       set((state) => ({
         files: state.files.map((f) => (f.id === id ? mappedFile : f)),
       }));
@@ -304,40 +422,94 @@ export const useFileStore = create<FileStore>((set, get) => ({
   },
 
   fetchStarredFiles: async () => {
-    set({ isLoading: true, error: null });
+    const cacheKey = get().getCacheKey('starred');
+    const cachedData = get().getCachedData(cacheKey);
+
+    // If we have cached data, use it immediately
+    if (cachedData) {
+      set({ files: cachedData, isLoading: false });
+    } else {
+      set({ isLoading: true, error: null });
+    }
+
+    // Always fetch from API
     try {
       const response = await fileService.getStarredFiles();
       const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+
+      // Update cache
+      get().setCachedData(cacheKey, mappedFiles);
+
       set({ files: mappedFiles, isLoading: false });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch starred files';
-      set({ error: errorMessage, isLoading: false });
+      if (!cachedData) {
+        set({ error: errorMessage, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
       throw error;
     }
   },
 
   fetchTrashedFiles: async () => {
-    set({ isLoading: true, error: null });
+    const cacheKey = get().getCacheKey('trash');
+    const cachedData = get().getCachedData(cacheKey);
+
+    // If we have cached data, use it immediately
+    if (cachedData) {
+      set({ files: cachedData, isLoading: false });
+    } else {
+      set({ isLoading: true, error: null });
+    }
+
+    // Always fetch from API
     try {
       const response = await fileService.getTrashFiles();
       const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+
+      // Update cache
+      get().setCachedData(cacheKey, mappedFiles);
+
       set({ files: mappedFiles, isLoading: false });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch trashed files';
-      set({ error: errorMessage, isLoading: false });
+      if (!cachedData) {
+        set({ error: errorMessage, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
       throw error;
     }
   },
 
   fetchRecentFiles: async () => {
-    set({ isLoading: true, error: null });
+    const cacheKey = get().getCacheKey('recent');
+    const cachedData = get().getCachedData(cacheKey);
+
+    // If we have cached data, use it immediately
+    if (cachedData) {
+      set({ files: cachedData, isLoading: false });
+    } else {
+      set({ isLoading: true, error: null });
+    }
+
+    // Always fetch from API
     try {
       const response = await fileService.getRecentFiles();
       const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+
+      // Update cache
+      get().setCachedData(cacheKey, mappedFiles);
+
       set({ files: mappedFiles, isLoading: false });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch recent files';
-      set({ error: errorMessage, isLoading: false });
+      if (!cachedData) {
+        set({ error: errorMessage, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
       throw error;
     }
   },
