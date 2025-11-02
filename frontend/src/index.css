@@ -34,6 +34,21 @@ body {
   overflow: hidden;
 }
 
+/* Ensure the page itself never shows scrollbars to avoid flicker during view changes */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Hide scrollbars globally on body (cross-browser), scrolling happens in app containers */
+body::-webkit-scrollbar {
+  display: none;
+}
+body {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
 h1 {
   font-size: 3.2em;
   line-height: 1.1;
