@@ -29,6 +29,8 @@ import { useAuthStore } from "../../store/authStore";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
 import { colors } from "../../theme/theme";
+import { AdvancedSearchModal, type AdvancedSearchFilters } from "../modals/AdvancedSearchModal";
+import { SearchSuggestions } from "../modals/SearchSuggestions";
 
 export const TopBar = () => {
   const navigate = useNavigate();
@@ -40,6 +42,8 @@ export const TopBar = () => {
 
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElUser(event.currentTarget);
@@ -57,6 +61,30 @@ export const TopBar = () => {
 
   const handleViewModeToggle = () => {
     setViewMode(viewMode === "list" ? "grid" : "list");
+  };
+
+  const handleAdvancedSearchOpen = () => {
+    setAdvancedSearchOpen(true);
+  };
+
+  const handleAdvancedSearchClose = () => {
+    setAdvancedSearchOpen(false);
+  };
+
+  const handleAdvancedSearch = (filters: AdvancedSearchFilters) => {
+    console.log("Advanced search filters:", filters);
+    // TODO: Implement search logic with filters
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchValue(suggestion);
+    setSearchFocused(false);
+    // TODO: Implement search with suggestion
+  };
+
+  const handleAdvancedSearchFromSuggestions = () => {
+    setSearchFocused(false);
+    setAdvancedSearchOpen(true);
   };
 
   return (
@@ -163,6 +191,8 @@ export const TopBar = () => {
               <SearchIcon sx={{ color: "text.secondary", mr: 1 }} />
               <InputBase
                 placeholder="Search in Drive"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
                 sx={{
                   flex: 1,
                   "& input": {
@@ -171,14 +201,29 @@ export const TopBar = () => {
                   },
                 }}
                 onFocus={() => setSearchFocused(true)}
-                onBlur={() => setSearchFocused(false)}
+                onBlur={() => {
+                  // Delay to allow clicking on suggestions
+                  setTimeout(() => setSearchFocused(false), 200);
+                }}
               />
               <Tooltip title="Advanced search">
-                <IconButton size="small" sx={{ color: "text.secondary" }}>
+                <IconButton
+                  size="small"
+                  sx={{ color: "text.secondary" }}
+                  onClick={handleAdvancedSearchOpen}
+                >
                   <FilterListIcon />
                 </IconButton>
               </Tooltip>
             </Box>
+
+            {/* Search Suggestions */}
+            <SearchSuggestions
+              open={searchFocused}
+              searchValue={searchValue}
+              onSuggestionClick={handleSuggestionClick}
+              onAdvancedSearchClick={handleAdvancedSearchFromSuggestions}
+            />
           </Box>
         </Box>
 
@@ -287,6 +332,13 @@ export const TopBar = () => {
           </Menu>
         </Box>
       </Toolbar>
+
+      {/* Advanced Search Modal */}
+      <AdvancedSearchModal
+        open={advancedSearchOpen}
+        onClose={handleAdvancedSearchClose}
+        onSearch={handleAdvancedSearch}
+      />
     </AppBar>
   );
 };
