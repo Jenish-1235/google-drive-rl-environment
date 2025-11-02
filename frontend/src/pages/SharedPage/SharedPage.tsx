@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Box,
   Typography,
@@ -19,7 +20,6 @@ import {
   ArrowDownward as ArrowDownwardIcon,
   BusinessOutlined as BusinessIcon,
 } from "@mui/icons-material";
-import { useState } from "react";
 import { getFileIcon } from "../../utils/fileIcons";
 
 // Mock data for shared files
@@ -496,9 +496,9 @@ export const SharedPage = () => {
           </TableHead>
           <TableBody>
             {Object.entries(groupedFiles).map(([timeGroup, files]) => (
-              <>
+              <React.Fragment key={`group-${timeGroup}`}>
                 {/* Time Group Header */}
-                <TableRow key={`group-${timeGroup}`}>
+                <TableRow>
                   <TableCell
                     colSpan={4}
                     sx={{
@@ -681,7 +681,7 @@ export const SharedPage = () => {
                     </TableCell>
                   </TableRow>
                 ))}
-              </>
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>

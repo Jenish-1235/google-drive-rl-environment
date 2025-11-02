@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
-import { mockFiles } from "../../utils/mockData";
 import { FileToolbar } from "../../components/files/FileToolbar";
 import { FileList } from "../../components/files/FileList";
 import { FileGrid } from "../../components/files/FileGrid";
@@ -16,7 +15,7 @@ import { RenameModal } from "../../components/modals/RenameModal";
 import { DeleteModal } from "../../components/modals/DeleteModal";
 import { ShareModal } from "../../components/modals/ShareModal";
 import { CreateFolderModal } from "../../components/modals/CreateFolderModal";
-import type { DriveItem, FolderItem } from "../../types/file.types";
+import type { DriveItem } from "../../types/file.types";
 import type {
   SharePermission,
   GeneralAccess,
@@ -24,19 +23,21 @@ import type {
 
 export const HomePage = () => {
   const { folderId } = useParams<{ folderId: string }>();
-  const files = useFileStore((state) => state.files);
-  const setFiles = useFileStore((state) => state.setFiles);
   const viewMode = useFileStore((state) => state.viewMode);
   const isLoading = useFileStore((state) => state.isLoading);
-  const setIsLoading = useFileStore((state) => state.setIsLoading);
   const currentFolderId = useFileStore((state) => state.currentFolderId);
   const setCurrentFolder = useFileStore((state) => state.setCurrentFolder);
   const getCurrentFolderFiles = useFileStore(
     (state) => state.getCurrentFolderFiles
   );
-  const addFile = useFileStore((state) => state.addFile);
-  const updateFile = useFileStore((state) => state.updateFile);
-  const deleteFile = useFileStore((state) => state.deleteFile);
+
+  // API methods
+  const fetchFiles = useFileStore((state) => state.fetchFiles);
+  const createFolder = useFileStore((state) => state.createFolder);
+  const renameFileAPI = useFileStore((state) => state.renameFile);
+  const toggleStar = useFileStore((state) => state.toggleStar);
+  const moveToTrash = useFileStore((state) => state.moveToTrash);
+
   const selectAll = useFileStore((state) => state.selectAll);
   const clearSelection = useFileStore((state) => state.clearSelection);
   const selectedFiles = useFileStore((state) => state.selectedFiles);
@@ -64,17 +65,12 @@ export const HomePage = () => {
   const [renameFile, setRenameFile] = useState<DriveItem | null>(null);
   const [deleteFiles, setDeleteFiles] = useState<DriveItem[]>([]);
   const [shareFile, setShareFile] = useState<DriveItem | null>(null);
+  // Fetch files on mount and when folder changes
   useEffect(() => {
-    // Simulate loading state on mount
-    if (files.length === 0) {
-      setIsLoading(true);
-      // Simulate API delay
-      setTimeout(() => {
-        setFiles(mockFiles);
-        setIsLoading(false);
-      }, 800);
-    }
-  }, [files.length, setFiles, setIsLoading]);
+    fetchFiles(currentFolderId).catch((error) => {
+      showSnackbar(error.message || "Failed to load files", "error");
+    });
+  }, [currentFolderId, fetchFiles, showSnackbar]);
 
   // Add context menu handler
   useEffect(() => {
@@ -110,10 +106,15 @@ export const HomePage = () => {
     setRenameFile(file);
   };
 
-  const handleRenameSubmit = (newName: string) => {
+  const handleRenameSubmit = async (newName: string) => {
     if (renameFile) {
-      updateFile(renameFile.id, { name: newName });
-      showSnackbar(`Renamed to "${newName}"`, "success");
+      try {
+        await renameFileAPI(renameFile.id, newName);
+        showSnackbar(`Renamed to "${newName}"`, "success");
+        setRenameFile(null);
+      } catch (error: any) {
+        showSnackbar(error.message || "Failed to rename", "error");
+      }
     }
   };
 
@@ -121,48 +122,41 @@ export const HomePage = () => {
     setDeleteFiles(filesToDelete);
   };
 
-  const handleDeleteConfirm = () => {
-    deleteFiles.forEach((file) => {
-      updateFile(file.id, { isTrashed: true });
-    });
-    showSnackbar(
-      `Moved ${deleteFiles.length} item${
-        deleteFiles.length > 1 ? "s" : ""
-      } to trash`,
-      "success"
-    );
-    setDeleteFiles([]);
+  const handleDeleteConfirm = async () => {
+    try {
+      await Promise.all(deleteFiles.map((file) => moveToTrash(file.id)));
+      showSnackbar(
+        `Moved ${deleteFiles.length} item${
+          deleteFiles.length > 1 ? "s" : ""
+        } to trash`,
+        "success"
+      );
+      setDeleteFiles([]);
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to move to trash", "error");
+    }
   };
 
-  const handleToggleStar = (file: DriveItem) => {
-    updateFile(file.id, { isStarred: !file.isStarred });
-    showSnackbar(
-      file.isStarred ? "Removed from starred" : "Added to starred",
-      "success"
-    );
+  const handleToggleStar = async (file: DriveItem) => {
+    try {
+      await toggleStar(file.id);
+      showSnackbar(
+        file.isStarred ? "Removed from starred" : "Added to starred",
+        "success"
+      );
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to toggle star", "error");
+    }
   };
 
-  const handleCreateFolder = (folderName: string) => {
-    const newFolder: FolderItem = {
-      id: `folder-${Date.now()}`,
-      name: folderName,
-      type: "folder",
-      childrenCount: 0,
-      ownerId: "current-user", // This should come from auth store
-      ownerName: "You",
-      ownerEmail: "user@example.com",
-      createdTime: new Date(),
-      modifiedTime: new Date(),
-      parentId: currentFolderId || null,
-      path: currentFolderId ? [currentFolderId] : [],
-      isStarred: false,
-      isTrashed: false,
-      isShared: false,
-      permissions: [],
-    };
-
-    addFile(newFolder);
-    showSnackbar(`Created folder "${folderName}"`, "success");
+  const handleCreateFolder = async (folderName: string) => {
+    try {
+      await createFolder(folderName, currentFolderId);
+      showSnackbar(`Created folder "${folderName}"`, "success");
+      closeModal();
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to create folder", "error");
+    }
   };
 
   const handleNextPreview = () => {
