@@ -26,14 +26,10 @@ import {
   Star as StarIcon,
   Delete as DeleteIcon,
   CloudQueue as CloudIcon,
-  Computer as ComputerIcon,
-  Devices as DevicesIcon,
-  Report as SpamIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUIStore } from "../../store/uiStore";
 import { useUploadStore } from "../../store/uploadStore";
-import { useFileStore } from "../../store/fileStore";
 import { colors } from "../../theme/theme";
 import {
   formatFileSize,
@@ -51,7 +47,7 @@ interface NavItem {
   path: string;
 }
 
-const topNavItems: NavItem[] = [
+const navItems: NavItem[] = [
   {
     id: "home",
     label: "Home",
@@ -64,21 +60,6 @@ const topNavItems: NavItem[] = [
     icon: <FolderIcon />,
     path: "/drive",
   },
-  {
-    id: "shared-drives",
-    label: "Shared drives",
-    icon: <DevicesIcon />,
-    path: "/shared-drives",
-  },
-  {
-    id: "computers",
-    label: "Computers",
-    icon: <ComputerIcon />,
-    path: "/computers",
-  },
-];
-
-const bottomNavItems: NavItem[] = [
   {
     id: "shared",
     label: "Shared with me",
@@ -97,26 +78,11 @@ const bottomNavItems: NavItem[] = [
     icon: <StarIcon />,
     path: "/starred",
   },
-];
-
-const utilityNavItems: NavItem[] = [
-  {
-    id: "spam",
-    label: "Spam",
-    icon: <SpamIcon />,
-    path: "/spam",
-  },
   {
     id: "trash",
     label: "Trash",
     icon: <DeleteIcon />,
     path: "/trash",
-  },
-  {
-    id: "storage",
-    label: "Storage",
-    icon: <CloudIcon />,
-    path: "/storage",
   },
 ];
 
@@ -128,8 +94,6 @@ export const Sidebar = () => {
   const addUpload = useUploadStore((state) => state.addUpload);
   const updateUpload = useUploadStore((state) => state.updateUpload);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
-  const openModal = useUIStore((state) => state.openModal);
-  const currentFolderId = useFileStore((state) => state.currentFolderId);
 
   // Ensure sidebar is always open on desktop
   useEffect(() => {
@@ -159,7 +123,8 @@ export const Sidebar = () => {
 
   const handleNewFolder = () => {
     handleNewMenuClose();
-    openModal("createFolder");
+    // TODO: Open new folder modal
+    showSnackbar("New folder feature coming soon", "info");
   };
 
   const handleFileUpload = () => {
@@ -195,7 +160,7 @@ export const Sidebar = () => {
         fileSize: file.size,
         progress: 0,
         status: "pending",
-        parentId: currentFolderId || null,
+        parentId: null,
       });
 
       // Simulate upload
@@ -295,23 +260,23 @@ export const Sidebar = () => {
               onClick={handleNewMenuOpen}
               sx={{
                 height: 56,
-                borderRadius: "8px",
+                borderRadius: 2,
                 textTransform: "none",
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: 500,
                 backgroundColor: "white",
-                border: "none",
-                color: "#202124",
+                border: `1px solid ${colors.border}`,
+                color: "text.primary",
                 boxShadow:
                   "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
                 "&:hover": {
                   backgroundColor: "#fafafa",
-                  border: "none",
+                  border: `1px solid ${colors.border}`,
                   boxShadow:
                     "0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15)",
                 },
                 justifyContent: "flex-start",
-                px: 2.5,
+                px: 3,
                 minWidth: "auto",
               }}
             >
@@ -325,57 +290,161 @@ export const Sidebar = () => {
               transformOrigin={{ horizontal: "left", vertical: "top" }}
               anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
               PaperProps={{
-                sx: { mt: 1, minWidth: 200 },
+                sx: {
+                  mt: 1,
+                  minWidth: 260,
+                  borderRadius: 2,
+                  boxShadow:
+                    "0 2px 10px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.1)",
+                  overflow: "hidden",
+                },
               }}
             >
+              {/* Folder & Upload Section */}
               <MenuItem onClick={handleNewFolder}>
                 <ListItemIcon>
                   <FolderIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>New folder</ListItemText>
+                <ListItemText primary="New folder" />
+                <Typography variant="body2" color="text.secondary">
+                  ^C then F
+                </Typography>
               </MenuItem>
+
               <Divider />
+
               <MenuItem onClick={handleFileUpload}>
                 <ListItemIcon>
                   <UploadFileIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>File upload</ListItemText>
+                <ListItemText primary="File upload" />
+                <Typography variant="body2" color="text.secondary">
+                  ^C then U
+                </Typography>
               </MenuItem>
+
               <MenuItem onClick={handleFolderUpload}>
                 <ListItemIcon>
                   <FolderUploadIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>Folder upload</ListItemText>
+                <ListItemText primary="Folder upload" />
+                <Typography variant="body2" color="text.secondary">
+                  ^C then I
+                </Typography>
+              </MenuItem>
+
+              <Divider sx={{ my: 0.5 }} />
+
+              {/* Google File Types Section */}
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/docs_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Docs" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/sheets_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Sheets" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/slides_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Slides" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/2x/vids_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Vids" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/forms_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Forms" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemText primary="More" />
               </MenuItem>
             </Menu>
           </Box>
 
-          {/* Top Navigation Items */}
-          <List sx={{ px: 0.75, py: 0 }}>
-            {topNavItems.map((item) => {
+          {/* Navigation Items */}
+          <List sx={{ flexGrow: 1, px: 1.5 }}>
+            {navItems.map((item) => {
               const active = isActive(item.path);
               return (
-                <ListItem key={item.id} disablePadding sx={{ mb: 0 }}>
+                <ListItem key={item.id} disablePadding sx={{ mb: 0.25 }}>
                   <ListItemButton
                     selected={active}
                     onClick={() => navigate(item.path)}
                     sx={{
-                      borderRadius: active ? "0 24px 24px 0" : 0,
+                      borderRadius: active ? "0 24px 24px 0" : 2,
                       height: 36,
-                      px: 3,
-                      py: 0,
+                      px: sidebarOpen ? 2.5 : 1,
+                      py: 0.5,
                       justifyContent: sidebarOpen ? "flex-start" : "center",
-                      backgroundColor: active ? "#c2e7ff" : "transparent",
+                      backgroundColor: active ? colors.selected : "transparent",
                       "&:hover": {
-                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
+                        backgroundColor: active
+                          ? alpha(colors.primary, 0.16)
+                          : colors.hover,
                       },
                     }}
                   >
                     <ListItemIcon
                       sx={{
-                        minWidth: 32,
-                        color: active ? "#041e49" : "#202124",
-                        justifyContent: "flex-start",
+                        minWidth: sidebarOpen ? 32 : "auto",
+                        color: active ? colors.primary : "text.secondary",
+                        justifyContent: "center",
                         "& .MuiSvgIcon-root": {
                           fontSize: 20,
                         },
@@ -388,8 +457,8 @@ export const Sidebar = () => {
                         primary={item.label}
                         primaryTypographyProps={{
                           fontSize: 14,
-                          fontWeight: 400,
-                          color: active ? "#041e49" : "#202124",
+                          fontWeight: active ? 500 : 400,
+                          color: active ? colors.primary : "text.primary",
                         }}
                       />
                     )}
@@ -399,132 +468,57 @@ export const Sidebar = () => {
             })}
           </List>
 
-          <Divider sx={{ my: 0.25, borderColor: "#e8eaed" }} />
-
-          {/* Bottom Navigation Items */}
-          <List sx={{ px: 0.75, py: 0 }}>
-            {bottomNavItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <ListItem key={item.id} disablePadding sx={{ mb: 0 }}>
-                  <ListItemButton
-                    selected={active}
-                    onClick={() => navigate(item.path)}
-                    sx={{
-                      borderRadius: active ? "0 24px 24px 0" : 0,
-                      height: 36,
-                      px: 3,
-                      py: 0,
-                      justifyContent: sidebarOpen ? "flex-start" : "center",
-                      backgroundColor: active ? "#c2e7ff" : "transparent",
-                      "&:hover": {
-                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
-                      },
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 32,
-                        color: active ? "#041e49" : "#202124",
-                        justifyContent: "flex-start",
-                        "& .MuiSvgIcon-root": {
-                          fontSize: 20,
-                        },
-                      }}
-                    >
-                      {item.icon}
-                    </ListItemIcon>
-                    {sidebarOpen && (
-                      <ListItemText
-                        primary={item.label}
-                        primaryTypographyProps={{
-                          fontSize: 14,
-                          fontWeight: 400,
-                          color: active ? "#041e49" : "#202124",
-                        }}
-                      />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
-
-          <Divider sx={{ my: 0.25, borderColor: "#e8eaed" }} />
-
-          {/* Utility Navigation Items */}
-          <List sx={{ px: 0.75, py: 0 }}>
-            {utilityNavItems.map((item) => {
-              const active = isActive(item.path);
-              return (
-                <ListItem key={item.id} disablePadding sx={{ mb: 0 }}>
-                  <ListItemButton
-                    selected={active}
-                    onClick={() => navigate(item.path)}
-                    sx={{
-                      borderRadius: active ? "0 24px 24px 0" : 0,
-                      height: 36,
-                      px: 3,
-                      py: 0,
-                      justifyContent: sidebarOpen ? "flex-start" : "center",
-                      backgroundColor: active ? "#c2e7ff" : "transparent",
-                      "&:hover": {
-                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
-                      },
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 32,
-                        color: active ? "#041e49" : "#202124",
-                        justifyContent: "flex-start",
-                        "& .MuiSvgIcon-root": {
-                          fontSize: 20,
-                        },
-                      }}
-                    >
-                      {item.icon}
-                    </ListItemIcon>
-                    {sidebarOpen && (
-                      <ListItemText
-                        primary={item.label}
-                        primaryTypographyProps={{
-                          fontSize: 14,
-                          fontWeight: 400,
-                          color: active ? "#041e49" : "#202124",
-                        }}
-                      />
-                    )}
-                  </ListItemButton>
-                </ListItem>
-              );
-            })}
-          </List>
-
-          {/* Storage Section */}
+          {/* Storage Indicator */}
           {sidebarOpen && (
-            <Box sx={{ px: 3, py: 1.5 }}>
+            <Box sx={{ px: 3, pb: 2 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1,
+                  mb: 1,
+                  cursor: "pointer",
+                  "&:hover": {
+                    "& .storage-icon": {
+                      color: colors.primary,
+                    },
+                  },
+                }}
+                onClick={() => navigate("/storage")}
+              >
+                <CloudIcon
+                  className="storage-icon"
+                  sx={{
+                    fontSize: 20,
+                    color: "text.secondary",
+                    transition: "color 0.2s",
+                  }}
+                />
+                <Typography variant="body2" color="text.secondary">
+                  Storage
+                </Typography>
+              </Box>
+
               <LinearProgress
                 variant="determinate"
                 value={storagePercentage}
                 sx={{
-                  height: 3,
+                  height: 4,
                   borderRadius: 2,
-                  backgroundColor: "#e8eaed",
+                  backgroundColor: colors.surfaceVariant,
                   "& .MuiLinearProgress-bar": {
                     backgroundColor:
                       storagePercentage > 90
-                        ? "#ea4335"
+                        ? colors.error
                         : storagePercentage > 75
-                        ? "#fbbc04"
-                        : "#1a73e8",
-                    borderRadius: 2,
+                        ? colors.warning
+                        : colors.primary,
                   },
                   mb: 1,
                 }}
               />
-              
-              <Typography fontSize={13} color="#5f6368" sx={{ mb: 1 }}>
+
+              <Typography variant="caption" color="text.secondary">
                 {formatFileSize(mockStorageQuota.usage)} of{" "}
                 {formatFileSize(mockStorageQuota.limit)} used
               </Typography>
@@ -532,18 +526,15 @@ export const Sidebar = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                onClick={() => navigate("/storage")}
+                size="small"
                 sx={{
+                  mt: 1.5,
                   textTransform: "none",
-                  borderColor: "#dadce0",
-                  color: "#1a73e8",
-                  fontSize: 14,
-                  fontWeight: 500,
-                  height: 36,
-                  borderRadius: "18px",
+                  borderColor: colors.border,
+                  color: "text.primary",
                   "&:hover": {
-                    borderColor: "#dadce0",
-                    backgroundColor: "#f8f9fa",
+                    borderColor: colors.border,
+                    backgroundColor: colors.hover,
                   },
                 }}
               >
@@ -552,8 +543,28 @@ export const Sidebar = () => {
             </Box>
           )}
 
-          {/* Spacer */}
-          <Box sx={{ flexGrow: 1 }} />
+          {/* Collapsed Storage Icon */}
+          {!sidebarOpen && (
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "center",
+                pb: 2,
+              }}
+            >
+              <CloudIcon
+                sx={{
+                  fontSize: 24,
+                  color: "text.secondary",
+                  cursor: "pointer",
+                  "&:hover": {
+                    color: colors.primary,
+                  },
+                }}
+                onClick={() => navigate("/storage")}
+              />
+            </Box>
+          )}
         </Box>
       </Drawer>
     </>

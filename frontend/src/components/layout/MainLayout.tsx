@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Box } from "@mui/material";
 import { TopBar } from "./TopBar";
-import { Sidebar } from "./Sidebar";
+import {Sidebar} from "./Sidebar";
 import { RightSidebar } from "./RightSidebar";
 import { DragDropOverlay } from "../files/DragDropOverlay";
 import { UploadProgress } from "../files/UploadProgress";
