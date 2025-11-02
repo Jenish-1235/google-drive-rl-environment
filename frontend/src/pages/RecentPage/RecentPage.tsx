@@ -454,7 +454,7 @@ export const RecentPage = () => {
                       <Box
                         sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
                       >
-                        {getFileIcon(file.type, 20)}
+                        {getFileIcon(file.type)}
                         <Box sx={{ display: "flex", flexDirection: "column" }}>
                           <Box
                             sx={{
