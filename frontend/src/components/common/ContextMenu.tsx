@@ -165,26 +165,31 @@ export const ContextMenu = ({
         paper: {
           elevation: 8,
           sx: {
-            minWidth: 240,
+            minWidth: 220,
             borderRadius: '8px',
             border: '1px solid #dadce0',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+            py: 0.5,
             '& .MuiMenuItem-root': {
-              px: 2,
-              py: 1.25,
+              px: 1.5,
+              py: 0.75,
               fontSize: '14px',
               color: '#202124',
+              borderBottom: '1px solid #f1f3f4',
+              '&:last-of-type': {
+                borderBottom: 'none',
+              },
               '&:hover': {
                 backgroundColor: '#f8f9fa',
               },
             },
             '& .MuiListItemIcon-root': {
-              minWidth: 40,
+              minWidth: 36,
               color: '#5f6368',
             },
             '& .MuiDivider-root': {
               borderColor: '#e8eaed',
-              my: 0,
+              my: 0.5,
             },
           },
         },

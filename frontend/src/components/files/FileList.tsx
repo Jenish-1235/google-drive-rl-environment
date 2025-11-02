@@ -25,6 +25,8 @@ import { formatDate, formatFileSize } from "../../utils/formatters";
 import { animations, getStaggerDelay } from "../../utils/animations";
 import { EmptyState } from "../common/EmptyState";
 import { ContextMenu } from "../common/ContextMenu";
+import { UserProfilePopover } from "../common/UserProfilePopover";
+import { useAuthStore } from "../../store/authStore";
 
 interface FileListProps {
   files: DriveItem[];
@@ -53,11 +55,49 @@ export const FileList = ({
     fileId: string;
   } | null>(null);
   const [clickTimeout, setClickTimeout] = useState<number | null>(null);
+  
+  // User profile popover state
+  const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
+  const [profileHoverTimer, setProfileHoverTimer] = useState<number | null>(null);
+  const currentUser = useAuthStore((state) => state.user);
 
   // Get the selected file for context menu
   const contextMenuFile = actionMenuAnchor ? 
     files.find(f => f.id === actionMenuAnchor.fileId) || null : 
     null;
+
+  // User profile hover handlers
+  const clearProfileHoverTimer = () => {
+    if (profileHoverTimer) {
+      clearTimeout(profileHoverTimer);
+      setProfileHoverTimer(null);
+    }
+  };
+
+  const handleProfileHoverEnter = (event: React.MouseEvent<HTMLElement>) => {
+    clearProfileHoverTimer();
+    setProfileAnchor(event.currentTarget);
+  };
+
+  const handleProfileHoverLeave = () => {
+    clearProfileHoverTimer();
+    const timer = window.setTimeout(() => {
+      setProfileAnchor(null);
+    }, 300);
+    setProfileHoverTimer(timer);
+  };
+
+  const handlePopoverEnter = () => {
+    clearProfileHoverTimer();
+  };
+
+  const handlePopoverLeave = () => {
+    clearProfileHoverTimer();
+    const timer = window.setTimeout(() => {
+      setProfileAnchor(null);
+    }, 200);
+    setProfileHoverTimer(timer);
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -334,7 +374,11 @@ export const FileList = ({
                       transition: "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
                     }}
                   >
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Box 
+                      sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }}
+                      onMouseEnter={handleProfileHoverEnter}
+                      onMouseLeave={handleProfileHoverLeave}
+                    >
                       <Box
                         sx={{
                           width: 28,
@@ -422,6 +466,22 @@ export const FileList = ({
         onDetails={handleDetails}
         onDelete={handleDelete}
       />
+
+      {/* User Profile Popover */}
+      {currentUser && (
+        <UserProfilePopover
+          anchorEl={profileAnchor}
+          open={Boolean(profileAnchor)}
+          onClose={() => setProfileAnchor(null)}
+          onMouseEnter={handlePopoverEnter}
+          onMouseLeave={handlePopoverLeave}
+          user={{
+            name: currentUser.name,
+            email: currentUser.email,
+            avatar: currentUser.photoUrl,
+          }}
+        />
+      )}
 
       {/* Empty State */}
       {files.length === 0 && <EmptyState type="no-files" />}

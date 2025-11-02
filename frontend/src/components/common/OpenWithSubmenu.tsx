@@ -57,14 +57,14 @@ export const OpenWithSubmenu = ({
         paper: {
           elevation: 8,
           sx: {
-            minWidth: 280,
+            minWidth: 260,
             borderRadius: '8px',
             border: '1px solid #dadce0',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
             '& .MuiMenuItem-root': {
-              px: 2,
-              py: 1.25,
+              px: 1,
+              py: 0.5,
               fontSize: '14px',
               color: '#202124',
               '&:hover': {
@@ -72,12 +72,12 @@ export const OpenWithSubmenu = ({
               },
             },
             '& .MuiListItemIcon-root': {
-              minWidth: 40,
+              minWidth: 32,
               color: '#5f6368',
             },
             '& .MuiDivider-root': {
               borderColor: '#e8eaed',
-              my: 1,
+              my: 0.5,
             },
           },
         },
