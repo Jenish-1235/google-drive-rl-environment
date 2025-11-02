@@ -1,13 +1,18 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
   Box,
   IconButton,
   Tabs,
   Tab,
   Typography,
+  Button,
+  Avatar,
+  TextField,
 } from '@mui/material';
-import { Close as CloseIcon } from '@mui/icons-material';
+import { Close as CloseIcon, ShieldOutlined as ShieldIcon, Folder as FolderIcon, Person as PersonIcon } from '@mui/icons-material';
 import { colors } from '../../theme/theme';
+import { useFileStore } from '../../store/fileStore';
 
 interface DetailsPanelProps {
   open: boolean;
@@ -16,6 +21,55 @@ interface DetailsPanelProps {
 
 export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
   const [activeTab, setActiveTab] = useState(0);
+  // Select primitive store slices to avoid re-renders from new array instances
+  const selectedIds = useFileStore((state) => state.selectedFiles);
+  const files = useFileStore((state) => state.files);
+  const selectedFile = useMemo(() => {
+    if (selectedIds.length !== 1) return null;
+    const id = selectedIds[0];
+    return files.find((f) => f.id === id) || null;
+  }, [selectedIds, files]);
+
+  const headerIcon = selectedFile ? (
+    <Box
+      sx={{
+        width: 36,
+        height: 36,
+        borderRadius: '10px',
+        backgroundColor: '#f1f3f4',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <FolderIcon sx={{ fontSize: 20, color: '#5f6368' }} />
+    </Box>
+  ) : (
+    <Box
+      sx={{
+        width: 36,
+        height: 36,
+        borderRadius: '10px',
+        backgroundColor: '#f1f3f4',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="currentColor"
+        style={{ color: '#5f6368' }}
+      >
+        <path d="M10,4H4C2.9,4,2.01,4.9,2.01,6L2,18c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"></path>
+      </svg>
+    </Box>
+  );
+
+  const panelTitle = selectedFile ? selectedFile.name : 'My Drive';
+  const titleFontWeight = selectedFile ? 500 : 400;
 
   return (
     <Box
@@ -43,27 +97,18 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
           py: 2,
         }}
       >
-  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="currentColor"
-            style={{ color: '#5f6368' }}
-          >
-            <path d="M19 2H5C3.9 2 3 2.9 3 4V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V4C21 2.9 20.1 2 19 2ZM19 20H5V19H19V20ZM19 17H5V4H19V17Z"></path>
-            <path d="M13.1215 6H10.8785C10.5514 6 10.271 6.18692 10.0841 6.46729L7.14019 11.6075C7 11.8878 7 12.215 7.14019 12.4953L8.26168 14.4579C8.40187 14.7383 8.72897 14.9252 9.05608 14.9252H15.0374C15.3645 14.9252 15.6449 14.7383 15.8318 14.4579L16.9533 12.4953C17.0935 12.215 17.0935 11.8878 16.9533 11.6075L13.9159 6.46729C13.7757 6.18692 13.4486 6 13.1215 6ZM10.1776 12.0748L12.0467 8.8972L13.8692 12.0748H10.1776Z"></path>
-          </svg>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          {headerIcon}
           <Typography
             sx={{
               fontSize: '18px',
-              fontWeight: 500,
+              fontWeight: titleFontWeight,
               color: '#202124',
               letterSpacing: '0.1px',
               lineHeight: '28px',
             }}
           >
-            My Drive
+            {panelTitle}
           </Typography>
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -196,6 +241,195 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
         }}
       >
         {activeTab === 0 ? (
+          selectedFile ? (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+              {/* Folder Icon with Title */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
+                <Box
+                  sx={{
+                    width: 120,
+                    height: 120,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <svg width="100" height="80" viewBox="0 0 24 24" fill="#5f6368">
+                    <path d="M10,4H4C2.9,4,2.01,4.9,2.01,6L2,18c0,1.1,0.9,2,2,2h16c1.1,0,2-0.9,2-2V8c0-1.1-0.9-2-2-2h-8L10,4z"/>
+                  </svg>
+                </Box>
+              </Box>
+
+              {/* Who has access */}
+              <DetailsSection title="Who has access">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+                  <Avatar 
+                    sx={{ 
+                      width: 36, 
+                      height: 36,
+                      backgroundColor: '#1a73e8',
+                    }}
+                  >
+                    <PersonIcon sx={{ fontSize: 20, color: 'white' }} />
+                  </Avatar>
+                  <Typography sx={{ fontSize: '14px', color: '#5f6368' }}>
+                    Private to you
+                  </Typography>
+                </Box>
+                <Button
+                  variant="outlined"
+                  sx={{
+                    textTransform: 'none',
+                    borderRadius: '20px',
+                    borderColor: '#dadce0',
+                    color: '#1a73e8',
+                    fontSize: '14px',
+                    fontWeight: 500,
+                    px: 3,
+                    py: 1,
+                    '&:hover': {
+                      borderColor: '#1a73e8',
+                      backgroundColor: 'rgba(26, 115, 232, 0.04)',
+                    }
+                  }}
+                >
+                  Manage access
+                </Button>
+              </DetailsSection>
+
+              {/* Security limitations */}
+              <DetailsSection title="Security limitations">
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1.5 }}>
+                  <ShieldIcon sx={{ color: '#5f6368', fontSize: 22, mt: 0.5 }} />
+                  <Box>
+                    <Typography
+                      sx={{ fontSize: '14px', fontWeight: 500, color: '#202124', mb: 0.5 }}
+                    >
+                      No limitations applied
+                    </Typography>
+                    <Typography sx={{ fontSize: '13px', color: '#5f6368' }}>
+                      If any are applied, they will appear here
+                    </Typography>
+                  </Box>
+                </Box>
+              </DetailsSection>
+
+              {/* Folder details - Expanded */}
+              <Box sx={{ borderTop: '1px solid #e8eaed', pt: 3 }}>
+                <Typography sx={{ fontSize: '14px', fontWeight: 500, color: '#202124', mb: 2 }}>
+                  Folder details
+                </Typography>
+                
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                  {/* Type */}
+                  <Box>
+                    <Typography sx={{ fontSize: '14px', color: '#202124', fontWeight: 500, mb: 0.5 }}>
+                      Type
+                    </Typography>
+                    <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
+                      Google Drive Folder
+                    </Typography>
+                  </Box>
+
+                  {/* Owner */}
+                  <Box>
+                    <Typography sx={{ fontSize: '14px', color: '#202124', fontWeight: 500, mb: 0.5 }}>
+                      Owner
+                    </Typography>
+                    <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
+                      me
+                    </Typography>
+                  </Box>
+
+                  {/* Modified */}
+                  <Box>
+                    <Typography sx={{ fontSize: '14px', color: '#202124', fontWeight: 500, mb: 0.5 }}>
+                      Modified
+                    </Typography>
+                    <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
+                      19 Mar 2022 by me
+                    </Typography>
+                  </Box>
+
+                  {/* Opened */}
+                  <Box>
+                    <Typography sx={{ fontSize: '14px', color: '#202124', fontWeight: 500, mb: 0.5 }}>
+                      Opened
+                    </Typography>
+                    <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
+                      2 Nov 2025 by me
+                    </Typography>
+                  </Box>
+
+                  {/* Created */}
+                  <Box>
+                    <Typography sx={{ fontSize: '14px', color: '#202124', fontWeight: 500, mb: 0.5 }}>
+                      Created
+                    </Typography>
+                    <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
+                      19 Mar 2022
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+
+              {/* Description */}
+              <Box sx={{ borderTop: '1px solid #e8eaed', pt: 3 }}>
+                <Typography sx={{ fontSize: '14px', fontWeight: 500, color: '#202124', mb: 2 }}>
+                  Description
+                </Typography>
+                
+                <Box sx={{ position: 'relative' }}>
+                  <TextField
+                    placeholder="Add description"
+                    variant="outlined"
+                    fullWidth
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        borderRadius: '8px',
+                        backgroundColor: '#fff',
+                        fontSize: '13px',
+                        height: '40px',
+                        '& fieldset': {
+                          borderColor: '#dadce0',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#5f6368',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#1a73e8',
+                          borderWidth: '2px',
+                        },
+                      },
+                      '& .MuiOutlinedInput-input': {
+                        padding: '10px 12px',
+                        fontSize: '13px',
+                        color: '#202124',
+                        height: '20px',
+                        '&::placeholder': {
+                          color: '#9aa0a6',
+                          opacity: 1,
+                        },
+                      },
+                    }}
+                  />
+                  
+                  {/* Character count */}
+                  <Typography 
+                    sx={{ 
+                      position: 'absolute',
+                      bottom: -20,
+                      right: 0,
+                      fontSize: '11px',
+                      color: '#5f6368',
+                    }}
+                  >
+                    0/25,000
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+          ) : (
           // Details Tab
           <Box
             sx={{
@@ -224,9 +458,12 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
                 lineHeight: 1.6,
               }}
             >
-              Select an item to see the details
+              {selectedIds.length > 1
+                ? 'Select a single item to see details here'
+                : 'Select an item to see the details'}
             </Typography>
           </Box>
+          )
         ) : (
           // Activity Tab
           <Box
@@ -288,3 +525,17 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
     </Box>
   );
 };
+
+const DetailsSection = ({ title, children }: DetailsSectionProps) => (
+  <Box>
+    <Typography sx={{ fontSize: '14px', fontWeight: 500, color: '#202124', mb: 1.5 }}>
+      {title}
+    </Typography>
+    {children}
+  </Box>
+);
+
+interface DetailsSectionProps {
+  title: string;
+  children: ReactNode;
+}
