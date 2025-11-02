@@ -292,6 +292,38 @@ export const fileModel = {
     const result = stmt.get(userId) as { total: number | null };
     return result.total || 0;
   },
+
+  // Get folder path (breadcrumb trail) for a given folder
+  getFolderPath: (folderId: string | null): Array<{ id: string; name: string }> => {
+    if (!folderId) {
+      // Root folder - return just "My Drive"
+      return [{ id: 'root', name: 'My Drive' }];
+    }
+
+    const path: Array<{ id: string; name: string }> = [];
+    let currentId: string | null = folderId;
+
+    // Recursively build path from folder to root
+    while (currentId) {
+      const folder = fileModel.findById(currentId);
+
+      if (!folder) {
+        // Folder not found, return root
+        return [{ id: 'root', name: 'My Drive' }];
+      }
+
+      // Add folder to beginning of path
+      path.unshift({ id: folder.id, name: folder.name });
+
+      // Move to parent folder
+      currentId = folder.parent_id;
+    }
+
+    // Add root folder at the beginning
+    path.unshift({ id: 'root', name: 'My Drive' });
+
+    return path;
+  },
 };
 
 export default fileModel;

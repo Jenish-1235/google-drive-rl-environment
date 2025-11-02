@@ -135,7 +135,9 @@ export const fileController = {
         return res.status(400).json({ error: "Folder name is required" });
       }
 
-      const folder = fileModel.createFolder(name, userId, parent_id || null);
+      // Handle parent_id properly - convert "null" string to actual null
+      const parentId = parent_id === "null" || !parent_id ? null : parent_id;
+      const folder = fileModel.createFolder(name, userId, parentId);
 
       // Log activity
       activityLogger.logCreateFolder(userId, folder.id, name);
@@ -150,7 +152,8 @@ export const fileController = {
   uploadFile: async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId = req.user!.userId;
-      const parent_id = req.body.parent_id || null;
+      // Handle parent_id properly - convert "null" string to actual null
+      const parent_id = req.body.parent_id === "null" || !req.body.parent_id ? null : req.body.parent_id;
 
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
@@ -429,6 +432,324 @@ export const fileController = {
       });
 
       res.json({ files });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Get folder path (for breadcrumbs)
+  getFolderPath: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const { folderId } = req.params;
+
+      // Build breadcrumb path from folder to root
+      const path: any[] = [];
+      let currentFolderId: string | null = folderId;
+
+      while (currentFolderId) {
+        const folder = fileModel.findById(currentFolderId);
+
+        if (!folder) {
+          return res.status(404).json({ error: "Folder not found" });
+        }
+
+        // Check ownership
+        if (folder.owner_id !== userId) {
+          // TODO: Check if user has access via share
+          return res.status(403).json({ error: "Access denied" });
+        }
+
+        path.unshift({
+          id: folder.id,
+          name: folder.name,
+          parent_id: folder.parent_id,
+        });
+
+        currentFolderId = folder.parent_id;
+      }
+
+      res.json({ path });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Batch move files
+  batchMove: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const { file_ids, parent_id } = req.body;
+
+      if (!Array.isArray(file_ids) || file_ids.length === 0) {
+        return res.status(400).json({ error: "file_ids must be a non-empty array" });
+      }
+
+      // Convert "null" string to actual null
+      const targetParentId = parent_id === "null" || !parent_id ? null : parent_id;
+
+      const results = [];
+      const errors = [];
+
+      for (const fileId of file_ids) {
+        try {
+          const file = fileModel.findById(fileId);
+
+          if (!file) {
+            errors.push({ id: fileId, error: "File not found" });
+            continue;
+          }
+
+          if (file.owner_id !== userId) {
+            errors.push({ id: fileId, error: "Access denied" });
+            continue;
+          }
+
+          fileModel.update(fileId, { parent_id: targetParentId });
+
+          // Log activity
+          const destination = targetParentId ? "folder" : "My Drive";
+          activityLogger.logMove(userId, fileId, file.name, destination);
+
+          results.push({ id: fileId, success: true });
+        } catch (error: any) {
+          errors.push({ id: fileId, error: error.message });
+        }
+      }
+
+      res.json({
+        success: errors.length === 0,
+        results,
+        errors,
+        moved: results.length,
+        failed: errors.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Batch delete (move to trash)
+  batchDelete: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const { file_ids } = req.body;
+
+      if (!Array.isArray(file_ids) || file_ids.length === 0) {
+        return res.status(400).json({ error: "file_ids must be a non-empty array" });
+      }
+
+      const results = [];
+      const errors = [];
+
+      for (const fileId of file_ids) {
+        try {
+          const file = fileModel.findById(fileId);
+
+          if (!file) {
+            errors.push({ id: fileId, error: "File not found" });
+            continue;
+          }
+
+          if (file.owner_id !== userId) {
+            errors.push({ id: fileId, error: "Access denied" });
+            continue;
+          }
+
+          fileModel.update(fileId, {
+            is_trashed: 1,
+            trashed_at: new Date().toISOString(),
+          });
+
+          // Log activity
+          activityLogger.logDelete(userId, fileId, file.name);
+
+          results.push({ id: fileId, success: true });
+        } catch (error: any) {
+          errors.push({ id: fileId, error: error.message });
+        }
+      }
+
+      res.json({
+        success: errors.length === 0,
+        results,
+        errors,
+        deleted: results.length,
+        failed: errors.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Batch restore from trash
+  batchRestore: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const { file_ids } = req.body;
+
+      if (!Array.isArray(file_ids) || file_ids.length === 0) {
+        return res.status(400).json({ error: "file_ids must be a non-empty array" });
+      }
+
+      const results = [];
+      const errors = [];
+
+      for (const fileId of file_ids) {
+        try {
+          const file = fileModel.findById(fileId);
+
+          if (!file) {
+            errors.push({ id: fileId, error: "File not found" });
+            continue;
+          }
+
+          if (file.owner_id !== userId) {
+            errors.push({ id: fileId, error: "Access denied" });
+            continue;
+          }
+
+          fileModel.update(fileId, {
+            is_trashed: 0,
+            trashed_at: null,
+          });
+
+          // Log activity
+          activityLogger.logRestore(userId, fileId, file.name);
+
+          results.push({ id: fileId, success: true });
+        } catch (error: any) {
+          errors.push({ id: fileId, error: error.message });
+        }
+      }
+
+      res.json({
+        success: errors.length === 0,
+        results,
+        errors,
+        restored: results.length,
+        failed: errors.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Batch star/unstar
+  batchStar: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const { file_ids, is_starred } = req.body;
+
+      if (!Array.isArray(file_ids) || file_ids.length === 0) {
+        return res.status(400).json({ error: "file_ids must be a non-empty array" });
+      }
+
+      if (typeof is_starred !== "boolean") {
+        return res.status(400).json({ error: "is_starred must be a boolean" });
+      }
+
+      const results = [];
+      const errors = [];
+
+      for (const fileId of file_ids) {
+        try {
+          const file = fileModel.findById(fileId);
+
+          if (!file) {
+            errors.push({ id: fileId, error: "File not found" });
+            continue;
+          }
+
+          if (file.owner_id !== userId) {
+            errors.push({ id: fileId, error: "Access denied" });
+            continue;
+          }
+
+          fileModel.update(fileId, { is_starred: is_starred ? 1 : 0 });
+
+          // Log activity
+          if (is_starred) {
+            activityLogger.logStar(userId, fileId, file.name);
+          } else {
+            activityLogger.logUnstar(userId, fileId, file.name);
+          }
+
+          results.push({ id: fileId, success: true });
+        } catch (error: any) {
+          errors.push({ id: fileId, error: error.message });
+        }
+      }
+
+      res.json({
+        success: errors.length === 0,
+        results,
+        errors,
+        updated: results.length,
+        failed: errors.length,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  // Batch permanent delete
+  batchPermanentDelete: async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const userId = req.user!.userId;
+      const { file_ids } = req.body;
+
+      if (!Array.isArray(file_ids) || file_ids.length === 0) {
+        return res.status(400).json({ error: "file_ids must be a non-empty array" });
+      }
+
+      const results = [];
+      const errors = [];
+
+      for (const fileId of file_ids) {
+        try {
+          const file = fileModel.findById(fileId);
+
+          if (!file) {
+            errors.push({ id: fileId, error: "File not found" });
+            continue;
+          }
+
+          if (file.owner_id !== userId) {
+            errors.push({ id: fileId, error: "Access denied" });
+            continue;
+          }
+
+          // Delete physical file if it's a file (not folder)
+          if (file.type === "file" && file.file_path) {
+            try {
+              await storageService.deleteFile(file.file_path);
+            } catch (error) {
+              console.error("Failed to delete physical file:", error);
+            }
+
+            // Update user's storage usage
+            if (file.size) {
+              userModel.updateStorageUsed(userId, -file.size);
+            }
+          }
+
+          // Delete from database
+          fileModel.permanentDelete(fileId);
+
+          results.push({ id: fileId, success: true });
+        } catch (error: any) {
+          errors.push({ id: fileId, error: error.message });
+        }
+      }
+
+      res.json({
+        success: errors.length === 0,
+        results,
+        errors,
+        deleted: results.length,
+        failed: errors.length,
+      });
     } catch (error) {
       next(error);
     }

@@ -14,7 +14,8 @@ export const fileService = {
     const params: any = {};
     if (filters) {
       if (filters.parent_id !== undefined) {
-        params.parent_id = filters.parent_id || "null";
+        // Send null as string "null" for backend to understand
+        params.parent_id = filters.parent_id === null ? "null" : filters.parent_id;
       }
       if (filters.starred !== undefined) params.starred = filters.starred;
       if (filters.trashed !== undefined) params.trashed = filters.trashed;
@@ -49,9 +50,8 @@ export const fileService = {
   ) => {
     const formData = new FormData();
     formData.append("file", file);
-    if (parentId) {
-      formData.append("parent_id", parentId);
-    }
+    // Always send parent_id, use "null" string for root folder
+    formData.append("parent_id", (parentId === null || parentId === undefined) ? "null" : parentId);
 
     const response = await api.post("/files/upload", formData, {
       headers: {
@@ -154,6 +154,50 @@ export const fileService = {
   // Get trash files
   getTrashFiles: async () => {
     const response = await api.get("/files/trash");
+    return response.data;
+  },
+
+  // Get folder path (for breadcrumbs)
+  getFolderPath: async (folderId: string) => {
+    const response = await api.get(`/files/${folderId}/path`);
+    return response.data;
+  },
+
+  // Batch operations
+  batchMove: async (fileIds: string[], parentId: string | null) => {
+    const response = await api.post("/files/batch/move", {
+      file_ids: fileIds,
+      parent_id: parentId === null ? "null" : parentId,
+    });
+    return response.data;
+  },
+
+  batchDelete: async (fileIds: string[]) => {
+    const response = await api.post("/files/batch/delete", {
+      file_ids: fileIds,
+    });
+    return response.data;
+  },
+
+  batchRestore: async (fileIds: string[]) => {
+    const response = await api.post("/files/batch/restore", {
+      file_ids: fileIds,
+    });
+    return response.data;
+  },
+
+  batchStar: async (fileIds: string[], isStarred: boolean) => {
+    const response = await api.post("/files/batch/star", {
+      file_ids: fileIds,
+      is_starred: isStarred,
+    });
+    return response.data;
+  },
+
+  batchPermanentDelete: async (fileIds: string[]) => {
+    const response = await api.post("/files/batch/permanent", {
+      file_ids: fileIds,
+    });
     return response.data;
   },
 };

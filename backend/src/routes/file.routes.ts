@@ -25,6 +25,9 @@ router.get("/shared", fileController.getSharedFiles);
 // GET /api/files/trash - Get trash files
 router.get("/trash", fileController.getTrashFiles);
 
+// GET /api/files/:folderId/path - Get folder path (for breadcrumbs)
+router.get("/:folderId/path", fileController.getFolderPath);
+
 // GET /api/files/:id - Get file by ID
 router.get("/:id", fileController.getFileById);
 
@@ -59,5 +62,20 @@ router.post("/:id/restore", fileController.restoreFile);
 
 // DELETE /api/files/:id/permanent - Permanent delete
 router.delete("/:id/permanent", fileController.permanentDelete);
+
+// POST /api/files/batch/move - Batch move files
+router.post("/batch/move", fileController.batchMove);
+
+// POST /api/files/batch/delete - Batch delete files (move to trash)
+router.post("/batch/delete", fileController.batchDelete);
+
+// POST /api/files/batch/restore - Batch restore files from trash
+router.post("/batch/restore", fileController.batchRestore);
+
+// POST /api/files/batch/star - Batch star/unstar files
+router.post("/batch/star", fileController.batchStar);
+
+// POST /api/files/batch/permanent - Batch permanent delete
+router.post("/batch/permanent", fileController.batchPermanentDelete);
 
 export default router;

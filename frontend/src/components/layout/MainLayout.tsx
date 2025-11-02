@@ -9,10 +9,12 @@ import { UploadProgress } from "../files/UploadProgress";
 import { Snackbar } from "../common/Snackbar";
 import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
+import { useFileStore } from "../../store/fileStore";
 
 export const MainLayout = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
   const { detailsPanelOpen } = useUIStore();
+  const currentFolderId = useFileStore((state) => state.currentFolderId);
   const navigate = useNavigate();
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -97,7 +99,7 @@ export const MainLayout = () => {
       <RightSidebar />
 
       {/* Global components */}
-      <DragDropOverlay />
+      <DragDropOverlay folderId={currentFolderId} />
       <UploadProgress />
       <Snackbar />
     </Box>

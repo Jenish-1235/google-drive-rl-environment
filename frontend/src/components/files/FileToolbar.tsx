@@ -10,6 +10,7 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  Skeleton,
 } from "@mui/material";
 import {
   ChevronRight as ChevronRightIcon,
@@ -25,6 +26,7 @@ import { useEffect, useState } from "react";
 import type { DriveItem } from "../../types/file.types";
 import { SelectionToolbar } from "./SelectionToolbar";
 import { DetailsPanel } from "../layout/DetailsPanel";
+import { fileService } from "../../services/fileService";
 
 interface FilterButtonProps {
   label: string;
@@ -99,23 +101,55 @@ export const FileToolbar = () => {
   });
   const currentFolders = currentFolderFiles.filter((f) => f.type === "folder");
 
+  const [loadingBreadcrumbs, setLoadingBreadcrumbs] = useState(false);
+
   useEffect(() => {
-    const buildBreadcrumbs = () => {
-      const newBreadcrumbs = [{ id: "root", name: "My Drive" }];
-      if (folderId) {
-        let currentFolder = files.find((f) => f.id === folderId);
-        const path = [];
-        while (currentFolder) {
-          path.unshift({ id: currentFolder.id, name: currentFolder.name });
-          currentFolder = files.find((f) => f.id === currentFolder?.parentId);
-        }
-        newBreadcrumbs.push(...path);
+    const buildBreadcrumbs = async () => {
+      // Root folder - just show "My Drive"
+      if (!folderId) {
+        setBreadcrumbs([{ id: "root", name: "My Drive" }]);
+        return;
       }
-      setBreadcrumbs(newBreadcrumbs);
+
+      // Try to get folder name from loaded files first for immediate feedback
+      const currentFolder = files.find((f) => f.id === folderId);
+      if (currentFolder) {
+        // Show immediate breadcrumb with just current folder name
+        setBreadcrumbs([
+          { id: "root", name: "My Drive" },
+          { id: currentFolder.id, name: currentFolder.name },
+        ]);
+      }
+
+      // Fetch complete folder path from backend API
+      try {
+        setLoadingBreadcrumbs(true);
+        const response = await fileService.getFolderPath(folderId);
+        const pathBreadcrumbs = response.path.map((folder: any) => ({
+          id: folder.id,
+          name: folder.name,
+        }));
+
+        // Prepend "My Drive" to the path
+        setBreadcrumbs([{ id: "root", name: "My Drive" }, ...pathBreadcrumbs]);
+      } catch (error: any) {
+        console.error("Failed to fetch folder path:", error);
+
+        // If we already have current folder name from loaded files, keep it
+        if (!currentFolder) {
+          // Fallback
+          setBreadcrumbs([
+            { id: "root", name: "My Drive" },
+            { id: folderId, name: "..." },
+          ]);
+        }
+      } finally {
+        setLoadingBreadcrumbs(false);
+      }
     };
 
     buildBreadcrumbs();
-  }, [folderId, files, setBreadcrumbs]);
+  }, [folderId, setBreadcrumbs, files]);
 
   return (
     <Box sx={{ mb: 2.5 }}>
