@@ -9,21 +9,12 @@ import {
   TableRow,
   TableSortLabel,
   IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  ListItemText,
   Typography,
   Tooltip,
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
   Share as ShareIcon,
-  GetApp as DownloadIcon,
-  DriveFileMove as MoveIcon,
-  Edit as RenameIcon,
-  Delete as DeleteIcon,
-  InfoOutlined as InfoIcon,
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import type { DriveItem, SortField } from "../../types/file.types";
@@ -33,6 +24,7 @@ import { getFileIcon } from "../../utils/fileIcons";
 import { formatDate, formatFileSize } from "../../utils/formatters";
 import { animations, getStaggerDelay } from "../../utils/animations";
 import { EmptyState } from "../common/EmptyState";
+import { ContextMenu } from "../common/ContextMenu";
 
 interface FileListProps {
   files: DriveItem[];
@@ -61,6 +53,11 @@ export const FileList = ({
     fileId: string;
   } | null>(null);
   const [clickTimeout, setClickTimeout] = useState<number | null>(null);
+
+  // Get the selected file for context menu
+  const contextMenuFile = actionMenuAnchor ? 
+    files.find(f => f.id === actionMenuAnchor.fileId) || null : 
+    null;
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -123,10 +120,40 @@ export const FileList = ({
     setActionMenuAnchor(null);
   };
 
-  const handleAction = (action: string) => {
-    console.log(`Action: ${action} on file:`, actionMenuAnchor?.fileId);
-    handleActionMenuClose();
-    // TODO: Implement actions
+  // Context menu action handlers
+  const handleDownload = (file: DriveItem) => {
+    console.log('Download file:', file.name);
+    // TODO: Implement download
+  };
+
+  const handleRename = (file: DriveItem) => {
+    console.log('Rename file:', file.name);
+    // TODO: Implement rename
+  };
+
+  const handleCopy = (file: DriveItem) => {
+    console.log('Make a copy of file:', file.name);
+    // TODO: Implement copy
+  };
+
+  const handleShare = (file: DriveItem) => {
+    console.log('Share file:', file.name);
+    // TODO: Implement share
+  };
+
+  const handleOrganise = (file: DriveItem) => {
+    console.log('Organise file:', file.name);
+    // TODO: Implement organise
+  };
+
+  const handleDetails = (file: DriveItem) => {
+    console.log('Show details for file:', file.name);
+    // TODO: Implement details
+  };
+
+  const handleDelete = (file: DriveItem) => {
+    console.log('Delete file:', file.name);
+    // TODO: Implement delete
   };
 
   const isSelected = (fileId: string) => selectedFiles.includes(fileId);
@@ -380,52 +407,21 @@ export const FileList = ({
         </Table>
       </TableContainer>
 
-      {/* Action Menu */}
-      <Menu
-        anchorEl={actionMenuAnchor?.element}
+      {/* Context Menu */}
+      <ContextMenu
+        anchorEl={actionMenuAnchor?.element || null}
         open={Boolean(actionMenuAnchor)}
+        file={contextMenuFile}
         onClose={handleActionMenuClose}
-        onClick={handleActionMenuClose}
-      >
-        <MenuItem onClick={() => handleAction("share")}>
-          <ListItemIcon>
-            <ShareIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Share</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("download")}>
-          <ListItemIcon>
-            <DownloadIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Download</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("rename")}>
-          <ListItemIcon>
-            <RenameIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Rename</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("move")}>
-          <ListItemIcon>
-            <MoveIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Move</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("details")}>
-          <ListItemIcon>
-            <InfoIcon fontSize="small" />
-          </ListItemIcon>
-          <ListItemText>Details</ListItemText>
-        </MenuItem>
-        <MenuItem onClick={() => handleAction("delete")}>
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" color="error" />
-          </ListItemIcon>
-          <ListItemText sx={{ color: "error.main" }}>
-            Move to trash
-          </ListItemText>
-        </MenuItem>
-      </Menu>
+        showOpenWith={true}
+        onDownload={handleDownload}
+        onRename={handleRename}
+        onCopy={handleCopy}
+        onShare={handleShare}
+        onOrganise={handleOrganise}
+        onDetails={handleDetails}
+        onDelete={handleDelete}
+      />
 
       {/* Empty State */}
       {files.length === 0 && <EmptyState type="no-files" />}

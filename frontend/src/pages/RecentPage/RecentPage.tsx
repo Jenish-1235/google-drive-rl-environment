@@ -23,6 +23,7 @@ import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
 import { getFileIcon } from "../../utils/fileIcons";
 import { formatFileSize } from "../../utils/formatters";
+import { ContextMenu } from "../../components/common/ContextMenu";
 
 // Mock data for recent files (backup if API fails)
 const mockRecentFiles = [
@@ -202,6 +203,58 @@ export const RecentPage = () => {
   const files = useFileStore((state) => state.files);
   const fetchRecentFiles = useFileStore((state) => state.fetchRecentFiles);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
+
+  // Context menu state
+  const [contextMenuAnchor, setContextMenuAnchor] = useState<{
+    element: HTMLElement;
+    file: any;
+  } | null>(null);
+
+  // Context menu handlers
+  const handleContextMenuOpen = (event: React.MouseEvent<HTMLElement>, file: any) => {
+    event.stopPropagation();
+    setContextMenuAnchor({ element: event.currentTarget, file });
+  };
+
+  const handleContextMenuClose = () => {
+    setContextMenuAnchor(null);
+  };
+
+  // Context menu action handlers
+  const handleDownload = (file: any) => {
+    console.log('Download file:', file.name);
+    // TODO: Implement download
+  };
+
+  const handleRename = (file: any) => {
+    console.log('Rename file:', file.name);
+    // TODO: Implement rename
+  };
+
+  const handleCopy = (file: any) => {
+    console.log('Make a copy of file:', file.name);
+    // TODO: Implement copy
+  };
+
+  const handleShare = (file: any) => {
+    console.log('Share file:', file.name);
+    // TODO: Implement share
+  };
+
+  const handleOrganise = (file: any) => {
+    console.log('Organise file:', file.name);
+    // TODO: Implement organise
+  };
+
+  const handleDetails = (file: any) => {
+    console.log('Show details for file:', file.name);
+    // TODO: Implement details
+  };
+
+  const handleDelete = (file: any) => {
+    console.log('Delete file:', file.name);
+    // TODO: Implement delete
+  };
 
   // Fetch recent files on mount
   useEffect(() => {
@@ -762,7 +815,10 @@ export const RecentPage = () => {
                         pr: 2,
                       }}
                     >
-                      <IconButton size="small">
+                      <IconButton 
+                        size="small"
+                        onClick={(e) => handleContextMenuOpen(e, file)}
+                      >
                         <MoreVertIcon sx={{ fontSize: 20, color: "#5f6368" }} />
                       </IconButton>
                     </TableCell>
@@ -773,6 +829,22 @@ export const RecentPage = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
+      {/* Context Menu */}
+      <ContextMenu
+        anchorEl={contextMenuAnchor?.element || null}
+        open={Boolean(contextMenuAnchor)}
+        file={contextMenuAnchor?.file || null}
+        onClose={handleContextMenuClose}
+        showOpenWith={true}
+        onDownload={handleDownload}
+        onRename={handleRename}
+        onCopy={handleCopy}
+        onShare={handleShare}
+        onOrganise={handleOrganise}
+        onDetails={handleDetails}
+        onDelete={handleDelete}
+      />
     </Box>
   );
 };
