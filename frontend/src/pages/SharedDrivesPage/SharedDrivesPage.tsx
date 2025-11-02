@@ -2,17 +2,11 @@ import {
   Box,
   Typography,
   IconButton,
-  ButtonGroup,
   TextField,
   InputAdornment,
   Link,
 } from "@mui/material";
-import {
-  ViewList as ViewListIcon,
-  ViewModule as ViewModuleIcon,
-  Info as InfoIcon,
-  Search as SearchIcon,
-} from "@mui/icons-material";
+import { Info as InfoIcon, Search as SearchIcon } from "@mui/icons-material";
 import { useState } from "react";
 
 interface SharedDrive {
@@ -75,74 +69,174 @@ export const SharedDrivesPage = () => {
             Hidden shared drives
           </Link>
 
-          <ButtonGroup
-            variant="outlined"
+          <Box
             sx={{
-              "& .MuiButtonGroup-grouped": {
-                borderColor: "#dadce0",
-                minWidth: 40,
-                "&:hover": {
-                  borderColor: "#dadce0",
-                  backgroundColor: "#f8f9fa",
-                },
-              },
+              display: "flex",
+              backgroundColor: "#ffffff",
+              borderRadius: "50px",
+              padding: "3px",
+              gap: "2px",
+              position: "relative",
+              border: "1.5px solid #5f6368",
+              boxShadow: "0 1px 3px rgba(60, 64, 67, 0.3)",
+              height: "36px",
             }}
           >
             <IconButton
               size="small"
               onClick={() => setViewMode("list")}
+              disableRipple
               sx={{
-                color: viewMode === "list" ? "#1a73e8" : "#5f6368",
+                color: viewMode === "list" ? "#202124" : "#5f6368",
                 backgroundColor:
-                  viewMode === "list" ? "#e8f0fe" : "transparent",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
-                border:
-                  viewMode === "list"
-                    ? "1px solid #1a73e8"
-                    : "1px solid #dadce0",
+                  viewMode === "list" ? "#d3e3fd" : "transparent",
+                borderRadius: "18px",
+                position: "relative",
+                minWidth: "48px",
+                height: "28px",
+                px: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
+                border: "none",
+                outline: "none",
                 "&:hover": {
-                  backgroundColor: viewMode === "list" ? "#e8f0fe" : "#f8f9fa",
+                  backgroundColor:
+                    viewMode === "list" ? "#d3e3fd" : "rgba(0, 0, 0, 0.04)",
+                },
+                "&:focus": {
+                  outline: "none",
+                },
+                "&:active": {
+                  outline: "none",
                 },
               }}
             >
-              <ViewListIcon fontSize="small" />
+              {viewMode === "list" && (
+                <svg
+                  viewBox="0 0 18 18"
+                  aria-hidden="true"
+                  width="12"
+                  height="12"
+                  style={{
+                    flexShrink: 0,
+                  }}
+                >
+                  <path
+                    fill="none"
+                    stroke="#5f6368"
+                    strokeWidth="2.5"
+                    d="M3 9.23529L6.84 13L15 5"
+                  />
+                </svg>
+              )}
+              <svg
+                width="14"
+                height="12"
+                viewBox="0 0 14 12"
+                fill="currentColor"
+                style={{
+                  flexShrink: 0,
+                }}
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M1 0C0.447715 0 0 0.447715 0 1C0 1.55228 0.447715 2 1 2H13C13.5523 2 14 1.55228 14 1C14 0.447715 13.5523 0 13 0H1ZM0 6C0 5.44772 0.447715 5 1 5H13C13.5523 5 14 5.44772 14 6C14 6.55228 13.5523 7 13 7H1C0.447715 7 0 6.55228 0 6ZM1 10C0.447715 10 0 10.4477 0 11C0 11.5523 0.447715 12 1 12H13C13.5523 12 14 11.5523 14 11C14 10.4477 13.5523 10 13 10H1Z"
+                  fill="currentColor"
+                />
+              </svg>
             </IconButton>
+            {/* Separator Line */}
+            <Box
+              sx={{
+                width: "1px",
+                height: "24px",
+                backgroundColor: "#dadce0",
+                alignSelf: "center",
+              }}
+            />
             <IconButton
               size="small"
               onClick={() => setViewMode("grid")}
+              disableRipple
               sx={{
-                color: viewMode === "grid" ? "#1a73e8" : "#5f6368",
+                color: viewMode === "grid" ? "#202124" : "#5f6368",
                 backgroundColor:
-                  viewMode === "grid" ? "#e8f0fe" : "transparent",
-                borderRadius: "50%",
-                width: 40,
-                height: 40,
-                border:
-                  viewMode === "grid"
-                    ? "1px solid #1a73e8"
-                    : "1px solid #dadce0",
-                ml: 1,
+                  viewMode === "grid" ? "#d3e3fd" : "transparent",
+                borderRadius: "18px",
+                position: "relative",
+                minWidth: "48px",
+                height: "28px",
+                px: 1.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 0.5,
+                border: "none",
+                outline: "none",
                 "&:hover": {
-                  backgroundColor: viewMode === "grid" ? "#e8f0fe" : "#f8f9fa",
+                  backgroundColor:
+                    viewMode === "grid" ? "#d3e3fd" : "rgba(0, 0, 0, 0.04)",
+                },
+                "&:focus": {
+                  outline: "none",
+                },
+                "&:active": {
+                  outline: "none",
                 },
               }}
             >
-              <ViewModuleIcon fontSize="small" />
+              {viewMode === "grid" && (
+                <svg
+                  viewBox="0 0 18 18"
+                  aria-hidden="true"
+                  width="12"
+                  height="12"
+                  style={{
+                    flexShrink: 0,
+                  }}
+                >
+                  <path
+                    fill="none"
+                    stroke="#5f6368"
+                    strokeWidth="2.5"
+                    d="M3 9.23529L6.84 13L15 5"
+                  />
+                </svg>
+              )}
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 14 14"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  flexShrink: 0,
+                }}
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M0 1C0 0.447715 0.447715 0 1 0H5C5.55228 0 6 0.447715 6 1V5C6 5.55228 5.55228 6 5 6H1C0.447715 6 0 5.55228 0 5V1ZM2 2H4V4H2V2ZM0 9C0 8.44772 0.447715 8 1 8H5C5.55228 8 6 8.44772 6 9V13C6 13.5523 5.55228 14 5 14H1C0.447715 14 0 13.5523 0 13V9ZM2 10H4V12H2V10ZM9 0C8.44772 0 8 0.447715 8 1V5C8 5.55228 8.44772 6 9 6H13C13.5523 6 14 5.55228 14 5V1C14 0.447715 13.5523 0 13 0H9ZM12 2H10V4H12V2ZM8 9C8 8.44772 8.44772 8 9 8H13C13.5523 8 14 8.44772 14 9V13C14 13.5523 13.5523 14 13 14H9C8.44772 14 8 13.5523 8 13V9ZM10 10H12V12H10V10Z"
+                  fill="currentColor"
+                />
+              </svg>
             </IconButton>
-          </ButtonGroup>
+          </Box>
 
           <IconButton
             size="small"
+            disableRipple
             sx={{
               color: "#5f6368",
-              border: `1px solid #dadce0`,
-              borderRadius: 1,
-              width: 40,
-              height: 40,
+              padding: 0.5,
               "&:hover": {
-                backgroundColor: "#f8f9fa",
+                backgroundColor: "rgba(95, 99, 104, 0.1)",
+              },
+              "&:focus": {
+                outline: "none",
               },
             }}
           >

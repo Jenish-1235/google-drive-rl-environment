@@ -186,14 +186,15 @@ export const StoragePage = () => {
 
           <IconButton
             size="small"
+            disableRipple
             sx={{
               color: "#5f6368",
-              border: `1px solid #dadce0`,
-              borderRadius: 1,
-              width: 40,
-              height: 40,
+              padding: 0.5,
               "&:hover": {
-                backgroundColor: "#f8f9fa",
+                backgroundColor: "rgba(95, 99, 104, 0.1)",
+              },
+              "&:focus": {
+                outline: "none",
               },
             }}
           >
@@ -213,8 +214,8 @@ export const StoragePage = () => {
               textTransform: "none",
               color: "#202124",
               borderColor: "#dadce0",
-              backgroundColor: "white",
-              borderRadius: "18px",
+              backgroundColor: "transparent",
+              borderRadius: 1,
               px: 2,
               py: 0.5,
               fontSize: 14,
