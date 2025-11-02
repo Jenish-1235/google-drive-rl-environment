@@ -39,22 +39,56 @@ export const FileGrid = ({
 }: FileGridProps) => {
   const navigate = useNavigate();
   const selectedFiles = useFileStore((state) => state.selectedFiles);
+  const setSelectedFiles = useFileStore((state) => state.setSelectedFiles);
 
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{
     element: HTMLElement;
     fileId: string;
   } | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+  const [clickTimeout, setClickTimeout] = useState<number | null>(null);
 
   // Separate folders and files
   const folders = files.filter((f) => f.type === "folder");
   const documents = files.filter((f) => f.type !== "folder");
 
-  const handleFileClick = (file: DriveItem) => {
+  const handleSingleClick = (file: DriveItem, event?: React.MouseEvent) => {
+    // Single click = select (add to selection, not toggle)
+    if (event?.ctrlKey || event?.metaKey) {
+      // Ctrl/Cmd+Click toggles selection
+      if (selectedFiles.includes(file.id)) {
+        setSelectedFiles(selectedFiles.filter((id) => id !== file.id));
+      } else {
+        setSelectedFiles([...selectedFiles, file.id]);
+      }
+    } else {
+      // Regular click = select only this item
+      setSelectedFiles([file.id]);
+    }
+  };
+
+  const handleDoubleClick = (file: DriveItem) => {
+    // Double click = navigate or preview
     if (file.type === "folder") {
       navigate(`/folder/${file.id}`);
     } else if (onFileClick) {
       onFileClick(file);
+    }
+  };
+
+  const handleFileClick = (file: DriveItem, event: React.MouseEvent) => {
+    if (clickTimeout) {
+      // Double click detected
+      clearTimeout(clickTimeout);
+      setClickTimeout(null);
+      handleDoubleClick(file);
+    } else {
+      // Single click - wait to see if double click follows
+      const timeout = window.setTimeout(() => {
+        handleSingleClick(file, event);
+        setClickTimeout(null);
+      }, 250);
+      setClickTimeout(timeout);
     }
   };
 
@@ -87,7 +121,7 @@ export const FileGrid = ({
         key={file.id}
         onMouseEnter={() => setHoveredCard(file.id)}
         onMouseLeave={() => setHoveredCard(null)}
-        onClick={() => handleFileClick(file)}
+        onClick={(e) => handleFileClick(file, e)}
         onContextMenu={(e) => {
           e.preventDefault();
           onContextMenu?.(e, file);

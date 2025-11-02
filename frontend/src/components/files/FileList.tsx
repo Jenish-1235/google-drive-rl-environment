@@ -52,11 +52,13 @@ export const FileList = ({
   const sortOrder = useFileStore((state) => state.sortOrder);
   const toggleSortOrder = useFileStore((state) => state.toggleSortOrder);
   const setSortField = useFileStore((state) => state.setSortField);
+  const setSelectedFiles = useFileStore((state) => state.setSelectedFiles);
 
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{
     element: HTMLElement;
     fileId: string;
   } | null>(null);
+  const [clickTimeout, setClickTimeout] = useState<number | null>(null);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -67,15 +69,44 @@ export const FileList = ({
     onSort?.(field);
   };
 
-  const handleFileClick = (file: DriveItem) => {
+  const handleSingleClick = (file: DriveItem, event?: React.MouseEvent) => {
+    // Single click = select (add to selection, not toggle)
+    if (event?.ctrlKey || event?.metaKey) {
+      // Ctrl/Cmd+Click toggles selection
+      if (selectedFiles.includes(file.id)) {
+        setSelectedFiles(selectedFiles.filter((id) => id !== file.id));
+      } else {
+        setSelectedFiles([...selectedFiles, file.id]);
+      }
+    } else {
+      // Regular click = select only this item
+      setSelectedFiles([file.id]);
+    }
+  };
+
+  const handleDoubleClick = (file: DriveItem) => {
+    // Double click = navigate or preview
     if (file.type === "folder") {
-      // Always navigate for folders
       navigate(`/folder/${file.id}`);
     } else if (onFileClick) {
-      // Use custom handler for files if provided
       onFileClick(file);
     }
-    // If no custom handler and not a folder, do nothing (could add default preview here)
+  };
+
+  const handleFileClick = (file: DriveItem, event: React.MouseEvent) => {
+    if (clickTimeout) {
+      // Double click detected
+      clearTimeout(clickTimeout);
+      setClickTimeout(null);
+      handleDoubleClick(file);
+    } else {
+      // Single click - wait to see if double click follows
+      const timeout = window.setTimeout(() => {
+        handleSingleClick(file, event);
+        setClickTimeout(null);
+      }, 250);
+      setClickTimeout(timeout);
+    }
   };
 
   const handleActionMenuOpen = (
@@ -207,7 +238,7 @@ export const FileList = ({
                 key={file.id}
                 hover
                 selected={isSelected(file.id)}
-                onClick={() => handleFileClick(file)}
+                onClick={(e) => handleFileClick(file, e)}
                 onContextMenu={(e) => {
                   e.preventDefault();
                   onContextMenu?.(e, file);

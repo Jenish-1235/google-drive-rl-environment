@@ -32,6 +32,7 @@ import type {
 import { useUIStore } from "../../store/uiStore";
 import { useEffect, useState } from "react";
 import type { DriveItem } from "../../types/file.types";
+import { SelectionToolbar } from "./SelectionToolbar";
 
 interface FilterButtonProps {
   label: string;
@@ -72,6 +73,8 @@ export const FileToolbar = () => {
   const setBreadcrumbs = useFileStore((state) => state.setBreadcrumbs);
   const viewMode = useFileStore((state) => state.viewMode);
   const setViewMode = useFileStore((state) => state.setViewMode);
+  const selectedFiles = useFileStore((state) => state.selectedFiles);
+  const clearSelection = useFileStore((state) => state.clearSelection);
 
   // Filters
   const typeFilter = useFileStore((state) => state.typeFilter);
@@ -279,36 +282,29 @@ export const FileToolbar = () => {
         </Box>
       </Box>
 
-      {/* Bottom Row: Filter Buttons */}
-      <Box sx={{ display: "flex", gap: 1.5 }}>
-        <FilterButton
-          label={typeFilter === "all" ? "Type" : `Type: ${typeFilter}`}
-          onClick={(e) => setTypeMenuAnchor(e.currentTarget)}
-          isActive={typeFilter !== "all"}
-        />
-        <FilterButton
-          label={
-            peopleFilter === "all"
-              ? "People"
-              : `People: ${
-                  peopleFilter === "owned-by-me"
-                    ? "Owned by me"
-                    : "Not owned by me"
-                }`
-          }
-          onClick={(e) => setPeopleMenuAnchor(e.currentTarget)}
-          isActive={peopleFilter !== "all"}
-        />
-        <FilterButton
-          label={
-            modifiedFilter === "all"
-              ? "Modified"
-              : `Modified: ${modifiedFilter.replace(/-/g, " ")}`
-          }
-          onClick={(e) => setModifiedMenuAnchor(e.currentTarget)}
-          isActive={modifiedFilter !== "all"}
-        />
-      </Box>
+      {/* Bottom Row: Filter Buttons or Selection Toolbar */}
+      {selectedFiles.length > 0 ? (
+        <SelectionToolbar onClose={clearSelection} />
+      ) : (
+        <Box sx={{ display: "flex", gap: 1 }}>
+          <FilterButton
+            label="Type"
+            onClick={(e) => setTypeMenuAnchor(e.currentTarget)}
+            isActive={typeFilter !== "all"}
+          />
+          <FilterButton
+            label="People"
+            onClick={(e) => setPeopleMenuAnchor(e.currentTarget)}
+            isActive={peopleFilter !== "all"}
+          />
+          <FilterButton
+            label="Modified"
+            onClick={(e) => setModifiedMenuAnchor(e.currentTarget)}
+            isActive={modifiedFilter !== "all"}
+          />
+          <FilterButton label="Source" onClick={() => {}} isActive={false} />
+        </Box>
+      )}
 
       {/* Filter Menus */}
       <Menu
