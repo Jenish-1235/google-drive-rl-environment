@@ -26,6 +26,9 @@ import {
   Star as StarIcon,
   Delete as DeleteIcon,
   CloudQueue as CloudIcon,
+  Computer as ComputerIcon,
+  Devices as DevicesIcon,
+  Report as SpamIcon,
 } from "@mui/icons-material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUIStore } from "../../store/uiStore";
@@ -48,7 +51,7 @@ interface NavItem {
   path: string;
 }
 
-const navItems: NavItem[] = [
+const topNavItems: NavItem[] = [
   {
     id: "home",
     label: "Home",
@@ -61,6 +64,21 @@ const navItems: NavItem[] = [
     icon: <FolderIcon />,
     path: "/drive",
   },
+  {
+    id: "shared-drives",
+    label: "Shared drives",
+    icon: <DevicesIcon />,
+    path: "/shared-drives",
+  },
+  {
+    id: "computers",
+    label: "Computers",
+    icon: <ComputerIcon />,
+    path: "/computers",
+  },
+];
+
+const bottomNavItems: NavItem[] = [
   {
     id: "shared",
     label: "Shared with me",
@@ -79,11 +97,26 @@ const navItems: NavItem[] = [
     icon: <StarIcon />,
     path: "/starred",
   },
+];
+
+const utilityNavItems: NavItem[] = [
+  {
+    id: "spam",
+    label: "Spam",
+    icon: <SpamIcon />,
+    path: "/spam",
+  },
   {
     id: "trash",
     label: "Trash",
     icon: <DeleteIcon />,
     path: "/trash",
+  },
+  {
+    id: "storage",
+    label: "Storage",
+    icon: <CloudIcon />,
+    path: "/storage",
   },
 ];
 
@@ -262,23 +295,23 @@ export const Sidebar = () => {
               onClick={handleNewMenuOpen}
               sx={{
                 height: 56,
-                borderRadius: 2,
+                borderRadius: "8px",
                 textTransform: "none",
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: 500,
                 backgroundColor: "white",
-                border: `1px solid ${colors.border}`,
-                color: "text.primary",
+                border: "none",
+                color: "#202124",
                 boxShadow:
                   "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
                 "&:hover": {
                   backgroundColor: "#fafafa",
-                  border: `1px solid ${colors.border}`,
+                  border: "none",
                   boxShadow:
                     "0 1px 3px 0 rgba(60,64,67,0.3), 0 4px 8px 3px rgba(60,64,67,0.15)",
                 },
                 justifyContent: "flex-start",
-                px: 3,
+                px: 2.5,
                 minWidth: "auto",
               }}
             >
@@ -317,34 +350,32 @@ export const Sidebar = () => {
             </Menu>
           </Box>
 
-          {/* Navigation Items */}
-          <List sx={{ flexGrow: 1, px: 1.5 }}>
-            {navItems.map((item) => {
+          {/* Top Navigation Items */}
+          <List sx={{ px: 0.75, py: 0 }}>
+            {topNavItems.map((item) => {
               const active = isActive(item.path);
               return (
-                <ListItem key={item.id} disablePadding sx={{ mb: 0.25 }}>
+                <ListItem key={item.id} disablePadding sx={{ mb: 0 }}>
                   <ListItemButton
                     selected={active}
                     onClick={() => navigate(item.path)}
                     sx={{
-                      borderRadius: active ? "0 24px 24px 0" : 2,
+                      borderRadius: active ? "0 24px 24px 0" : 0,
                       height: 36,
-                      px: sidebarOpen ? 2.5 : 1,
-                      py: 0.5,
+                      px: 3,
+                      py: 0,
                       justifyContent: sidebarOpen ? "flex-start" : "center",
-                      backgroundColor: active ? colors.selected : "transparent",
+                      backgroundColor: active ? "#c2e7ff" : "transparent",
                       "&:hover": {
-                        backgroundColor: active
-                          ? alpha(colors.primary, 0.16)
-                          : colors.hover,
+                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
                       },
                     }}
                   >
                     <ListItemIcon
                       sx={{
-                        minWidth: sidebarOpen ? 32 : "auto",
-                        color: active ? colors.primary : "text.secondary",
-                        justifyContent: "center",
+                        minWidth: 32,
+                        color: active ? "#041e49" : "#202124",
+                        justifyContent: "flex-start",
                         "& .MuiSvgIcon-root": {
                           fontSize: 20,
                         },
@@ -357,8 +388,8 @@ export const Sidebar = () => {
                         primary={item.label}
                         primaryTypographyProps={{
                           fontSize: 14,
-                          fontWeight: active ? 500 : 400,
-                          color: active ? colors.primary : "text.primary",
+                          fontWeight: 400,
+                          color: active ? "#041e49" : "#202124",
                         }}
                       />
                     )}
@@ -368,57 +399,132 @@ export const Sidebar = () => {
             })}
           </List>
 
-          {/* Storage Indicator */}
-          {sidebarOpen && (
-            <Box sx={{ px: 3, pb: 2 }}>
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 1,
-                  mb: 1,
-                  cursor: "pointer",
-                  "&:hover": {
-                    "& .storage-icon": {
-                      color: colors.primary,
-                    },
-                  },
-                }}
-                onClick={() => navigate("/storage")}
-              >
-                <CloudIcon
-                  className="storage-icon"
-                  sx={{
-                    fontSize: 20,
-                    color: "text.secondary",
-                    transition: "color 0.2s",
-                  }}
-                />
-                <Typography variant="body2" color="text.secondary">
-                  Storage
-                </Typography>
-              </Box>
+          <Divider sx={{ my: 0.25, borderColor: "#e8eaed" }} />
 
+          {/* Bottom Navigation Items */}
+          <List sx={{ px: 0.75, py: 0 }}>
+            {bottomNavItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <ListItem key={item.id} disablePadding sx={{ mb: 0 }}>
+                  <ListItemButton
+                    selected={active}
+                    onClick={() => navigate(item.path)}
+                    sx={{
+                      borderRadius: active ? "0 24px 24px 0" : 0,
+                      height: 36,
+                      px: 3,
+                      py: 0,
+                      justifyContent: sidebarOpen ? "flex-start" : "center",
+                      backgroundColor: active ? "#c2e7ff" : "transparent",
+                      "&:hover": {
+                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 32,
+                        color: active ? "#041e49" : "#202124",
+                        justifyContent: "flex-start",
+                        "& .MuiSvgIcon-root": {
+                          fontSize: 20,
+                        },
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    {sidebarOpen && (
+                      <ListItemText
+                        primary={item.label}
+                        primaryTypographyProps={{
+                          fontSize: 14,
+                          fontWeight: 400,
+                          color: active ? "#041e49" : "#202124",
+                        }}
+                      />
+                    )}
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </List>
+
+          <Divider sx={{ my: 0.25, borderColor: "#e8eaed" }} />
+
+          {/* Utility Navigation Items */}
+          <List sx={{ px: 0.75, py: 0 }}>
+            {utilityNavItems.map((item) => {
+              const active = isActive(item.path);
+              return (
+                <ListItem key={item.id} disablePadding sx={{ mb: 0 }}>
+                  <ListItemButton
+                    selected={active}
+                    onClick={() => navigate(item.path)}
+                    sx={{
+                      borderRadius: active ? "0 24px 24px 0" : 0,
+                      height: 36,
+                      px: 3,
+                      py: 0,
+                      justifyContent: sidebarOpen ? "flex-start" : "center",
+                      backgroundColor: active ? "#c2e7ff" : "transparent",
+                      "&:hover": {
+                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
+                      },
+                    }}
+                  >
+                    <ListItemIcon
+                      sx={{
+                        minWidth: 32,
+                        color: active ? "#041e49" : "#202124",
+                        justifyContent: "flex-start",
+                        "& .MuiSvgIcon-root": {
+                          fontSize: 20,
+                        },
+                      }}
+                    >
+                      {item.icon}
+                    </ListItemIcon>
+                    {sidebarOpen && (
+                      <ListItemText
+                        primary={item.label}
+                        primaryTypographyProps={{
+                          fontSize: 14,
+                          fontWeight: 400,
+                          color: active ? "#041e49" : "#202124",
+                        }}
+                      />
+                    )}
+                  </ListItemButton>
+                </ListItem>
+              );
+            })}
+          </List>
+
+          {/* Storage Section */}
+          {sidebarOpen && (
+            <Box sx={{ px: 3, py: 1.5 }}>
               <LinearProgress
                 variant="determinate"
                 value={storagePercentage}
                 sx={{
-                  height: 4,
+                  height: 3,
                   borderRadius: 2,
-                  backgroundColor: colors.surfaceVariant,
+                  backgroundColor: "#e8eaed",
                   "& .MuiLinearProgress-bar": {
                     backgroundColor:
                       storagePercentage > 90
-                        ? colors.error
+                        ? "#ea4335"
                         : storagePercentage > 75
-                        ? colors.warning
-                        : colors.primary,
+                        ? "#fbbc04"
+                        : "#1a73e8",
+                    borderRadius: 2,
                   },
                   mb: 1,
                 }}
               />
-
-              <Typography variant="caption" color="text.secondary">
+              
+              <Typography fontSize={13} color="#5f6368" sx={{ mb: 1 }}>
                 {formatFileSize(mockStorageQuota.usage)} of{" "}
                 {formatFileSize(mockStorageQuota.limit)} used
               </Typography>
@@ -426,15 +532,18 @@ export const Sidebar = () => {
               <Button
                 variant="outlined"
                 fullWidth
-                size="small"
+                onClick={() => navigate("/storage")}
                 sx={{
-                  mt: 1.5,
                   textTransform: "none",
-                  borderColor: colors.border,
-                  color: "text.primary",
+                  borderColor: "#dadce0",
+                  color: "#1a73e8",
+                  fontSize: 14,
+                  fontWeight: 500,
+                  height: 36,
+                  borderRadius: "18px",
                   "&:hover": {
-                    borderColor: colors.border,
-                    backgroundColor: colors.hover,
+                    borderColor: "#dadce0",
+                    backgroundColor: "#f8f9fa",
                   },
                 }}
               >
@@ -443,28 +552,8 @@ export const Sidebar = () => {
             </Box>
           )}
 
-          {/* Collapsed Storage Icon */}
-          {!sidebarOpen && (
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                pb: 2,
-              }}
-            >
-              <CloudIcon
-                sx={{
-                  fontSize: 24,
-                  color: "text.secondary",
-                  cursor: "pointer",
-                  "&:hover": {
-                    color: colors.primary,
-                  },
-                }}
-                onClick={() => navigate("/storage")}
-              />
-            </Box>
-          )}
+          {/* Spacer */}
+          <Box sx={{ flexGrow: 1 }} />
         </Box>
       </Drawer>
     </>

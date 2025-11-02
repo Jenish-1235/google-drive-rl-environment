@@ -5,6 +5,9 @@ import { RecentPage } from "./pages/RecentPage/RecentPage";
 import { StarredPage } from "./pages/StarredPage/StarredPage";
 import { TrashPage } from "./pages/TrashPage/TrashPage";
 import { StoragePage } from "./pages/StoragePage/StoragePage";
+import { ComputersPage } from "./pages/ComputersPage/ComputersPage";
+import { SharedDrivesPage } from "./pages/SharedDrivesPage/SharedDrivesPage";
+import { SpamPage } from "./pages/SpamPage/SpamPage";
 import { AuthPage } from "./pages/AuthPage/AuthPage";
 import { ROUTES } from "./utils/constants";
 import { MainLayout } from "./components/layout/MainLayout";
@@ -41,6 +44,14 @@ export const router = createBrowserRouter([
         element: <Navigate to="/home" replace />,
       },
       {
+        path: "shared-drives",
+        element: <SharedDrivesPage />,
+      },
+      {
+        path: "computers",
+        element: <ComputersPage />,
+      },
+      {
         path: "shared",
         element: <SharedPage />,
       },
@@ -51,6 +62,10 @@ export const router = createBrowserRouter([
       {
         path: "starred",
         element: <StarredPage />,
+      },
+      {
+        path: "spam",
+        element: <SpamPage />,
       },
       {
         path: "trash",
