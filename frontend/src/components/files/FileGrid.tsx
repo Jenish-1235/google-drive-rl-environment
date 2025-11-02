@@ -1,10 +1,6 @@
 import { useState } from "react";
 import {
   Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Checkbox,
   IconButton,
   Menu,
   MenuItem,
@@ -12,13 +8,9 @@ import {
   ListItemText,
   Typography,
   Tooltip,
-  Grid,
-  alpha,
 } from "@mui/material";
 import {
   MoreVert as MoreVertIcon,
-  Star as StarIcon,
-  StarBorder as StarBorderIcon,
   Share as ShareIcon,
   GetApp as DownloadIcon,
   DriveFileMove as MoveIcon,
@@ -31,8 +23,6 @@ import { useNavigate } from "react-router-dom";
 import type { DriveItem } from "../../types/file.types";
 import { useFileStore } from "../../store/fileStore";
 import { getFileIcon } from "../../utils/fileIcons";
-import { formatDate, formatFileSize } from "../../utils/formatters";
-import { colors } from "../../theme/theme";
 import { animations, getStaggerDelay } from "../../utils/animations";
 import { EmptyState } from "../common/EmptyState";
 
@@ -49,10 +39,6 @@ export const FileGrid = ({
 }: FileGridProps) => {
   const navigate = useNavigate();
   const selectedFiles = useFileStore((state) => state.selectedFiles);
-  const toggleFileSelection = useFileStore(
-    (state) => state.toggleFileSelection
-  );
-  const updateFile = useFileStore((state) => state.updateFile);
 
   const [actionMenuAnchor, setActionMenuAnchor] = useState<{
     element: HTMLElement;
@@ -60,15 +46,16 @@ export const FileGrid = ({
   } | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
 
+  // Separate folders and files
+  const folders = files.filter((f) => f.type === "folder");
+  const documents = files.filter((f) => f.type !== "folder");
+
   const handleFileClick = (file: DriveItem) => {
     if (file.type === "folder") {
-      // Always navigate for folders
       navigate(`/folder/${file.id}`);
     } else if (onFileClick) {
-      // Use custom handler for files if provided
       onFileClick(file);
     }
-    // If no custom handler and not a folder, do nothing
   };
 
   const handleActionMenuOpen = (
@@ -83,211 +70,191 @@ export const FileGrid = ({
     setActionMenuAnchor(null);
   };
 
-  const handleToggleStar = (event: React.MouseEvent, fileId: string) => {
-    event.stopPropagation();
-    const file = files.find((f) => f.id === fileId);
-    if (file) {
-      updateFile(fileId, { isStarred: !file.isStarred });
-    }
-  };
-
-  const handleSelectFile = (event: React.MouseEvent, fileId: string) => {
-    event.stopPropagation();
-    toggleFileSelection(fileId);
-  };
-
   const handleAction = (action: string) => {
     console.log(`Action: ${action} on file:`, actionMenuAnchor?.fileId);
     handleActionMenuClose();
-    // TODO: Implement actions
   };
 
   const isSelected = (fileId: string) => selectedFiles.includes(fileId);
 
-  return (
-    <Box sx={{ p: 3 }}>
-      <Grid container spacing={2}>
-        {files.map((file, index) => {
-          const selected = isSelected(file.id);
-          const hovered = hoveredCard === file.id;
+  const renderCard = (file: DriveItem, index: number) => {
+    const selected = isSelected(file.id);
+    const hovered = hoveredCard === file.id;
+    const isFolder = file.type === "folder";
 
-          return (
-            <Grid item xs={6} sm={4} md={3} lg={2} key={file.id}>
-              <Card
-                onMouseEnter={() => setHoveredCard(file.id)}
-                onMouseLeave={() => setHoveredCard(null)}
-                onClick={() => handleFileClick(file)}
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  onContextMenu?.(e, file);
-                }}
+    return (
+      <Box
+        key={file.id}
+        onMouseEnter={() => setHoveredCard(file.id)}
+        onMouseLeave={() => setHoveredCard(null)}
+        onClick={() => handleFileClick(file)}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          onContextMenu?.(e, file);
+        }}
+        sx={{
+          width: 256,
+          height: isFolder ? 40 : 232,
+          border: "1px solid #e8eaed",
+          borderRadius: "8px",
+          cursor: "pointer",
+          position: "relative",
+          backgroundColor: selected ? "#e8f0fe" : "white",
+          transition: "all 0.2s",
+          "&:hover": {
+            boxShadow:
+              "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
+            borderColor: "#d3d3d3",
+          },
+          ...animations.fadeIn,
+          ...getStaggerDelay(index, 20),
+        }}
+      >
+        {isFolder ? (
+          // Folder Card
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              px: 2,
+              height: "100%",
+            }}
+          >
+            <FolderIcon sx={{ fontSize: 24, color: "#5f6368" }} />
+            <Typography
+              fontSize={14}
+              fontWeight={400}
+              color="#202124"
+              noWrap
+              sx={{ flex: 1 }}
+            >
+              {file.name}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={(e) => handleActionMenuOpen(e, file.id)}
+              sx={{
+                opacity: hovered ? 1 : 0,
+                transition: "opacity 0.2s",
+                color: "#5f6368",
+              }}
+            >
+              <MoreVertIcon sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Box>
+        ) : (
+          // File Card
+          <>
+            {/* Thumbnail Area */}
+            <Box
+              sx={{
+                height: 180,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: file.thumbnailUrl ? "transparent" : "#f8f9fa",
+                borderTopLeftRadius: "8px",
+                borderTopRightRadius: "8px",
+                position: "relative",
+                overflow: "hidden",
+              }}
+            >
+              {file.thumbnailUrl ? (
+                <img
+                  src={file.thumbnailUrl}
+                  alt={file.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              ) : (
+                <Box sx={{ "& > svg": { fontSize: 48 } }}>
+                  {getFileIcon(file.type)}
+                </Box>
+              )}
+
+              {/* More Actions Button */}
+              <IconButton
+                size="small"
+                onClick={(e) => handleActionMenuOpen(e, file.id)}
                 sx={{
-                  cursor: "pointer",
-                  position: "relative",
-                  height: 220,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: 2,
-                  transition: "all 0.2s",
-                  backgroundColor: selected
-                    ? alpha(colors.primary, 0.08)
-                    : "background.paper",
+                  position: "absolute",
+                  top: 4,
+                  right: 4,
+                  opacity: hovered ? 1 : 0,
+                  transition: "opacity 0.2s",
+                  backgroundColor: "white",
+                  boxShadow: "0 1px 2px 0 rgba(60,64,67,0.3)",
                   "&:hover": {
-                    boxShadow:
-                      "0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15)",
-                    borderColor: selected ? colors.primary : colors.border,
+                    backgroundColor: "#f8f9fa",
                   },
-                  ...animations.scaleIn,
-                  ...getStaggerDelay(index, 25),
                 }}
               >
-                {/* Checkbox */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    left: 8,
-                    zIndex: 1,
-                    opacity: selected || hovered ? 1 : 0,
-                    transition: "opacity 0.2s",
-                  }}
-                >
-                  <Checkbox
-                    checked={selected}
-                    onChange={(e) => handleSelectFile(e as any, file.id)}
-                    size="small"
-                    sx={{
-                      backgroundColor: "background.paper",
-                      borderRadius: "2px",
-                      "&:hover": {
-                        backgroundColor: "background.paper",
-                      },
-                    }}
-                  />
-                </Box>
+                <MoreVertIcon sx={{ fontSize: 18, color: "#5f6368" }} />
+              </IconButton>
+            </Box>
 
-                {/* Star Icon */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 40,
-                    zIndex: 1,
-                    opacity: file.isStarred || hovered ? 1 : 0,
-                    transition: "opacity 0.2s",
-                  }}
+            {/* File Info */}
+            <Box
+              sx={{
+                px: 2,
+                py: 1.5,
+                borderTop: "1px solid #e8eaed",
+              }}
+            >
+              <Tooltip title={file.name} placement="bottom-start">
+                <Typography
+                  fontSize={14}
+                  fontWeight={400}
+                  color="#202124"
+                  noWrap
                 >
-                  <Tooltip title={file.isStarred ? "Remove star" : "Add star"}>
-                    <IconButton
-                      size="small"
-                      onClick={(e) => handleToggleStar(e, file.id)}
-                      sx={{
-                        backgroundColor: "background.paper",
-                        "&:hover": {
-                          backgroundColor: "background.paper",
-                        },
-                      }}
-                    >
-                      {file.isStarred ? (
-                        <StarIcon
-                          sx={{ fontSize: 20, color: colors.warning }}
-                        />
-                      ) : (
-                        <StarBorderIcon sx={{ fontSize: 20 }} />
-                      )}
-                    </IconButton>
-                  </Tooltip>
-                </Box>
+                  {file.name}
+                </Typography>
+              </Tooltip>
+            </Box>
+          </>
+        )}
+      </Box>
+    );
+  };
 
-                {/* More Actions */}
-                <Box
-                  sx={{
-                    position: "absolute",
-                    top: 8,
-                    right: 8,
-                    zIndex: 1,
-                    opacity: hovered ? 1 : 0,
-                    transition: "opacity 0.2s",
-                  }}
-                >
-                  <IconButton
-                    size="small"
-                    onClick={(e) => handleActionMenuOpen(e, file.id)}
-                    sx={{
-                      backgroundColor: "background.paper",
-                      "&:hover": {
-                        backgroundColor: "background.paper",
-                      },
-                    }}
-                  >
-                    <MoreVertIcon sx={{ fontSize: 20 }} />
-                  </IconButton>
-                </Box>
+  return (
+    <Box sx={{ px: 3, py: 2 }}>
+      {/* Folders Section */}
+      {folders.length > 0 && (
+        <Box sx={{ mb: 3 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+            }}
+          >
+            {folders.map((folder, index) => renderCard(folder, index))}
+          </Box>
+        </Box>
+      )}
 
-                {/* Thumbnail/Icon */}
-                <CardMedia
-                  sx={{
-                    height: 140,
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    backgroundColor: colors.surfaceVariant,
-                  }}
-                >
-                  {file.type === "folder" ? (
-                    <FolderIcon
-                      sx={{ fontSize: 80, color: colors.fileTypes.folder }}
-                    />
-                  ) : (
-                    <Box sx={{ "& > svg": { fontSize: 64 } }}>
-                      {getFileIcon(file.type)}
-                    </Box>
-                  )}
-                </CardMedia>
-
-                {/* File Info */}
-                <CardContent sx={{ p: 1.5, "&:last-child": { pb: 1.5 } }}>
-                  <Tooltip title={file.name} placement="bottom-start">
-                    <Typography
-                      variant="body2"
-                      noWrap
-                      sx={{
-                        fontWeight: 500,
-                        mb: 0.5,
-                      }}
-                    >
-                      {file.name}
-                    </Typography>
-                  </Tooltip>
-                  <Box
-                    sx={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                      gap: 1,
-                    }}
-                  >
-                    <Typography variant="caption" color="text.secondary" noWrap>
-                      {formatDate(file.modifiedTime)}
-                    </Typography>
-                    {file.type !== "folder" && (
-                      <Typography variant="caption" color="text.secondary">
-                        {formatFileSize((file as any).size || 0)}
-                      </Typography>
-                    )}
-                    {file.isShared && (
-                      <Tooltip title="Shared">
-                        <ShareIcon
-                          sx={{ fontSize: 14, color: "text.secondary" }}
-                        />
-                      </Tooltip>
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          );
-        })}
-      </Grid>
+      {/* Files Section */}
+      {documents.length > 0 && (
+        <Box>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 2,
+            }}
+          >
+            {documents.map((file, index) =>
+              renderCard(file, folders.length + index)
+            )}
+          </Box>
+        </Box>
+      )}
 
       {/* Action Menu */}
       <Menu
