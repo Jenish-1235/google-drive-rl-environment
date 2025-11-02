@@ -15,6 +15,8 @@ interface ShareSubmenuProps {
   open: boolean;
   onClose: () => void;
   file: any;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export const ShareSubmenu = ({
@@ -22,6 +24,8 @@ export const ShareSubmenu = ({
   open,
   onClose,
   file,
+  onMouseEnter,
+  onMouseLeave,
 }: ShareSubmenuProps) => {
   const handleAction = (action: string) => {
     console.log(`Share action: ${action} for file:`, file?.name);
@@ -36,6 +40,8 @@ export const ShareSubmenu = ({
       anchorEl={anchorEl}
       open={open}
       onClose={onClose}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       anchorOrigin={{
         vertical: 'top',
         horizontal: 'left',

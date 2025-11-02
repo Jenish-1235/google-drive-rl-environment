@@ -48,15 +48,33 @@ export const ContextMenu = ({
   onDownload,
   onRename,
   onCopy,
-  onShare,
-  onOrganise,
-  onDetails,
   onDelete,
 }: ContextMenuProps) => {
   const [openWithAnchor, setOpenWithAnchor] = useState<HTMLElement | null>(null);
   const [shareAnchor, setShareAnchor] = useState<HTMLElement | null>(null);
   const [organiseAnchor, setOrganiseAnchor] = useState<HTMLElement | null>(null);
   const [infoAnchor, setInfoAnchor] = useState<HTMLElement | null>(null);
+  const [hoverCloseTimer, setHoverCloseTimer] = useState<number | null>(null);
+  const CLOSE_DELAY = 320; // ms
+  const TRIGGER_LEAVE_DELAY = 260; // ms
+
+  const clearHoverCloseTimer = () => {
+    if (hoverCloseTimer) {
+      window.clearTimeout(hoverCloseTimer);
+      setHoverCloseTimer(null);
+    }
+  };
+
+  const scheduleClose = (delay = CLOSE_DELAY) => {
+    clearHoverCloseTimer();
+    const t = window.setTimeout(() => {
+      setOpenWithAnchor(null);
+      setShareAnchor(null);
+      setOrganiseAnchor(null);
+      setInfoAnchor(null);
+    }, delay);
+    setHoverCloseTimer(t);
+  };
 
   const handleAction = (action?: (file: DriveItem) => void) => {
     onClose();
@@ -71,37 +89,55 @@ export const ContextMenu = ({
 
   const handleOpenWithHover = (event: React.MouseEvent<HTMLElement>) => {
     // Clear other submenus
+    clearHoverCloseTimer();
     setShareAnchor(null);
     setOrganiseAnchor(null);
     setInfoAnchor(null);
     setOpenWithAnchor(event.currentTarget);
   };
+  const handleOpenWithLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
 
   const handleShareHover = (event: React.MouseEvent<HTMLElement>) => {
     // Clear other submenus
+    clearHoverCloseTimer();
     setOpenWithAnchor(null);
     setOrganiseAnchor(null);
     setInfoAnchor(null);
     setShareAnchor(event.currentTarget);
   };
+  const handleShareLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
 
   const handleOrganiseHover = (event: React.MouseEvent<HTMLElement>) => {
     // Clear other submenus
+    clearHoverCloseTimer();
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setInfoAnchor(null);
     setOrganiseAnchor(event.currentTarget);
   };
+  const handleOrganiseLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
 
   const handleInfoHover = (event: React.MouseEvent<HTMLElement>) => {
     // Clear other submenus
+    clearHoverCloseTimer();
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
     setInfoAnchor(event.currentTarget);
   };
+  const handleInfoLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
+
+  const handleRegularItemHover = () => {
+    // Close all submenus when hovering over non-submenu items
+    clearHoverCloseTimer();
+    setOpenWithAnchor(null);
+    setShareAnchor(null);
+    setOrganiseAnchor(null);
+    setInfoAnchor(null);
+  };
 
   const handleSubmenuClose = () => {
+    clearHoverCloseTimer();
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
@@ -110,6 +146,7 @@ export const ContextMenu = ({
 
   const handleMainMenuClose = () => {
     onClose();
+    clearHoverCloseTimer();
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
@@ -158,6 +195,7 @@ export const ContextMenu = ({
         <>
           <MenuItem 
             onMouseEnter={handleOpenWithHover}
+            onMouseLeave={handleOpenWithLeave}
           >
             <ListItemIcon>
               <OpenWithIcon fontSize="small" />
@@ -176,7 +214,7 @@ export const ContextMenu = ({
         </>
       )}
 
-      <MenuItem onClick={() => handleAction(onDownload)}>
+      <MenuItem onClick={() => handleAction(onDownload)} onMouseEnter={handleRegularItemHover}>
         <ListItemIcon>
           <DownloadIcon fontSize="small" />
         </ListItemIcon>
@@ -190,7 +228,7 @@ export const ContextMenu = ({
         />
       </MenuItem>
       
-      <MenuItem onClick={() => handleAction(onRename)}>
+      <MenuItem onClick={() => handleAction(onRename)} onMouseEnter={handleRegularItemHover}>
         <ListItemIcon>
           <RenameIcon fontSize="small" />
         </ListItemIcon>
@@ -215,7 +253,7 @@ export const ContextMenu = ({
         </Typography>
       </MenuItem>
 
-      <MenuItem onClick={() => handleAction(onCopy)}>
+      <MenuItem onClick={() => handleAction(onCopy)} onMouseEnter={handleRegularItemHover}>
         <ListItemIcon>
           <CopyIcon fontSize="small" />
         </ListItemIcon>
@@ -242,7 +280,7 @@ export const ContextMenu = ({
 
       <Divider />
 
-      <MenuItem onMouseEnter={handleShareHover}>
+  <MenuItem onMouseEnter={handleShareHover} onMouseLeave={handleShareLeave}>
         <ListItemIcon>
           <ShareIcon fontSize="small" />
         </ListItemIcon>
@@ -257,7 +295,7 @@ export const ContextMenu = ({
         <ChevronRightIcon fontSize="small" sx={{ color: '#5f6368', ml: 'auto' }} />
       </MenuItem>
 
-      <MenuItem onMouseEnter={handleOrganiseHover}>
+  <MenuItem onMouseEnter={handleOrganiseHover} onMouseLeave={handleOrganiseLeave}>
         <ListItemIcon>
           <OrganiseIcon fontSize="small" />
         </ListItemIcon>
@@ -272,7 +310,7 @@ export const ContextMenu = ({
         <ChevronRightIcon fontSize="small" sx={{ color: '#5f6368', ml: 'auto' }} />
       </MenuItem>
 
-      <MenuItem onMouseEnter={handleInfoHover}>
+  <MenuItem onMouseEnter={handleInfoHover} onMouseLeave={handleInfoLeave}>
         <ListItemIcon>
           <InfoIcon fontSize="small" />
         </ListItemIcon>
@@ -289,7 +327,7 @@ export const ContextMenu = ({
 
       <Divider />
 
-      <MenuItem onClick={() => handleAction(onDelete)}>
+      <MenuItem onClick={() => handleAction(onDelete)} onMouseEnter={handleRegularItemHover}>
         <ListItemIcon>
           <DeleteIcon fontSize="small" sx={{ color: '#5f6368' }} />
         </ListItemIcon>
@@ -321,6 +359,8 @@ export const ContextMenu = ({
       open={Boolean(openWithAnchor)}
       onClose={handleSubmenuClose}
       file={file}
+      onMouseEnter={clearHoverCloseTimer}
+      onMouseLeave={() => scheduleClose()}
     />
 
     {/* Share Submenu */}
@@ -329,6 +369,8 @@ export const ContextMenu = ({
       open={Boolean(shareAnchor)}
       onClose={handleSubmenuClose}
       file={file}
+      onMouseEnter={clearHoverCloseTimer}
+      onMouseLeave={() => scheduleClose()}
     />
 
     {/* Organise Submenu */}
@@ -337,6 +379,8 @@ export const ContextMenu = ({
       open={Boolean(organiseAnchor)}
       onClose={handleSubmenuClose}
       file={file}
+      onMouseEnter={clearHoverCloseTimer}
+      onMouseLeave={() => scheduleClose()}
     />
 
     {/* File Information Submenu */}
@@ -345,6 +389,8 @@ export const ContextMenu = ({
       open={Boolean(infoAnchor)}
       onClose={handleSubmenuClose}
       file={file}
+      onMouseEnter={clearHoverCloseTimer}
+      onMouseLeave={() => scheduleClose()}
     />
     </>
   );

@@ -18,6 +18,8 @@ interface OpenWithSubmenuProps {
   open: boolean;
   onClose: () => void;
   file: any;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export const OpenWithSubmenu = ({
@@ -25,6 +27,8 @@ export const OpenWithSubmenu = ({
   open,
   onClose,
   file,
+  onMouseEnter,
+  onMouseLeave,
 }: OpenWithSubmenuProps) => {
   const handleAction = (action: string) => {
     console.log(`Open with action: ${action} for file:`, file?.name);
@@ -39,6 +43,8 @@ export const OpenWithSubmenu = ({
       anchorEl={anchorEl}
       open={open}
       onClose={onClose}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       anchorOrigin={{
         vertical: 'top',
         horizontal: 'left',

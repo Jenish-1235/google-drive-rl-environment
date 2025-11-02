@@ -16,6 +16,8 @@ interface OrganiseSubmenuProps {
   open: boolean;
   onClose: () => void;
   file: any;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export const OrganiseSubmenu = ({
@@ -23,6 +25,8 @@ export const OrganiseSubmenu = ({
   open,
   onClose,
   file,
+  onMouseEnter,
+  onMouseLeave,
 }: OrganiseSubmenuProps) => {
   const handleAction = (action: string) => {
     console.log(`Organise action: ${action} for file:`, file?.name);
@@ -37,6 +41,8 @@ export const OrganiseSubmenu = ({
       anchorEl={anchorEl}
       open={open}
       onClose={onClose}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       anchorOrigin={{
         vertical: 'top',
         horizontal: 'left',

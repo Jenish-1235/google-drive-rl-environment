@@ -19,6 +19,8 @@ interface FileInformationSubmenuProps {
   open: boolean;
   onClose: () => void;
   file: any;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export const FileInformationSubmenu = ({
@@ -26,6 +28,8 @@ export const FileInformationSubmenu = ({
   open,
   onClose,
   file,
+  onMouseEnter,
+  onMouseLeave,
 }: FileInformationSubmenuProps) => {
   const handleAction = (action: string) => {
     console.log(`File information action: ${action} for file:`, file?.name);
@@ -40,6 +44,8 @@ export const FileInformationSubmenu = ({
       anchorEl={anchorEl}
       open={open}
       onClose={onClose}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
       anchorOrigin={{
         vertical: 'top',
         horizontal: 'left',
