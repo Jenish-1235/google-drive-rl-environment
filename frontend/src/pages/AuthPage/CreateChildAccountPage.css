@@ -1,0 +1,327 @@
+/* Create Child Account Page Container */
+.create-child-account-page-container {
+  background-color: #2d3035;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  padding: 20px;
+}
+
+/* Main Card */
+.create-child-account-card {
+  background-color: #1f1f1f;
+  border-radius: 28px;
+  max-width: 850px;
+  width: 100%;
+  padding: 48px 40px 36px;
+  box-sizing: border-box;
+  transition: max-width 0.3s ease;
+}
+
+/* When showing name form, make card narrower */
+.create-child-account-card:has(.child-name-form) {
+  max-width: 450px;
+}
+
+/* Logo */
+.create-child-account-card .logo-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 32px;
+}
+
+/* Content Layout */
+.child-account-content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  margin-bottom: 32px;
+}
+
+/* Left side */
+.child-account-left {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.child-account-heading {
+  color: #e3e3e3;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  margin: 0 0 16px 0;
+  padding: 0;
+}
+
+.child-account-description {
+  color: #e3e3e3;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  margin: 0;
+  padding: 0;
+}
+
+/* Right side - Features */
+.child-account-right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.child-account-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.feature-icon {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-icon svg {
+  width: 20px;
+  height: 20px;
+}
+
+.feature-text {
+  color: #e3e3e3;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  flex: 1;
+}
+
+.learn-more-child-link {
+  color: #8ab4f8;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.learn-more-child-link:hover {
+  text-decoration: underline;
+}
+
+/* Action Buttons */
+.child-account-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 24px;
+}
+
+/* No Thanks Button */
+.no-thanks-btn {
+  background-color: transparent;
+  border: none;
+  border-radius: 20px;
+  color: #8ab4f8;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 24px;
+  min-width: 80px;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  transition: background-color 0.2s;
+}
+
+.no-thanks-btn:hover {
+  background-color: rgba(138, 180, 248, 0.08);
+}
+
+.no-thanks-btn:active {
+  background-color: rgba(138, 180, 248, 0.12);
+}
+
+/* Yes Continue Button */
+.yes-continue-btn {
+  background-color: #aecbfa;
+  border: none;
+  border-radius: 20px;
+  color: #001d35;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 24px;
+  min-width: 80px;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.yes-continue-btn:hover {
+  background-color: #c1d8fc;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
+.yes-continue-btn:active {
+  background-color: #a0c0f5;
+}
+
+/* Footer */
+.create-child-account-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 850px;
+  width: 100%;
+  margin-top: 40px;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.create-child-account-footer .language-selector {
+  color: #9aa0a6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.create-child-account-footer .language-selector:hover {
+  background-color: rgba(232, 234, 237, 0.08);
+}
+
+.create-child-account-footer .footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.create-child-account-footer .footer-link {
+  color: #9aa0a6;
+  font-size: 12px;
+  text-decoration: none;
+  padding: 8px 4px;
+  transition: color 0.2s;
+}
+
+.create-child-account-footer .footer-link:hover {
+  color: #e3e3e3;
+}
+
+.create-child-account-footer .footer-link:hover {
+  color: #e3e3e3;
+}
+
+/* Child Name Form (after clicking Yes, continue) */
+.child-name-form {
+  width: 100%;
+}
+
+.child-account-subheading {
+  color: #e3e3e3;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0 0 24px 0;
+  padding: 0;
+}
+
+/* Name Inputs Container */
+.child-name-inputs-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.child-name-input-wrapper {
+  width: 100%;
+}
+
+/* Child Name Input Fields */
+.child-name-input {
+  background-color: transparent;
+  border: 1px solid #5f6368;
+  border-radius: 4px;
+  color: #e3e3e3;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  padding: 13px 15px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  outline: none;
+  transition: border-color 0.2s, border-width 0.2s, padding 0.2s;
+}
+
+.child-name-input::placeholder {
+  color: #9aa0a6;
+}
+
+.child-name-input:hover {
+  border-color: #8ab4f8;
+}
+
+.child-name-input:focus {
+  border: 2px solid #8ab4f8;
+  padding: 12px 14px;
+}
+
+/* Child Name Action Buttons */
+.child-name-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+
+/* Child Next Button */
+.child-next-btn {
+  background-color: #aecbfa;
+  border: none;
+  border-radius: 20px;
+  color: #001d35;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 24px;
+  min-width: 80px;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.child-next-btn:hover {
+  background-color: #c1d8fc;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
+.child-next-btn:active {
+  background-color: #a0c0f5;
+}
+
+.child-next-btn:disabled {
+  background-color: rgba(138, 180, 248, 0.12);
+  color: rgba(232, 234, 237, 0.38);
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .child-account-content {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .create-child-account-card {
+    max-width: 450px;
+  }
+
+  .create-child-account-footer {
+    max-width: 450px;
+  }
+}

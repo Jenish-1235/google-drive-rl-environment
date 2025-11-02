@@ -1,0 +1,164 @@
+/* Forgot Email Page Container */
+.forgot-email-page-container {
+  background-color: #2d3035;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  padding: 20px;
+}
+
+/* Main Card */
+.forgot-email-card {
+  background-color: #1f1f1f;
+  border-radius: 28px;
+  max-width: 450px;
+  width: 100%;
+  padding: 48px 40px 36px;
+  box-sizing: border-box;
+}
+
+/* Logo */
+.forgot-email-card .logo-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 16px;
+}
+
+/* Heading */
+.forgot-email-heading {
+  color: #e3e3e3;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  margin: 0 0 8px 0;
+  padding: 0;
+}
+
+.forgot-email-subheading {
+  color: #e3e3e3;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  margin: 0 0 24px 0;
+  padding: 0;
+}
+
+/* Input Container */
+.forgot-input-container {
+  margin-bottom: 24px;
+}
+
+/* Input Field */
+.forgot-email-input {
+  background-color: transparent;
+  border: 1px solid #5f6368;
+  border-radius: 4px;
+  color: #e3e3e3;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 24px;
+  padding: 13px 15px;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  outline: none;
+  transition: border-color 0.2s, border-width 0.2s, padding 0.2s;
+}
+
+.forgot-email-input::placeholder {
+  color: #9aa0a6;
+}
+
+.forgot-email-input:hover {
+  border-color: #8ab4f8;
+}
+
+.forgot-email-input:focus {
+  border: 2px solid #8ab4f8;
+  padding: 12px 14px;
+}
+
+/* Action Buttons */
+.forgot-email-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 28px;
+}
+
+/* Next Button */
+.forgot-next-btn {
+  background-color: #aecbfa;
+  border: none;
+  border-radius: 20px;
+  color: #001d35;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 10px 24px;
+  min-width: 80px;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.forgot-next-btn:hover {
+  background-color: #c1d8fc;
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+}
+
+.forgot-next-btn:active {
+  background-color: #a0c0f5;
+}
+
+.forgot-next-btn:disabled {
+  background-color: rgba(138, 180, 248, 0.12);
+  color: rgba(232, 234, 237, 0.38);
+  cursor: not-allowed;
+}
+
+/* Footer */
+.forgot-email-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 450px;
+  width: 100%;
+  margin-top: 40px;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.forgot-email-footer .language-selector {
+  color: #9aa0a6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.forgot-email-footer .language-selector:hover {
+  background-color: rgba(232, 234, 237, 0.08);
+}
+
+.forgot-email-footer .footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.forgot-email-footer .footer-link {
+  color: #9aa0a6;
+  font-size: 12px;
+  text-decoration: none;
+  padding: 8px 4px;
+  transition: color 0.2s;
+}
+
+.forgot-email-footer .footer-link:hover {
+  color: #e3e3e3;
+}

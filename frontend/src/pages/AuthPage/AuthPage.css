@@ -1,0 +1,383 @@
+/* Auth Page Styles - Matching Google Sign In Screenshot */
+
+.auth-page-container {
+  min-height: 100vh;
+  background-color: #2d3035;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+}
+
+/* Main card */
+.auth-card {
+  background-color: #1f1f1f;
+  border-radius: 28px;
+  padding: 48px 40px 36px;
+  width: 100%;
+  max-width: 450px;
+  box-sizing: border-box;
+}
+
+/* Google Logo */
+.logo-container {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 24px;
+}
+
+/* Headings */
+.sign-in-heading {
+  color: #e3e3e3;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 1.3333;
+  margin: 0 0 8px 0;
+}
+
+.sign-in-subheading {
+  color: #e3e3e3;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  margin: 0 0 26px 0;
+}
+
+/* Input container */
+.input-container {
+  margin-bottom: 8px;
+}
+
+.email-input {
+  width: 100%;
+  background-color: transparent;
+  border: 1px solid #5f6368;
+  border-radius: 4px;
+  color: #e3e3e3;
+  font-size: 16px;
+  font-weight: 400;
+  padding: 15px 16px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+}
+
+.email-input::placeholder {
+  color: #9aa0a6;
+}
+
+.email-input:hover {
+  border-color: #8ab4f8;
+}
+
+.email-input:focus {
+  border-color: #8ab4f8;
+  border-width: 2px;
+  padding: 14px 15px;
+}
+
+/* Error state for input */
+.email-input.input-error {
+  border-color: #d93025;
+}
+
+.email-input.input-error:focus {
+  border-color: #d93025;
+}
+
+/* Password error message */
+.password-error-message {
+  display: flex;
+  align-items: flex-start;
+  color: #d93025;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 16px;
+  margin-top: 8px;
+  padding: 0 16px;
+}
+
+.password-error-message span {
+  flex: 1;
+}
+
+.error-link {
+  color: #d93025;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.error-link:hover {
+  text-decoration: underline;
+}
+
+/* Forgot email link */
+.forgot-email-link {
+  color: #8ab4f8;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  display: inline-block;
+  margin: 8px 0 24px 0;
+}
+
+.forgot-email-link:hover {
+  text-decoration: underline;
+}
+
+/* Guest mode info */
+.guest-mode-info {
+  background-color: rgba(232, 234, 237, 0.08);
+  border-radius: 8px;
+  color: #e3e3e3;
+  font-size: 14px;
+  line-height: 1.4286;
+  padding: 16px;
+  margin-bottom: 26px;
+}
+
+.learn-more-link {
+  color: #8ab4f8;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.learn-more-link:hover {
+  text-decoration: underline;
+}
+
+/* Action buttons */
+.action-buttons {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.create-account-wrapper {
+  position: relative;
+}
+
+.create-account-btn {
+  background: transparent;
+  border: none;
+  border-radius: 20px;
+  color: #8ab4f8;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  padding: 9px 16px;
+  transition: background-color 0.2s;
+}
+
+.create-account-btn:hover {
+  background-color: rgba(138, 180, 248, 0.08);
+}
+
+.next-btn {
+  background-color: #aecbfa;
+  border: none;
+  border-radius: 20px;
+  color: #001d35;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
+  padding: 10px 24px;
+  min-width: 80px;
+  transition: background-color 0.2s, box-shadow 0.2s;
+}
+
+.next-btn:hover {
+  background-color: #c4d7f6;
+  box-shadow: 0 1px 3px 0 rgba(60, 64, 67, 0.3), 0 4px 8px 3px rgba(60, 64, 67, 0.15);
+}
+
+/* Dropdown menu */
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background-color: #292a2d;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.3), 0 2px 6px 2px rgba(0, 0, 0, 0.15);
+  min-width: 180px;
+  padding: 8px 0;
+  z-index: 1000;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  color: #e8eaed;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+  padding: 10px 24px;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.dropdown-item:hover {
+  background-color: rgba(232, 234, 237, 0.08);
+}
+
+.dropdown-item:first-child {
+  border-radius: 8px 8px 0 0;
+}
+
+.dropdown-item:last-child {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Footer */
+.auth-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 450px;
+  margin-top: 48px;
+  color: #9aa0a6;
+  font-size: 12px;
+}
+
+.language-selector {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.language-selector:hover {
+  background-color: rgba(232, 234, 237, 0.08);
+}
+
+.language-selector svg {
+  margin-left: 4px;
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+}
+
+.footer-link {
+  color: #9aa0a6;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: #e3e3e3;
+}
+
+/* Welcome screen (password entry) */
+.welcome-heading {
+  color: #e3e3e3;
+  font-size: 24px;
+  font-weight: 400;
+  line-height: 32px;
+  margin: 0 0 16px 0;
+  padding: 0;
+}
+
+/* Email display container */
+.email-display-container {
+  margin-bottom: 24px;
+}
+
+.email-display {
+  display: flex;
+  align-items: center;
+  background-color: transparent;
+  border: 1px solid #5f6368;
+  border-radius: 20px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  width: fit-content;
+}
+
+.email-display:hover {
+  background-color: rgba(232, 234, 237, 0.08);
+  border-color: #8ab4f8;
+}
+
+.email-text {
+  color: #e3e3e3;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+/* Show password container */
+.show-password-container {
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.show-password-label {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.show-password-checkbox {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  margin-right: 12px;
+  cursor: pointer;
+  accent-color: #8ab4f8;
+  background-color: transparent;
+  border: 2px solid #5f6368;
+  border-radius: 2px;
+}
+
+.show-password-text {
+  color: #e3e3e3;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 20px;
+}
+
+/* Password screen action buttons */
+.password-actions {
+  margin-top: 32px;
+}
+
+/* Forgot password link */
+.forgot-password-link {
+  color: #8ab4f8;
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s;
+  padding: 8px 0;
+}
+
+.forgot-password-link:hover {
+  color: #aecbfa;
+  text-decoration: underline;
+}
+
