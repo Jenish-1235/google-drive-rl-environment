@@ -8,9 +8,11 @@ import { DragDropOverlay } from "../files/DragDropOverlay";
 import { UploadProgress } from "../files/UploadProgress";
 import { Snackbar } from "../common/Snackbar";
 import { useAuthStore } from "../../store/authStore";
+import { useUIStore } from "../../store/uiStore";
 
 export const MainLayout = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
+  const { detailsPanelOpen } = useUIStore();
   const navigate = useNavigate();
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
