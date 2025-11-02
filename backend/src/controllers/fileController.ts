@@ -17,6 +17,15 @@ export const fileController = {
         trashed,
         type,
         search,
+        mime_type,
+        created_after,
+        created_before,
+        modified_after,
+        modified_before,
+        size_min,
+        size_max,
+        sort_by,
+        sort_order,
       } = req.query;
 
       const filters: any = {
@@ -44,6 +53,42 @@ export const fileController = {
 
       if (search) {
         filters.search = search as string;
+      }
+
+      if (mime_type) {
+        filters.mimeType = mime_type as string;
+      }
+
+      if (created_after) {
+        filters.createdAfter = created_after as string;
+      }
+
+      if (created_before) {
+        filters.createdBefore = created_before as string;
+      }
+
+      if (modified_after) {
+        filters.modifiedAfter = modified_after as string;
+      }
+
+      if (modified_before) {
+        filters.modifiedBefore = modified_before as string;
+      }
+
+      if (size_min) {
+        filters.sizeMin = parseInt(size_min as string);
+      }
+
+      if (size_max) {
+        filters.sizeMax = parseInt(size_max as string);
+      }
+
+      if (sort_by) {
+        filters.sortBy = sort_by as string;
+      }
+
+      if (sort_order) {
+        filters.sortOrder = sort_order as string;
       }
 
       const files = fileModel.findAll(filters);

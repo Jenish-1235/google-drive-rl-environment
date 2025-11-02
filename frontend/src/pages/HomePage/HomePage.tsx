@@ -317,6 +317,9 @@ export const HomePage = () => {
         }
         onDelete={() => contextMenu.file && handleDelete([contextMenu.file])}
         onDetails={() => showSnackbar("Details feature coming soon", "info")}
+        onOrganize={() => showSnackbar("Organize feature coming soon", "info")}
+        onMakeOffline={() => showSnackbar("Make offline feature coming soon", "info")}
+        onSummarize={() => showSnackbar("AI summarization coming soon", "info")}
       />
 
       <RenameModal

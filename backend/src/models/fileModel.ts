@@ -9,6 +9,15 @@ export interface FileFilters {
   isTrashed?: boolean;
   type?: "file" | "folder";
   search?: string;
+  mimeType?: string;
+  createdAfter?: string;
+  createdBefore?: string;
+  modifiedAfter?: string;
+  modifiedBefore?: string;
+  sizeMin?: number;
+  sizeMax?: number;
+  sortBy?: "name" | "created_at" | "updated_at" | "size";
+  sortOrder?: "asc" | "desc";
 }
 
 export const fileModel = {
@@ -86,14 +95,61 @@ export const fileModel = {
       params.push(filters.type);
     }
 
-    // Search by name
+    // Filter by mime type
+    if (filters.mimeType) {
+      query += " AND mime_type LIKE ?";
+      params.push(`%${filters.mimeType}%`);
+    }
+
+    // Search by name (case-insensitive)
     if (filters.search) {
       query += " AND name LIKE ?";
       params.push(`%${filters.search}%`);
     }
 
-    // Order by type (folders first) then name
-    query += " ORDER BY type DESC, name ASC";
+    // Filter by creation date range
+    if (filters.createdAfter) {
+      query += " AND created_at >= ?";
+      params.push(filters.createdAfter);
+    }
+
+    if (filters.createdBefore) {
+      query += " AND created_at <= ?";
+      params.push(filters.createdBefore);
+    }
+
+    // Filter by modification date range
+    if (filters.modifiedAfter) {
+      query += " AND updated_at >= ?";
+      params.push(filters.modifiedAfter);
+    }
+
+    if (filters.modifiedBefore) {
+      query += " AND updated_at <= ?";
+      params.push(filters.modifiedBefore);
+    }
+
+    // Filter by file size range
+    if (filters.sizeMin !== undefined) {
+      query += " AND size >= ?";
+      params.push(filters.sizeMin);
+    }
+
+    if (filters.sizeMax !== undefined) {
+      query += " AND size <= ?";
+      params.push(filters.sizeMax);
+    }
+
+    // Sorting
+    const sortBy = filters.sortBy || "name";
+    const sortOrder = filters.sortOrder || "asc";
+
+    // Special handling for default sort (folders first, then by name)
+    if (!filters.sortBy) {
+      query += " ORDER BY type DESC, name ASC";
+    } else {
+      query += ` ORDER BY ${sortBy} ${sortOrder.toUpperCase()}`;
+    }
 
     const stmt = db.prepare(query);
     return stmt.all(...params) as File[];
