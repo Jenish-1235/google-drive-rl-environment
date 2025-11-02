@@ -294,7 +294,7 @@ export const Sidebar = () => {
               startIcon={<AddIcon />}
               onClick={handleNewMenuOpen}
               sx={{
-                height: 56,
+                height: 48,
                 borderRadius: "8px",
                 textTransform: "none",
                 fontSize: 14,
@@ -323,29 +323,122 @@ export const Sidebar = () => {
               open={Boolean(newMenuAnchor)}
               onClose={handleNewMenuClose}
               transformOrigin={{ horizontal: "left", vertical: "top" }}
-              anchorOrigin={{ horizontal: "left", vertical: "bottom" }}
+              anchorOrigin={{ horizontal: "left", vertical: "top" }}
               PaperProps={{
-                sx: { mt: 1, minWidth: 200 },
+                sx: {
+                  mt: -0.5,
+                  minWidth: 260,
+                  borderRadius: 2,
+                  boxShadow:
+                    "0 2px 10px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.1)",
+                  overflow: "hidden",
+                },
               }}
             >
+              {/* Folder & Upload Section */}
               <MenuItem onClick={handleNewFolder}>
                 <ListItemIcon>
                   <FolderIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>New folder</ListItemText>
+                <ListItemText primary="New folder" />
               </MenuItem>
+
               <Divider />
+
               <MenuItem onClick={handleFileUpload}>
                 <ListItemIcon>
                   <UploadFileIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>File upload</ListItemText>
+                <ListItemText primary="File upload" />
               </MenuItem>
+
               <MenuItem onClick={handleFolderUpload}>
                 <ListItemIcon>
                   <FolderUploadIcon fontSize="small" />
                 </ListItemIcon>
-                <ListItemText>Folder upload</ListItemText>
+                <ListItemText primary="Folder upload" />
+              </MenuItem>
+
+              <Divider sx={{ my: 0.5 }} />
+
+              {/* Google File Types Section */}
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/docs_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Docs" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/sheets_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Sheets" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/slides_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Slides" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/2x/vids_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Vids" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemIcon>
+                  <img
+                    src="https://www.gstatic.com/images/branding/product/1x/forms_2020q4_48dp.png"
+                    alt=""
+                    width={20}
+                    height={20}
+                  />
+                </ListItemIcon>
+                <ListItemText primary="Google Forms" />
+                <Typography variant="body2" color="text.secondary">
+                  ▶
+                </Typography>
+              </MenuItem>
+
+              <MenuItem>
+                <ListItemText primary="More" />
               </MenuItem>
             </Menu>
           </Box>
