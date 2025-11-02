@@ -314,10 +314,10 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
                 </Box>
               </DetailsSection>
 
-              {/* Folder details - Expanded */}
+              {/* File/Folder details - Expanded */}
               <Box sx={{ borderTop: '1px solid #e8eaed', pt: 3 }}>
                 <Typography sx={{ fontSize: '14px', fontWeight: 500, color: '#202124', mb: 2 }}>
-                  Folder details
+                  {selectedFile?.type === 'folder' ? 'Folder details' : 'File details'}
                 </Typography>
                 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -327,9 +327,41 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
                       Type
                     </Typography>
                     <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
-                      Google Drive Folder
+                      {selectedFile?.type === 'folder' ? 'Google Drive Folder' : 
+                       selectedFile?.type === 'pdf' ? 'PDF' :
+                       selectedFile?.type === 'document' ? 'Google Docs' :
+                       selectedFile?.type === 'spreadsheet' ? 'Google Sheets' :
+                       selectedFile?.type === 'presentation' ? 'Google Slides' :
+                       selectedFile?.type === 'image' ? 'Image' :
+                       selectedFile?.type === 'video' ? 'Video' :
+                       selectedFile?.type === 'audio' ? 'Audio' :
+                       selectedFile?.type || 'File'}
                     </Typography>
                   </Box>
+
+                  {/* Size - Only for files */}
+                  {selectedFile?.type !== 'folder' && (
+                    <Box>
+                      <Typography sx={{ fontSize: '14px', color: '#202124', fontWeight: 500, mb: 0.5 }}>
+                        Size
+                      </Typography>
+                      <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
+                        {selectedFile?.size ? `${Math.round(selectedFile.size / 1024)} KB` : '0 KB'}
+                      </Typography>
+                    </Box>
+                  )}
+
+                  {/* Storage used - Only for files */}
+                  {selectedFile?.type !== 'folder' && (
+                    <Box>
+                      <Typography sx={{ fontSize: '14px', color: '#202124', fontWeight: 500, mb: 0.5 }}>
+                        Storage used
+                      </Typography>
+                      <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
+                        {selectedFile?.size ? `${Math.round(selectedFile.size / 1024)} KB` : '0 KB'}
+                      </Typography>
+                    </Box>
+                  )}
 
                   {/* Owner */}
                   <Box>
@@ -347,7 +379,14 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
                       Modified
                     </Typography>
                     <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
-                      19 Mar 2022 by me
+                      {selectedFile?.modifiedTime ? 
+                        new Date(selectedFile.modifiedTime).toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short', 
+                          year: 'numeric' 
+                        }) + ' by me' : 
+                        '19 Mar 2022 by me'
+                      }
                     </Typography>
                   </Box>
 
@@ -357,7 +396,14 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
                       Opened
                     </Typography>
                     <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
-                      2 Nov 2025 by me
+                      {selectedFile?.lastOpenedTime ? 
+                        new Date(selectedFile.lastOpenedTime).toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short', 
+                          year: 'numeric' 
+                        }) + ' by me' : 
+                        '2 Nov 2025 by me'
+                      }
                     </Typography>
                   </Box>
 
@@ -367,7 +413,14 @@ export const DetailsPanel = ({ open, onClose }: DetailsPanelProps) => {
                       Created
                     </Typography>
                     <Typography sx={{ fontSize: '13px', color: '#5f6368', fontWeight: 400 }}>
-                      19 Mar 2022
+                      {selectedFile?.createdTime ? 
+                        new Date(selectedFile.createdTime).toLocaleDateString('en-GB', { 
+                          day: 'numeric', 
+                          month: 'short', 
+                          year: 'numeric' 
+                        }) : 
+                        '19 Mar 2022'
+                      }
                     </Typography>
                   </Box>
                 </Box>
