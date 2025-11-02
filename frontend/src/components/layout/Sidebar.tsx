@@ -130,6 +130,7 @@ export const Sidebar = () => {
   const showSnackbar = useUIStore((state) => state.showSnackbar);
   const openModal = useUIStore((state) => state.openModal);
   const currentFolderId = useFileStore((state) => state.currentFolderId);
+  const uploadFile = useFileStore((state) => state.uploadFile);
 
   // Ensure sidebar is always open on desktop
   useEffect(() => {
@@ -198,8 +199,8 @@ export const Sidebar = () => {
         parentId: currentFolderId || null,
       });
 
-      // Simulate upload
-      simulateUpload(uploadId, file);
+      // Start real upload
+      handleRealUpload(uploadId, file, currentFolderId || null);
     });
 
     showSnackbar(
@@ -208,21 +209,20 @@ export const Sidebar = () => {
     );
   };
 
-  const simulateUpload = (uploadId: string, file: File) => {
-    updateUpload(uploadId, { status: "uploading" });
+  const handleRealUpload = async (uploadId: string, file: File, parentId: string | null) => {
+    try {
+      updateUpload(uploadId, { status: "uploading" });
 
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15;
+      await uploadFile(file, parentId, (progress) => {
+        updateUpload(uploadId, { progress });
+      });
 
-      if (progress >= 100) {
-        clearInterval(interval);
-        updateUpload(uploadId, { progress: 100, status: "completed" });
-        showSnackbar(`${file.name} uploaded successfully`, "success");
-      } else {
-        updateUpload(uploadId, { progress: Math.min(progress, 99) });
-      }
-    }, 300);
+      updateUpload(uploadId, { progress: 100, status: "completed" });
+      showSnackbar(`${file.name} uploaded successfully`, "success");
+    } catch (error: any) {
+      updateUpload(uploadId, { status: "error", error: error.message || "Upload failed" });
+      showSnackbar(`Failed to upload ${file.name}`, "error");
+    }
   };
 
   const isActive = (path: string) => {

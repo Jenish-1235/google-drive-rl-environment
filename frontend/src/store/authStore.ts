@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { AuthState, User, LoginCredentials, SignupCredentials } from '../types/user.types';
+import { authService } from '../services/authService';
 
 interface AuthStore extends AuthState {
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -23,70 +24,57 @@ export const useAuthStore = create<AuthStore>()(
       login: async (credentials: LoginCredentials) => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Implement actual API call
-          // Mock login for now
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          const response = await authService.login(credentials);
 
-          const mockUser: User = {
-            id: 'user-001',
-            email: credentials.email,
-            name: credentials.email.split('@')[0],
-            photoUrl: '',
-            createdAt: new Date(),
-            lastLoginAt: new Date(),
-          };
-
-          const mockToken = 'mock-jwt-token-' + Date.now();
+          // Store token in localStorage for API interceptor
+          localStorage.setItem('token', response.token);
 
           set({
-            user: mockUser,
-            token: mockToken,
+            user: response.user,
+            token: response.token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
-        } catch (error) {
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.error || error.message || 'Login failed';
           set({
-            error: error instanceof Error ? error.message : 'Login failed',
+            error: errorMessage,
             isLoading: false,
+            isAuthenticated: false,
           });
+          throw error;
         }
       },
 
       signup: async (credentials: SignupCredentials) => {
         set({ isLoading: true, error: null });
         try {
-          // TODO: Implement actual API call
-          // Mock signup for now
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          const response = await authService.register(credentials);
 
-          const mockUser: User = {
-            id: 'user-' + Date.now(),
-            email: credentials.email,
-            name: credentials.name,
-            photoUrl: '',
-            createdAt: new Date(),
-            lastLoginAt: new Date(),
-          };
-
-          const mockToken = 'mock-jwt-token-' + Date.now();
+          // Store token in localStorage for API interceptor
+          localStorage.setItem('token', response.token);
 
           set({
-            user: mockUser,
-            token: mockToken,
+            user: response.user,
+            token: response.token,
             isAuthenticated: true,
             isLoading: false,
             error: null,
           });
-        } catch (error) {
+        } catch (error: any) {
+          const errorMessage = error.response?.data?.error || error.message || 'Signup failed';
           set({
-            error: error instanceof Error ? error.message : 'Signup failed',
+            error: errorMessage,
             isLoading: false,
+            isAuthenticated: false,
           });
+          throw error;
         }
       },
 
       logout: () => {
+        authService.logout();
         set({
           user: null,
           token: null,

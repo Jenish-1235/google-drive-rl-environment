@@ -5,6 +5,7 @@ import { CloudUpload as UploadIcon } from '@mui/icons-material';
 import { colors } from '../../theme/theme';
 import { useUploadStore } from '../../store/uploadStore';
 import { useUIStore } from '../../store/uiStore';
+import { useFileStore } from '../../store/fileStore';
 
 interface FileUploaderProps {
   folderId?: string | null;
@@ -14,6 +15,7 @@ interface FileUploaderProps {
 export const FileUploader = ({ folderId = null, onFilesSelected }: FileUploaderProps) => {
   const addUpload = useUploadStore((state) => state.addUpload);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
+  const uploadFile = useFileStore((state) => state.uploadFile);
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -34,7 +36,7 @@ export const FileUploader = ({ folderId = null, onFilesSelected }: FileUploaderP
         return;
       }
 
-      // Add files to upload queue
+      // Add files to upload queue and start upload
       acceptedFiles.forEach((file) => {
         const uploadId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
@@ -47,12 +49,9 @@ export const FileUploader = ({ folderId = null, onFilesSelected }: FileUploaderP
           status: 'pending',
           parentId: folderId,
         });
-      });
 
-      // Simulate upload process
-      acceptedFiles.forEach((file, index) => {
-        const uploadId = `upload-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-        simulateUpload(uploadId, file);
+        // Start actual upload
+        handleFileUpload(uploadId, file, folderId);
       });
 
       showSnackbar(
@@ -62,26 +61,25 @@ export const FileUploader = ({ folderId = null, onFilesSelected }: FileUploaderP
 
       onFilesSelected?.(acceptedFiles);
     },
-    [folderId, addUpload, showSnackbar, onFilesSelected]
+    [folderId, addUpload, showSnackbar, onFilesSelected, uploadFile]
   );
 
-  const simulateUpload = (uploadId: string, file: File) => {
+  const handleFileUpload = async (uploadId: string, file: File, parentId: string | null) => {
     const updateUpload = useUploadStore.getState().updateUpload;
 
-    updateUpload(uploadId, { status: 'uploading' });
+    try {
+      updateUpload(uploadId, { status: 'uploading' });
 
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15;
+      await uploadFile(file, parentId, (progress) => {
+        updateUpload(uploadId, { progress });
+      });
 
-      if (progress >= 100) {
-        clearInterval(interval);
-        updateUpload(uploadId, { progress: 100, status: 'completed' });
-        useUIStore.getState().showSnackbar(`${file.name} uploaded successfully`, 'success');
-      } else {
-        updateUpload(uploadId, { progress: Math.min(progress, 99) });
-      }
-    }, 300);
+      updateUpload(uploadId, { progress: 100, status: 'completed' });
+      useUIStore.getState().showSnackbar(`${file.name} uploaded successfully`, 'success');
+    } catch (error: any) {
+      updateUpload(uploadId, { status: 'error', error: error.message || 'Upload failed' });
+      useUIStore.getState().showSnackbar(`Failed to upload ${file.name}`, 'error');
+    }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({

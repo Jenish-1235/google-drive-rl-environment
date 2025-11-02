@@ -3,12 +3,22 @@ import {
   InfoOutlined as InfoIcon,
   KeyboardArrowDown as ArrowDownIcon,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useFileStore } from "../../store/fileStore";
+import { useUIStore } from "../../store/uiStore";
 
 export const StarredPage = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const files = useFileStore((state) => state.files);
+  const fetchStarredFiles = useFileStore((state) => state.fetchStarredFiles);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
+
+  // Fetch starred files on mount
+  useEffect(() => {
+    fetchStarredFiles().catch((error) => {
+      showSnackbar(error.message || "Failed to load starred files", "error");
+    });
+  }, [fetchStarredFiles, showSnackbar]);
 
   // Get starred files
   const starredFiles = files.filter((file) => file.isStarred);

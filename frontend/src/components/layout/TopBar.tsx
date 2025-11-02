@@ -27,7 +27,6 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
-import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
 import { colors } from "../../theme/theme";
 import {
@@ -105,9 +104,7 @@ export const TopBar = () => {
         right: 0,
       }}
     >
-      <Toolbar
-        sx={{ gap: 0, minHeight: 64, width: "100%", px: { xs: 2, md: 3 } }}
-      >
+      <Toolbar sx={{ gap: 0, minHeight: 64, width: "100%", px: { xs: 2, md: 3 } }}>
         {/* Menu button & Logo */}
         <Box
           sx={{
@@ -166,12 +163,8 @@ export const TopBar = () => {
             sx={{
               position: "relative",
               borderRadius: 8,
-              backgroundColor: searchFocused
-                ? colors.surface
-                : colors.backgroundGray,
-              border: searchFocused
-                ? `1px solid ${colors.primary}`
-                : "1px solid transparent",
+              backgroundColor: searchFocused ? colors.surface : colors.backgroundGray,
+              border: searchFocused ? `1px solid ${colors.primary}` : "1px solid transparent",
               "&:hover": {
                 backgroundColor: colors.surface,
                 boxShadow: searchFocused
@@ -206,11 +199,7 @@ export const TopBar = () => {
                 onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
               />
               <Tooltip title="Advanced search">
-                <IconButton
-                  size="small"
-                  sx={{ color: "text.secondary" }}
-                  onClick={handleAdvancedSearchOpen}
-                >
+                <IconButton size="small" sx={{ color: "text.secondary" }} onClick={handleAdvancedSearchOpen}>
                   <FilterListIcon />
                 </IconButton>
               </Tooltip>
@@ -332,11 +321,7 @@ export const TopBar = () => {
           <Tooltip title="Account">
             <IconButton onClick={handleOpenUserMenu} sx={{ ml: 0.5 }}>
               {user?.photoUrl ? (
-                <Avatar
-                  src={user.photoUrl}
-                  alt={user.name}
-                  sx={{ width: 32, height: 32 }}
-                />
+                <Avatar src={user.photoUrl} alt={user.name} sx={{ width: 32, height: 32 }} />
               ) : (
                 <Avatar sx={{ width: 32, height: 32, bgcolor: colors.primary }}>
                   {user?.name?.charAt(0).toUpperCase() || "U"}

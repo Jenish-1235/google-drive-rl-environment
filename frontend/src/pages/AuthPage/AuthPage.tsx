@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuthStore } from '../../store/authStore';
 import './AuthPage.css';
 
 interface AuthPageProps {
@@ -9,13 +10,23 @@ interface AuthPageProps {
 export const AuthPage = ({ mode }: AuthPageProps) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordScreen, setShowPasswordScreen] = useState(false);
-  const [passwordError, setPasswordError] = useState(false);
   const [createAccountOpen, setCreateAccountOpen] = useState(false);
   const [languageOpen, setLanguageOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  // Auth store
+  const { login, signup, isLoading, error, isAuthenticated } = useAuthStore();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/drive');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleNextClick = () => {
     if (email.trim()) {
@@ -23,26 +34,26 @@ export const AuthPage = ({ mode }: AuthPageProps) => {
     }
   };
 
-  const handlePasswordSubmit = () => {
-    // For demo purposes, let's use a simple password check
-    // In a real app, this would validate against a backend
-    const CORRECT_PASSWORD = 'password123'; // Demo password
-    
-    if (password === CORRECT_PASSWORD) {
-      // Correct password - redirect to home/drive
-      navigate('/drive');
-    } else {
-      // Wrong password - show error
-      setPasswordError(true);
+  const handlePasswordSubmit = async () => {
+    try {
+      if (mode === 'signup') {
+        if (!name.trim()) {
+          return;
+        }
+        await signup({ email, password, name });
+      } else {
+        await login({ email, password });
+      }
+      // Navigate will happen automatically via useEffect when isAuthenticated changes
+    } catch (err) {
+      // Error is already set in the store
+      console.error('Auth error:', err);
     }
   };
 
   // Clear error when user starts typing
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPassword(e.target.value);
-    if (passwordError) {
-      setPasswordError(false);
-    }
   };
 
   useEffect(() => {
@@ -96,7 +107,7 @@ export const AuthPage = ({ mode }: AuthPageProps) => {
         {!showPasswordScreen ? (
           <>
             {/* Heading */}
-            <h1 className="sign-in-heading">Sign in</h1>
+            <h1 className="sign-in-heading">{mode === 'signup' ? 'Create your Account' : 'Sign in'}</h1>
             <p className="sign-in-subheading">to continue to Google Drive</p>
 
             {/* Email Input */}
@@ -116,10 +127,12 @@ export const AuthPage = ({ mode }: AuthPageProps) => {
               />
             </div>
 
-            {/* Forgot email link */}
-            <Link to="/auth/forgot-email" className="forgot-email-link">
-              Forgot email?
-            </Link>
+            {/* Forgot email link (login only) */}
+            {mode === 'login' && (
+              <Link to="/auth/forgot-email" className="forgot-email-link">
+                Forgot email?
+              </Link>
+            )}
 
             {/* Guest mode info */}
             <div className="guest-mode-info">
@@ -131,53 +144,28 @@ export const AuthPage = ({ mode }: AuthPageProps) => {
 
             {/* Action buttons */}
             <div className="action-buttons">
-              <div className="create-account-wrapper" ref={dropdownRef}>
-                <button
-                  className="create-account-btn"
-                  onClick={() => setCreateAccountOpen(!createAccountOpen)}
-                >
-                  Create account
-                </button>
-                {createAccountOpen && (
-                  <div className="dropdown-menu">
-                    <div
-                      className="dropdown-item"
-                      onClick={() => {
-                        setCreateAccountOpen(false);
-                        navigate('/auth/create-account');
-                      }}
-                    >
-                      For my personal use
-                    </div>
-                    <div
-                      className="dropdown-item"
-                      onClick={() => {
-                        setCreateAccountOpen(false);
-                        navigate('/auth/create-child-account');
-                      }}
-                    >
-                      For my child
-                    </div>
-                    <div
-                      className="dropdown-item"
-                      onClick={() => {
-                        setCreateAccountOpen(false);
-                        navigate('/auth/business-account');
-                      }}
-                    >
-                      For work or my business
-                    </div>
-                  </div>
-                )}
-              </div>
+              {mode === 'login' ? (
+                <div className="create-account-wrapper" ref={dropdownRef}>
+                  <button
+                    className="create-account-btn"
+                    onClick={() => navigate('/auth/signup')}
+                  >
+                    Create account
+                  </button>
+                </div>
+              ) : (
+                <Link to="/auth/login" className="create-account-btn" style={{ textDecoration: 'none' }}>
+                  Sign in instead
+                </Link>
+              )}
               <button className="next-btn" onClick={handleNextClick}>Next</button>
             </div>
           </>
         ) : (
           <>
             {/* Welcome screen - Password entry */}
-            <h1 className="welcome-heading">Welcome</h1>
-            
+            <h1 className="welcome-heading">{mode === 'signup' ? 'Create Account' : 'Welcome'}</h1>
+
             {/* Email display with change option */}
             <div className="email-display-container">
               <div className="email-display">
@@ -185,41 +173,55 @@ export const AuthPage = ({ mode }: AuthPageProps) => {
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
                 </svg>
                 <span className="email-text">{email}</span>
-                <svg 
-                  width="16" 
-                  height="16" 
-                  viewBox="0 0 24 24" 
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
                   fill="#e3e3e3"
                   style={{ marginLeft: '8px', cursor: 'pointer' }}
+                  onClick={() => setShowPasswordScreen(false)}
                 >
                   <path d="M7 10l5 5 5-5z"/>
                 </svg>
               </div>
             </div>
 
+            {/* Name Input (for signup only) */}
+            {mode === 'signup' && (
+              <div className="input-container">
+                <input
+                  type="text"
+                  className="email-input"
+                  placeholder="Full name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  autoComplete="name"
+                />
+              </div>
+            )}
+
             {/* Password Input */}
             <div className="input-container">
               <input
                 type={showPassword ? 'text' : 'password'}
-                className={`email-input ${passwordError ? 'input-error' : ''}`}
-                placeholder="Enter your password"
+                className={`email-input ${error ? 'input-error' : ''}`}
+                placeholder={mode === 'signup' ? 'Create password (min 6 characters)' : 'Enter your password'}
                 value={password}
                 onChange={handlePasswordChange}
-                autoComplete="current-password"
+                autoComplete={mode === 'signup' ? 'new-password' : 'current-password'}
+                disabled={isLoading}
                 onKeyPress={(e) => {
                   if (e.key === 'Enter') {
                     handlePasswordSubmit();
                   }
                 }}
               />
-              {passwordError && (
+              {error && (
                 <div className="password-error-message">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="#d93025" style={{ marginRight: '8px', flexShrink: 0 }}>
                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
                   </svg>
-                  <span>
-                    Wrong password. Try again or click <span className="error-link">Forgot password</span> to reset it.
-                  </span>
+                  <span>{error}</span>
                 </div>
               )}
             </div>
@@ -239,10 +241,18 @@ export const AuthPage = ({ mode }: AuthPageProps) => {
 
             {/* Action buttons */}
             <div className="action-buttons password-actions">
-              <a href="#" className="forgot-password-link">
-                Forgot password?
-              </a>
-              <button className="next-btn" onClick={handlePasswordSubmit}>Next</button>
+              {mode === 'login' && (
+                <a href="#" className="forgot-password-link">
+                  Forgot password?
+                </a>
+              )}
+              <button
+                className="next-btn"
+                onClick={handlePasswordSubmit}
+                disabled={isLoading}
+              >
+                {isLoading ? 'Loading...' : mode === 'signup' ? 'Create Account' : 'Next'}
+              </button>
             </div>
           </>
         )}

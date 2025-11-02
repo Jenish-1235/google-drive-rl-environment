@@ -4,6 +4,7 @@ import { CloudUpload as UploadIcon } from '@mui/icons-material';
 import { colors } from '../../theme/theme';
 import { useUploadStore } from '../../store/uploadStore';
 import { useUIStore } from '../../store/uiStore';
+import { useFileStore } from '../../store/fileStore';
 
 interface DragDropOverlayProps {
   folderId?: string | null;
@@ -15,6 +16,7 @@ export const DragDropOverlay = ({ folderId = null }: DragDropOverlayProps) => {
   const addUpload = useUploadStore((state) => state.addUpload);
   const updateUpload = useUploadStore((state) => state.updateUpload);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
+  const uploadFile = useFileStore((state) => state.uploadFile);
 
   const handleDragEnter = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -41,6 +43,22 @@ export const DragDropOverlay = ({ folderId = null }: DragDropOverlayProps) => {
     e.preventDefault();
     e.stopPropagation();
   }, []);
+
+  const handleRealUpload = async (uploadId: string, file: File, parentId: string | null) => {
+    try {
+      updateUpload(uploadId, { status: 'uploading' });
+
+      await uploadFile(file, parentId, (progress) => {
+        updateUpload(uploadId, { progress });
+      });
+
+      updateUpload(uploadId, { progress: 100, status: 'completed' });
+      useUIStore.getState().showSnackbar(`${file.name} uploaded successfully`, 'success');
+    } catch (error: any) {
+      updateUpload(uploadId, { status: 'error', error: error.message || 'Upload failed' });
+      useUIStore.getState().showSnackbar(`Failed to upload ${file.name}`, 'error');
+    }
+  };
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -85,8 +103,8 @@ export const DragDropOverlay = ({ folderId = null }: DragDropOverlayProps) => {
           parentId: folderId,
         });
 
-        // Simulate upload
-        simulateUpload(uploadId, file);
+        // Start real upload
+        handleRealUpload(uploadId, file, folderId);
       });
 
       showSnackbar(
@@ -94,25 +112,8 @@ export const DragDropOverlay = ({ folderId = null }: DragDropOverlayProps) => {
         'info'
       );
     },
-    [folderId, addUpload, showSnackbar]
+    [folderId, addUpload, showSnackbar, uploadFile]
   );
-
-  const simulateUpload = (uploadId: string, file: File) => {
-    updateUpload(uploadId, { status: 'uploading' });
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 15;
-
-      if (progress >= 100) {
-        clearInterval(interval);
-        updateUpload(uploadId, { progress: 100, status: 'completed' });
-        useUIStore.getState().showSnackbar(`${file.name} uploaded successfully`, 'success');
-      } else {
-        updateUpload(uploadId, { progress: Math.min(progress, 99) });
-      }
-    }, 300);
-  };
 
   return (
     <>

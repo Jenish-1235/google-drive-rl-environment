@@ -5,7 +5,10 @@ import type {
   SortOrder,
   ViewMode,
   BreadcrumbItem,
+  BackendFile,
 } from "../types/file.types";
+import { fileService } from "../services/fileService";
+import { mapBackendFile as mapFile } from "../types/file.types";
 
 export type FileTypeFilter =
   | "all"
@@ -34,15 +37,39 @@ interface FileStore {
   sortOrder: SortOrder;
   searchQuery: string;
   isLoading: boolean;
+  error: string | null;
 
   // Filters
   typeFilter: FileTypeFilter;
   peopleFilter: PeopleFilter;
   modifiedFilter: ModifiedFilter;
 
-  // Actions
+  // API Actions
+  fetchFiles: (folderId?: string | null) => Promise<void>;
+  createFolder: (name: string, parentId?: string | null) => Promise<DriveItem>;
+  uploadFile: (file: File, parentId?: string | null, onProgress?: (progress: number) => void) => Promise<DriveItem>;
+  renameFile: (id: string, newName: string) => Promise<void>;
+  moveFile: (id: string, newParentId: string | null) => Promise<void>;
+  toggleStar: (id: string) => Promise<void>;
+  moveToTrash: (id: string) => Promise<void>;
+  restoreFromTrash: (id: string) => Promise<void>;
+  permanentlyDelete: (id: string) => Promise<void>;
+  downloadFile: (id: string, name: string) => Promise<void>;
+  fetchStarredFiles: () => Promise<void>;
+  fetchTrashedFiles: () => Promise<void>;
+  fetchRecentFiles: () => Promise<void>;
+
+  // Batch operations
+  batchMoveFiles: (fileIds: string[], newParentId: string | null) => Promise<void>;
+  batchDeleteFiles: (fileIds: string[]) => Promise<void>;
+  batchRestoreFiles: (fileIds: string[]) => Promise<void>;
+  batchStarFiles: (fileIds: string[], isStarred: boolean) => Promise<void>;
+  batchPermanentDeleteFiles: (fileIds: string[]) => Promise<void>;
+
+  // State Actions
   setFiles: (files: DriveItem[]) => void;
   setIsLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   addFile: (file: DriveItem) => void;
   updateFile: (id: string, updates: Partial<DriveItem>) => void;
   deleteFile: (id: string) => void;
@@ -84,15 +111,332 @@ export const useFileStore = create<FileStore>((set, get) => ({
   sortOrder: "asc",
   searchQuery: "",
   isLoading: false,
+  error: null,
 
   // Filters
   typeFilter: "all",
   peopleFilter: "all",
   modifiedFilter: "all",
 
-  // Actions
+  // API Actions
+  fetchFiles: async (folderId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.listFiles({
+        parent_id: folderId,
+      });
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  createFolder: async (name, parentId) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.createFolder(name, parentId);
+      const mappedFile = mapFile(response.file);
+
+      // Only add to state if creating in current folder
+      const currentFolderId = get().currentFolderId;
+      const targetParentId = parentId === undefined ? currentFolderId : parentId;
+
+      if (targetParentId === currentFolderId) {
+        set((state) => ({
+          files: [...state.files, mappedFile],
+          isLoading: false,
+        }));
+      } else {
+        set({ isLoading: false });
+      }
+
+      return mappedFile;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create folder';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  uploadFile: async (file, parentId, onProgress) => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.uploadFile(file, parentId, onProgress);
+      const mappedFile = mapFile(response.file);
+
+      // Only add to state if uploading to current folder
+      const currentFolderId = get().currentFolderId;
+      const targetParentId = parentId === undefined ? currentFolderId : parentId;
+
+      if (targetParentId === currentFolderId) {
+        set((state) => ({
+          files: [...state.files, mappedFile],
+          isLoading: false,
+        }));
+      } else {
+        set({ isLoading: false });
+      }
+
+      return mappedFile;
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to upload file';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  renameFile: async (id, newName) => {
+    set({ error: null });
+    try {
+      const response = await fileService.renameFile(id, newName);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: state.files.map((file) => (file.id === id ? mappedFile : file)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to rename file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  moveFile: async (id, newParentId) => {
+    set({ error: null });
+    try {
+      const response = await fileService.moveFile(id, newParentId);
+      const mappedFile = mapFile(response.file);
+      const currentFolderId = get().currentFolderId;
+
+      // If moving file out of current folder, remove from state
+      // If moving within current folder (no parent change), update the file
+      if (mappedFile.parentId !== currentFolderId) {
+        set((state) => ({
+          files: state.files.filter((file) => file.id !== id),
+        }));
+      } else {
+        set((state) => ({
+          files: state.files.map((file) => (file.id === id ? mappedFile : file)),
+        }));
+      }
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to move file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  toggleStar: async (id) => {
+    const file = get().files.find((f) => f.id === id);
+    if (!file) return;
+
+    set({ error: null });
+    try {
+      const response = await fileService.starFile(id, !file.isStarred);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: state.files.map((f) => (f.id === id ? mappedFile : f)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to toggle star';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  moveToTrash: async (id) => {
+    set({ error: null });
+    try {
+      await fileService.deleteFile(id);
+      set((state) => ({
+        files: state.files.map((file) =>
+          file.id === id ? ({ ...file, isTrashed: true } as DriveItem) : file
+        ),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to move to trash';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  restoreFromTrash: async (id) => {
+    set({ error: null });
+    try {
+      const response = await fileService.restoreFile(id);
+      const mappedFile = mapFile(response.file);
+      set((state) => ({
+        files: state.files.map((file) => (file.id === id ? mappedFile : file)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to restore file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  permanentlyDelete: async (id) => {
+    set({ error: null });
+    try {
+      await fileService.permanentDelete(id);
+      set((state) => ({
+        files: state.files.filter((file) => file.id !== id),
+        selectedFiles: state.selectedFiles.filter((selectedId) => selectedId !== id),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  downloadFile: async (id, name) => {
+    set({ error: null });
+    try {
+      await fileService.downloadFile(id, name);
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to download file';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  fetchStarredFiles: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.getStarredFiles();
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch starred files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  fetchTrashedFiles: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.getTrashFiles();
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch trashed files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  fetchRecentFiles: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const response = await fileService.getRecentFiles();
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch recent files';
+      set({ error: errorMessage, isLoading: false });
+      throw error;
+    }
+  },
+
+  // Batch operations
+  batchMoveFiles: async (fileIds, newParentId) => {
+    set({ error: null });
+    try {
+      await fileService.batchMove(fileIds, newParentId);
+
+      // Remove moved files from state (they're no longer in current folder)
+      set((state) => ({
+        files: state.files.filter((file) => !fileIds.includes(file.id)),
+        selectedFiles: state.selectedFiles.filter((id) => !fileIds.includes(id)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to move files';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  batchDeleteFiles: async (fileIds) => {
+    set({ error: null });
+    try {
+      await fileService.batchDelete(fileIds);
+
+      // Mark files as trashed in state
+      set((state) => ({
+        files: state.files.map((file) =>
+          fileIds.includes(file.id) ? { ...file, isTrashed: true } as DriveItem : file
+        ),
+        selectedFiles: state.selectedFiles.filter((id) => !fileIds.includes(id)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to delete files';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  batchRestoreFiles: async (fileIds) => {
+    set({ error: null });
+    try {
+      await fileService.batchRestore(fileIds);
+
+      // Mark files as not trashed in state
+      set((state) => ({
+        files: state.files.map((file) =>
+          fileIds.includes(file.id) ? { ...file, isTrashed: false } as DriveItem : file
+        ),
+        selectedFiles: state.selectedFiles.filter((id) => !fileIds.includes(id)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to restore files';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  batchStarFiles: async (fileIds, isStarred) => {
+    set({ error: null });
+    try {
+      await fileService.batchStar(fileIds, isStarred);
+
+      // Update star status in state
+      set((state) => ({
+        files: state.files.map((file) =>
+          fileIds.includes(file.id) ? { ...file, isStarred } as DriveItem : file
+        ),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to star files';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  batchPermanentDeleteFiles: async (fileIds) => {
+    set({ error: null });
+    try {
+      await fileService.batchPermanentDelete(fileIds);
+
+      // Remove files from state
+      set((state) => ({
+        files: state.files.filter((file) => !fileIds.includes(file.id)),
+        selectedFiles: state.selectedFiles.filter((id) => !fileIds.includes(id)),
+      }));
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to permanently delete files';
+      set({ error: errorMessage });
+      throw error;
+    }
+  },
+
+  // State Actions
   setFiles: (files) => set({ files }),
   setIsLoading: (loading) => set({ isLoading: loading }),
+  setError: (error) => set({ error }),
 
   addFile: (file) => set((state) => ({ files: [...state.files, file] })),
 

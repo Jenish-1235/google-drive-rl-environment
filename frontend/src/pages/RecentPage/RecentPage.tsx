@@ -18,11 +18,13 @@ import {
   PeopleOutline as PeopleIcon,
   FolderOutlined as FolderIcon,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useFileStore } from "../../store/fileStore";
+import { useUIStore } from "../../store/uiStore";
 import { getFileIcon } from "../../utils/fileIcons";
 import { formatFileSize } from "../../utils/formatters";
 
-// Mock data for recent files
+// Mock data for recent files (backup if API fails)
 const mockRecentFiles = [
   {
     id: "1",
@@ -197,9 +199,22 @@ const mockRecentFiles = [
 
 export const RecentPage = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
+  const files = useFileStore((state) => state.files);
+  const fetchRecentFiles = useFileStore((state) => state.fetchRecentFiles);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
+
+  // Fetch recent files on mount
+  useEffect(() => {
+    fetchRecentFiles().catch((error) => {
+      showSnackbar(error.message || "Failed to load recent files", "error");
+    });
+  }, [fetchRecentFiles, showSnackbar]);
+
+  // Use real files from store if available, otherwise use mock data
+  const recentFiles = files.length > 0 ? files : mockRecentFiles;
 
   // Group files by time period
-  const groupedFiles = mockRecentFiles.reduce((groups, file) => {
+  const groupedFiles = recentFiles.reduce((groups, file: any) => {
     const group = file.timeGroup;
     if (!groups[group]) {
       groups[group] = [];
