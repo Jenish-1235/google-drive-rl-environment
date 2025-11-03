@@ -1,18 +1,18 @@
-import { 
-  Popover, 
+import {
+  Popover,
   Box,
   Typography,
   Button,
   IconButton,
   Avatar,
-} from '@mui/material';
+} from "@mui/material";
 import {
   Mail as MailIcon,
   VideoCall as VideoCallIcon,
   Event as EventIcon,
   Edit as EditIcon,
   OpenInNew as OpenInNewIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
 
 interface UserProfilePopoverProps {
   anchorEl: HTMLElement | null;
@@ -41,7 +41,7 @@ export const UserProfilePopover = ({
   };
 
   const handleOpenDetailedView = () => {
-    console.log('Opening detailed view for:', user.email);
+    console.log("Opening detailed view for:", user.email);
     onClose();
   };
 
@@ -51,12 +51,12 @@ export const UserProfilePopover = ({
       anchorEl={anchorEl}
       onClose={onClose}
       anchorOrigin={{
-        vertical: 'bottom',
-        horizontal: 'left',
+        vertical: "bottom",
+        horizontal: "left",
       }}
       transformOrigin={{
-        vertical: 'top',
-        horizontal: 'left',
+        vertical: "top",
+        horizontal: "left",
       }}
       slotProps={{
         paper: {
@@ -65,12 +65,12 @@ export const UserProfilePopover = ({
           onMouseLeave: onMouseLeave,
           sx: {
             width: 360,
-            borderRadius: '16px',
-            border: '1px solid #dadce0',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
-            overflow: 'visible',
-            mt: 1,
-            transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
+            borderRadius: "16px",
+            border: "1px solid #dadce0",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.2)",
+            overflow: "visible",
+            mt: "1",
+            transition: "opacity 0.2s ease-in-out, transform 0.2s ease-in-out",
           },
         },
       }}
@@ -80,7 +80,14 @@ export const UserProfilePopover = ({
     >
       <Box sx={{ p: 3 }}>
         {/* User Info Section */}
-        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 2 }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            mb: 2,
+          }}
+        >
           <Avatar
             src={user.avatar}
             alt={user.name}
@@ -88,37 +95,37 @@ export const UserProfilePopover = ({
               width: 80,
               height: 80,
               mb: 1.5,
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
             }}
           >
             {user.name.charAt(0).toUpperCase()}
           </Avatar>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
             <Typography
               sx={{
-                fontSize: '20px',
+                fontSize: "20px",
                 fontWeight: 400,
-                color: '#202124',
+                color: "#202124",
               }}
             >
               {user.name}
             </Typography>
-            <IconButton 
-              size="small" 
-              sx={{ 
-                color: '#5f6368',
-                '&:hover': { backgroundColor: '#f8f9fa' }
+            <IconButton
+              size="small"
+              sx={{
+                color: "#5f6368",
+                "&:hover": { backgroundColor: "#f8f9fa" },
               }}
             >
               <EditIcon fontSize="small" />
             </IconButton>
           </Box>
-          
+
           <Typography
             sx={{
-              fontSize: '14px',
-              color: '#5f6368',
+              fontSize: "14px",
+              color: "#5f6368",
               mt: 0.5,
             }}
           >
@@ -127,50 +134,50 @@ export const UserProfilePopover = ({
         </Box>
 
         {/* Action Buttons */}
-        <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+        <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
           <Button
             fullWidth
             variant="contained"
             startIcon={<MailIcon />}
             onClick={handleSendMail}
             sx={{
-              backgroundColor: '#c2e7ff',
-              color: '#001d35',
-              textTransform: 'none',
-              fontSize: '14px',
+              backgroundColor: "#c2e7ff",
+              color: "#001d35",
+              textTransform: "none",
+              fontSize: "14px",
               fontWeight: 500,
               py: 1,
-              borderRadius: '20px',
-              boxShadow: 'none',
-              '&:hover': {
-                backgroundColor: '#a8daf5',
-                boxShadow: 'none',
+              borderRadius: "20px",
+              boxShadow: "none",
+              "&:hover": {
+                backgroundColor: "#a8daf5",
+                boxShadow: "none",
               },
             }}
           >
             Send mail
           </Button>
-          
+
           <IconButton
             sx={{
-              border: '1px solid #dadce0',
-              borderRadius: '50%',
-              color: '#5f6368',
-              '&:hover': {
-                backgroundColor: '#f8f9fa',
+              border: "1px solid #dadce0",
+              borderRadius: "50%",
+              color: "#5f6368",
+              "&:hover": {
+                backgroundColor: "#f8f9fa",
               },
             }}
           >
             <VideoCallIcon />
           </IconButton>
-          
+
           <IconButton
             sx={{
-              border: '1px solid #dadce0',
-              borderRadius: '50%',
-              color: '#5f6368',
-              '&:hover': {
-                backgroundColor: '#f8f9fa',
+              border: "1px solid #dadce0",
+              borderRadius: "50%",
+              color: "#5f6368",
+              "&:hover": {
+                backgroundColor: "#f8f9fa",
               },
             }}
           >
@@ -184,16 +191,16 @@ export const UserProfilePopover = ({
           onClick={handleOpenDetailedView}
           endIcon={<OpenInNewIcon fontSize="small" />}
           sx={{
-            textTransform: 'none',
-            color: '#1a73e8',
-            fontSize: '14px',
+            textTransform: "none",
+            color: "#1a73e8",
+            fontSize: "14px",
             fontWeight: 500,
-            justifyContent: 'space-between',
+            justifyContent: "space-between",
             py: 1,
             px: 2,
-            borderRadius: '8px',
-            '&:hover': {
-              backgroundColor: '#f8f9fa',
+            borderRadius: "8px",
+            "&:hover": {
+              backgroundColor: "#f8f9fa",
             },
           }}
         >

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from "react";
+import { useState } from "react";
 import {
   Box,
   Table,
@@ -72,60 +72,50 @@ export const FileList = ({
 
   // User profile popover state
   const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
-  const profileHoverTimerRef = useRef<number | null>(null);
-  const profileOpenTimerRef = useRef<number | null>(null);
+  const [isProfileVisible, setIsProfileVisible] = useState(false);
+  const [profileHoverTimer, setProfileHoverTimer] = useState<number | null>(
+    null
+  );
   const currentUser = useAuthStore((state) => state.user);
 
   // Get the selected file for context menu
-  const contextMenuFile = actionMenuAnchor ?
-    files.find(f => f.id === actionMenuAnchor.fileId) || null :
-    null;
+  const contextMenuFile = actionMenuAnchor
+    ? files.find((f) => f.id === actionMenuAnchor.fileId) || null
+    : null;
 
-  // User profile hover handlers - memoized to prevent recreating on every render
-  const clearAllProfileTimers = useCallback(() => {
-    if (profileHoverTimerRef.current) {
-      clearTimeout(profileHoverTimerRef.current);
-      profileHoverTimerRef.current = null;
+  // User profile hover handlers
+  const clearProfileHoverTimer = () => {
+    if (profileHoverTimer) {
+      clearTimeout(profileHoverTimer);
+      setProfileHoverTimer(null);
     }
-    if (profileOpenTimerRef.current) {
-      clearTimeout(profileOpenTimerRef.current);
-      profileOpenTimerRef.current = null;
-    }
-  }, []);
+  };
 
-  const handleProfileHoverEnter = useCallback((event: React.MouseEvent<HTMLElement>) => {
-    clearAllProfileTimers();
+  const handleProfileHoverEnter = (event: React.MouseEvent<HTMLElement>) => {
+    clearProfileHoverTimer();
+    setProfileAnchor(event.currentTarget);
+    setIsProfileVisible(true);
+  };
 
-    // Delay opening to prevent flicker on quick mouse movement
-    profileOpenTimerRef.current = window.setTimeout(() => {
-      setProfileAnchor(event.currentTarget);
-      profileOpenTimerRef.current = null;
-    }, 300); // 300ms delay - faster but still prevents flicker
-  }, [clearAllProfileTimers]);
-
-  const handleProfileHoverLeave = useCallback(() => {
-    clearAllProfileTimers();
-
-    // Delay closing to allow mouse to move to popover
-    profileHoverTimerRef.current = window.setTimeout(() => {
-      setProfileAnchor(null);
-      profileHoverTimerRef.current = null;
+  const handleProfileHoverLeave = () => {
+    clearProfileHoverTimer();
+    const timer = window.setTimeout(() => {
+      setIsProfileVisible(false);
     }, 300);
-  }, [clearAllProfileTimers]);
+    setProfileHoverTimer(timer);
+  };
 
-  const handlePopoverEnter = useCallback(() => {
-    clearAllProfileTimers();
-  }, [clearAllProfileTimers]);
+  const handlePopoverEnter = () => {
+    clearProfileHoverTimer();
+  };
 
-  const handlePopoverLeave = useCallback(() => {
-    clearAllProfileTimers();
-
-    // Close popover after leaving
-    profileHoverTimerRef.current = window.setTimeout(() => {
-      setProfileAnchor(null);
-      profileHoverTimerRef.current = null;
+  const handlePopoverLeave = () => {
+    clearProfileHoverTimer();
+    const timer = window.setTimeout(() => {
+      setIsProfileVisible(false);
     }, 200);
-  }, [clearAllProfileTimers]);
+    setProfileHoverTimer(timer);
+  };
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -198,7 +188,7 @@ export const FileList = ({
   };
 
   const handleContextCopy = (file: DriveItem) => {
-    console.log('Make a copy of file:', file.name);
+    console.log("Make a copy of file:", file.name);
     // TODO: Implement copy feature
   };
 
@@ -207,12 +197,12 @@ export const FileList = ({
   };
 
   const handleContextOrganise = (file: DriveItem) => {
-    console.log('Organise file:', file.name);
+    console.log("Organise file:", file.name);
     // TODO: Implement organise submenu actions
   };
 
   const handleContextDetails = (file: DriveItem) => {
-    console.log('Show details for file:', file.name);
+    console.log("Show details for file:", file.name);
     // TODO: Implement details panel
   };
 
@@ -225,27 +215,24 @@ export const FileList = ({
   // Drag and drop handlers
   const handleDragStart = (event: React.DragEvent, file: DriveItem) => {
     // If file is already selected, drag all selected files, otherwise just this file
-    const filesToDrag = isSelected(file.id)
-      ? selectedFiles
-      : [file.id];
+    const filesToDrag = isSelected(file.id) ? selectedFiles : [file.id];
 
     setDraggedFiles(filesToDrag);
-    event.dataTransfer.effectAllowed = 'move';
-    event.dataTransfer.setData('text/plain', JSON.stringify(filesToDrag));
+    event.dataTransfer.effectAllowed = "move";
+    event.dataTransfer.setData("text/plain", JSON.stringify(filesToDrag));
 
     // Add visual feedback
     if (event.dataTransfer.setDragImage) {
-      const dragImage = document.createElement('div');
-      dragImage.textContent = filesToDrag.length === 1
-        ? file.name
-        : `${filesToDrag.length} items`;
-      dragImage.style.padding = '8px 12px';
-      dragImage.style.background = '#1a73e8';
-      dragImage.style.color = 'white';
-      dragImage.style.borderRadius = '4px';
-      dragImage.style.fontSize = '14px';
-      dragImage.style.position = 'absolute';
-      dragImage.style.top = '-1000px';
+      const dragImage = document.createElement("div");
+      dragImage.textContent =
+        filesToDrag.length === 1 ? file.name : `${filesToDrag.length} items`;
+      dragImage.style.padding = "8px 12px";
+      dragImage.style.background = "#1a73e8";
+      dragImage.style.color = "white";
+      dragImage.style.borderRadius = "4px";
+      dragImage.style.fontSize = "14px";
+      dragImage.style.position = "absolute";
+      dragImage.style.top = "-1000px";
       document.body.appendChild(dragImage);
       event.dataTransfer.setDragImage(dragImage, 0, 0);
       setTimeout(() => document.body.removeChild(dragImage), 0);
@@ -254,9 +241,9 @@ export const FileList = ({
 
   const handleDragOver = (event: React.DragEvent, file: DriveItem) => {
     // Only allow drop on folders that aren't being dragged
-    if (file.type === 'folder' && !draggedFiles.includes(file.id)) {
+    if (file.type === "folder" && !draggedFiles.includes(file.id)) {
       event.preventDefault();
-      event.dataTransfer.dropEffect = 'move';
+      event.dataTransfer.dropEffect = "move";
       setDropTarget(file.id);
     }
   };
@@ -269,10 +256,10 @@ export const FileList = ({
     event.preventDefault();
     event.stopPropagation();
 
-    if (targetFolder.type !== 'folder') return;
+    if (targetFolder.type !== "folder") return;
 
     try {
-      const fileIds = JSON.parse(event.dataTransfer.getData('text/plain'));
+      const fileIds = JSON.parse(event.dataTransfer.getData("text/plain"));
 
       // Don't allow dropping into itself
       if (fileIds.includes(targetFolder.id)) return;
@@ -282,7 +269,7 @@ export const FileList = ({
         onMove(fileIds, targetFolder.id);
       }
     } catch (error) {
-      console.error('Drop error:', error);
+      console.error("Drop error:", error);
     } finally {
       setDraggedFiles([]);
       setDropTarget(null);
@@ -435,12 +422,16 @@ export const FileList = ({
                 onDrop={(e) => handleDrop(e, file)}
                 onDragEnd={handleDragEnd}
                 sx={{
-                  cursor: draggedFiles.includes(file.id) ? 'grabbing' : 'pointer',
+                  cursor: draggedFiles.includes(file.id)
+                    ? "grabbing"
+                    : "pointer",
                   borderBottom: `1px solid #dadce0`,
-                  backgroundColor: dropTarget === file.id ? '#e8f0fe' : 'transparent',
+                  backgroundColor:
+                    dropTarget === file.id ? "#e8f0fe" : "transparent",
                   opacity: draggedFiles.includes(file.id) ? 0.5 : 1,
                   "&:hover": {
-                    backgroundColor: dropTarget === file.id ? '#e8f0fe' : "#f6f9fc",
+                    backgroundColor:
+                      dropTarget === file.id ? "#e8f0fe" : "#f6f9fc",
                   },
                   "&.Mui-selected": {
                     backgroundColor: "#e8f0fe",
@@ -470,16 +461,22 @@ export const FileList = ({
                   </Box>
                 </TableCell>
                 {!detailsPanelOpen && (
-                  <TableCell 
-                    sx={{ 
-                      py: 0.5, 
+                  <TableCell
+                    sx={{
+                      py: 0.5,
                       borderBottom: "none",
                       opacity: detailsPanelOpen ? 0 : 1,
-                      transition: "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                      transition:
+                        "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
                     }}
                   >
-                    <Box 
-                      sx={{ display: "flex", alignItems: "center", gap: 1, cursor: "pointer" }}
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        cursor: "pointer",
+                      }}
                       onMouseEnter={handleProfileHoverEnter}
                       onMouseLeave={handleProfileHoverLeave}
                     >
@@ -511,12 +508,13 @@ export const FileList = ({
                   </Typography>
                 </TableCell>
                 {!detailsPanelOpen && (
-                  <TableCell 
-                    sx={{ 
-                      py: 0.5, 
+                  <TableCell
+                    sx={{
+                      py: 0.5,
                       borderBottom: "none",
                       opacity: detailsPanelOpen ? 0 : 1,
-                      transition: "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
+                      transition:
+                        "opacity 0.15s cubic-bezier(0.4, 0.0, 0.2, 1)",
                     }}
                   >
                     <Typography fontSize={14} color="#5f6368">
@@ -575,8 +573,8 @@ export const FileList = ({
       {currentUser && (
         <UserProfilePopover
           anchorEl={profileAnchor}
-          open={Boolean(profileAnchor)}
-          onClose={() => setProfileAnchor(null)}
+          open={isProfileVisible}
+          onClose={() => setIsProfileVisible(false)}
           onMouseEnter={handlePopoverEnter}
           onMouseLeave={handlePopoverLeave}
           user={{
