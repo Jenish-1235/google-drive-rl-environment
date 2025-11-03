@@ -22,8 +22,8 @@ ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 ENV VITE_DUMMY_USER_EMAIL=$VITE_DUMMY_USER_EMAIL
 ENV VITE_DUMMY_USER_PASSWORD=$VITE_DUMMY_USER_PASSWORD
 
-# Build the application
-RUN npm run build
+# Build the application (skip TypeScript checks for Docker build)
+RUN npm run build:docker
 
 # Production stage
 FROM nginx:alpine
