@@ -65,7 +65,11 @@ export const FileList = ({
     fileId: string;
   } | null>(null);
   const [clickTimeout, setClickTimeout] = useState<number | null>(null);
-  
+
+  // Drag and drop state
+  const [draggedFiles, setDraggedFiles] = useState<string[]>([]);
+  const [dropTarget, setDropTarget] = useState<string | null>(null);
+
   // User profile popover state
   const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
   const [profileHoverTimer, setProfileHoverTimer] = useState<number | null>(null);
@@ -170,40 +174,36 @@ export const FileList = ({
     setActionMenuAnchor(null);
   };
 
-  // Context menu action handlers
-  const handleDownload = (file: DriveItem) => {
-    console.log('Download file:', file.name);
-    // TODO: Implement download
+  // Context menu action handlers - wire to passed props
+  const handleContextDownload = (file: DriveItem) => {
+    onDownload?.(file);
   };
 
-  const handleRename = (file: DriveItem) => {
-    console.log('Rename file:', file.name);
-    // TODO: Implement rename
+  const handleContextRename = (file: DriveItem) => {
+    onRename?.(file);
   };
 
-  const handleCopy = (file: DriveItem) => {
+  const handleContextCopy = (file: DriveItem) => {
     console.log('Make a copy of file:', file.name);
-    // TODO: Implement copy
+    // TODO: Implement copy feature
   };
 
-  const handleShare = (file: DriveItem) => {
-    console.log('Share file:', file.name);
-    // TODO: Implement share
+  const handleContextShare = (file: DriveItem) => {
+    onShare?.(file);
   };
 
-  const handleOrganise = (file: DriveItem) => {
+  const handleContextOrganise = (file: DriveItem) => {
     console.log('Organise file:', file.name);
-    // TODO: Implement organise
+    // TODO: Implement organise submenu actions
   };
 
-  const handleDetails = (file: DriveItem) => {
+  const handleContextDetails = (file: DriveItem) => {
     console.log('Show details for file:', file.name);
-    // TODO: Implement details
+    // TODO: Implement details panel
   };
 
-  const handleDelete = (file: DriveItem) => {
-    console.log('Delete file:', file.name);
-    // TODO: Implement delete
+  const handleContextDelete = (file: DriveItem) => {
+    onDelete?.([file]);
   };
 
   const isSelected = (fileId: string) => selectedFiles.includes(fileId);
@@ -548,13 +548,13 @@ export const FileList = ({
         file={contextMenuFile}
         onClose={handleActionMenuClose}
         showOpenWith={true}
-        onDownload={handleDownload}
-        onRename={handleRename}
-        onCopy={handleCopy}
-        onShare={handleShare}
-        onOrganise={handleOrganise}
-        onDetails={handleDetails}
-        onDelete={handleDelete}
+        onDownload={handleContextDownload}
+        onRename={handleContextRename}
+        onCopy={handleContextCopy}
+        onShare={handleContextShare}
+        onOrganise={handleContextOrganise}
+        onDetails={handleContextDetails}
+        onDelete={handleContextDelete}
       />
 
       {/* User Profile Popover */}

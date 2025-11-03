@@ -10,12 +10,17 @@ import { Snackbar } from "../common/Snackbar";
 import { useAuthStore } from "../../store/authStore";
 import { useUIStore } from "../../store/uiStore";
 import { useFileStore } from "../../store/fileStore";
+import { useAutoLogin } from "../../hooks/useAutoLogin";
 
 export const MainLayout = () => {
   const { isAuthenticated, isLoading } = useAuthStore();
   const { detailsPanelOpen } = useUIStore();
   const currentFolderId = useFileStore((state) => state.currentFolderId);
   const navigate = useNavigate();
+
+  // Auto-login with dummy credentials
+  useAutoLogin();
+
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       navigate('/auth/login');

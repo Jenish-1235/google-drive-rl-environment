@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
+import { useAutoLogin } from '../../hooks/useAutoLogin';
 import './AuthPage.css';
 
 interface AuthPageProps {
@@ -20,6 +21,9 @@ export const AuthPage = ({ mode }: AuthPageProps) => {
 
   // Auth store
   const { login, signup, isLoading, error, isAuthenticated } = useAuthStore();
+
+  // Auto-login with dummy credentials
+  useAutoLogin();
 
   // Redirect if already authenticated
   useEffect(() => {

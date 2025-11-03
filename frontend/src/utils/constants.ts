@@ -2,7 +2,14 @@ import type { FileType } from "../types/file.types";
 
 // API endpoints (for future backend integration)
 export const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:3000/api";
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.MODE === 'production' ? '/api' : 'http://localhost:5000/api');
+
+// Dummy user credentials for auto-login
+export const DUMMY_USER_CREDENTIALS = {
+  email: import.meta.env.VITE_DUMMY_USER_EMAIL || 'demo@drive.com',
+  password: import.meta.env.VITE_DUMMY_USER_PASSWORD || 'demo123',
+};
 
 export const API_ENDPOINTS = {
   // Auth

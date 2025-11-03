@@ -42,26 +42,28 @@ export const ShareSubmenu = ({
       onClose={onClose}
       onMouseEnter={onMouseEnter}
       onMouseLeave={onMouseLeave}
+      disableAutoFocusItem
       anchorOrigin={{
         vertical: 'top',
-        horizontal: 'left',
+        horizontal: 'right',
       }}
       transformOrigin={{
         vertical: 'top',
-        horizontal: 'right',
+        horizontal: 'left',
       }}
       slotProps={{
         paper: {
           elevation: 8,
           sx: {
             minWidth: 180,
-            borderRadius: '8px',
+            borderRadius: '4px',
             border: '1px solid #dadce0',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            transition: 'opacity 0.2s ease-in-out, transform 0.2s ease-in-out',
+            ml: -0.5,
+            pointerEvents: 'auto',
             '& .MuiMenuItem-root': {
-              px: 1,
-              py: 0.5,
+              px: 2,
+              py: 1,
               fontSize: '14px',
               color: '#202124',
               '&:hover': {
@@ -69,14 +71,14 @@ export const ShareSubmenu = ({
               },
             },
             '& .MuiListItemIcon-root': {
-              minWidth: 32,
+              minWidth: 40,
               color: '#5f6368',
             },
           },
         },
       }}
       TransitionProps={{
-        timeout: 200,
+        timeout: 100,
       }}
     >
       {/* Share */}

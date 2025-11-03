@@ -27,6 +27,12 @@ export const config = {
       process.env.DEFAULT_STORAGE_LIMIT || "2199023255552"
     ),
   },
+
+  dummyUser: {
+    email: process.env.DUMMY_USER_EMAIL || "demo@drive.com",
+    password: process.env.DUMMY_USER_PASSWORD || "demo123",
+    name: process.env.DUMMY_USER_NAME || "Demo User",
+  },
 };
 
 export default config;

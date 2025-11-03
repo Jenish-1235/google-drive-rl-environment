@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: google-drive-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=5000
+      - DUMMY_USER_EMAIL=demo@drive.com
+      - DUMMY_USER_PASSWORD=demo123
+      - DUMMY_USER_NAME=Demo User
+      - DATABASE_PATH=/app/data/drive.db
+    restart: unless-stopped
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_BASE_URL=/api
+        - VITE_DUMMY_USER_EMAIL=demo@drive.com
+        - VITE_DUMMY_USER_PASSWORD=demo123
+    container_name: google-drive-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  uploads:
+  data:

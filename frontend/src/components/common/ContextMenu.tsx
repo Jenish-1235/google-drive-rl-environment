@@ -17,7 +17,7 @@ import {
   DeleteOutline as DeleteIcon,
   ChevronRight as ChevronRightIcon,
 } from '@mui/icons-material';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { OpenWithSubmenu } from './OpenWithSubmenu';
 import { ShareSubmenu } from './ShareSubmenu';
 import { OrganiseSubmenu } from './OrganiseSubmenu';
@@ -25,11 +25,13 @@ import { FileInformationSubmenu } from './FileInformationSubmenu';
 import type { DriveItem } from '../../types/file.types';
 
 interface ContextMenuProps {
-  anchorEl: HTMLElement | null;
+  anchorEl?: HTMLElement | null;
+  anchorPosition?: { top: number; left: number } | null;
   open: boolean;
   file: DriveItem | null;
   onClose: () => void;
   showOpenWith?: boolean;
+  onOpen?: (file: DriveItem) => void;
   onDownload?: (file: DriveItem) => void;
   onRename?: (file: DriveItem) => void;
   onCopy?: (file: DriveItem) => void;
@@ -37,50 +39,72 @@ interface ContextMenuProps {
   onOrganise?: (file: DriveItem) => void;
   onDetails?: (file: DriveItem) => void;
   onDelete?: (file: DriveItem) => void;
+  onToggleStar?: (file: DriveItem) => void;
+  onMove?: (file: DriveItem) => void;
+  onMakeOffline?: (file: DriveItem) => void;
+  onSummarize?: (file: DriveItem) => void;
 }
 
 export const ContextMenu = ({
   anchorEl,
+  anchorPosition,
   open,
   file,
   onClose,
   showOpenWith = true,
+  onOpen: _onOpen,
   onDownload,
   onRename,
   onCopy,
+  onShare: _onShare,
+  onOrganise: _onOrganise,
+  onDetails: _onDetails,
   onDelete,
-  onDetails,
-  onMakeOffline,
-  onSummarize,
+  onToggleStar: _onToggleStar,
+  onMove: _onMove,
+  onMakeOffline: _onMakeOffline,
+  onSummarize: _onSummarize,
 }: ContextMenuProps) => {
   const [openWithAnchor, setOpenWithAnchor] = useState<HTMLElement | null>(null);
   const [shareAnchor, setShareAnchor] = useState<HTMLElement | null>(null);
   const [organiseAnchor, setOrganiseAnchor] = useState<HTMLElement | null>(null);
   const [infoAnchor, setInfoAnchor] = useState<HTMLElement | null>(null);
-  const [hoverCloseTimer, setHoverCloseTimer] = useState<number | null>(null);
-  const CLOSE_DELAY = 320; // ms
-  const TRIGGER_LEAVE_DELAY = 260; // ms
 
-  const clearHoverCloseTimer = () => {
-    if (hoverCloseTimer) {
-      window.clearTimeout(hoverCloseTimer);
-      setHoverCloseTimer(null);
+  // Simple timer refs - one per submenu
+  const openWithTimerRef = useRef<number | null>(null);
+  const shareTimerRef = useRef<number | null>(null);
+  const organiseTimerRef = useRef<number | null>(null);
+  const infoTimerRef = useRef<number | null>(null);
+
+  // Delay before closing submenu
+  const CLOSE_DELAY = 300; // ms
+
+  // Helper to clear a specific timer
+  const clearTimer = (timerRef: React.MutableRefObject<number | null>) => {
+    if (timerRef.current) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
     }
   };
 
-  const scheduleClose = (delay = CLOSE_DELAY) => {
-    clearHoverCloseTimer();
-    const t = window.setTimeout(() => {
-      setOpenWithAnchor(null);
-      setShareAnchor(null);
-      setOrganiseAnchor(null);
-      setInfoAnchor(null);
-    }, delay);
-    setHoverCloseTimer(t);
+  // Helper to schedule closing a specific submenu
+  const scheduleClose = (
+    timerRef: React.MutableRefObject<number | null>,
+    closeAction: () => void
+  ) => {
+    clearTimer(timerRef);
+    timerRef.current = window.setTimeout(() => {
+      closeAction();
+      timerRef.current = null;
+    }, CLOSE_DELAY);
   };
 
   const handleAction = (action?: (file: DriveItem) => void) => {
     onClose();
+    clearTimer(openWithTimerRef);
+    clearTimer(shareTimerRef);
+    clearTimer(organiseTimerRef);
+    clearTimer(infoTimerRef);
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
@@ -90,49 +114,84 @@ export const ContextMenu = ({
     }
   };
 
+  // OpenWith submenu handlers
   const handleOpenWithHover = (event: React.MouseEvent<HTMLElement>) => {
-    // Clear other submenus
-    clearHoverCloseTimer();
+    clearTimer(openWithTimerRef);
     setShareAnchor(null);
     setOrganiseAnchor(null);
     setInfoAnchor(null);
     setOpenWithAnchor(event.currentTarget);
   };
-  const handleOpenWithLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
+  const handleOpenWithLeave = () => {
+    scheduleClose(openWithTimerRef, () => setOpenWithAnchor(null));
+  };
+  const handleOpenWithSubmenuEnter = () => {
+    clearTimer(openWithTimerRef);
+  };
+  const handleOpenWithSubmenuLeave = () => {
+    scheduleClose(openWithTimerRef, () => setOpenWithAnchor(null));
+  };
 
+  // Share submenu handlers
   const handleShareHover = (event: React.MouseEvent<HTMLElement>) => {
-    // Clear other submenus
-    clearHoverCloseTimer();
+    clearTimer(shareTimerRef);
     setOpenWithAnchor(null);
     setOrganiseAnchor(null);
     setInfoAnchor(null);
     setShareAnchor(event.currentTarget);
   };
-  const handleShareLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
+  const handleShareLeave = () => {
+    scheduleClose(shareTimerRef, () => setShareAnchor(null));
+  };
+  const handleShareSubmenuEnter = () => {
+    clearTimer(shareTimerRef);
+  };
+  const handleShareSubmenuLeave = () => {
+    scheduleClose(shareTimerRef, () => setShareAnchor(null));
+  };
 
+  // Organise submenu handlers
   const handleOrganiseHover = (event: React.MouseEvent<HTMLElement>) => {
-    // Clear other submenus
-    clearHoverCloseTimer();
+    clearTimer(organiseTimerRef);
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setInfoAnchor(null);
     setOrganiseAnchor(event.currentTarget);
   };
-  const handleOrganiseLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
+  const handleOrganiseLeave = () => {
+    scheduleClose(organiseTimerRef, () => setOrganiseAnchor(null));
+  };
+  const handleOrganiseSubmenuEnter = () => {
+    clearTimer(organiseTimerRef);
+  };
+  const handleOrganiseSubmenuLeave = () => {
+    scheduleClose(organiseTimerRef, () => setOrganiseAnchor(null));
+  };
 
+  // Info submenu handlers
   const handleInfoHover = (event: React.MouseEvent<HTMLElement>) => {
-    // Clear other submenus
-    clearHoverCloseTimer();
+    clearTimer(infoTimerRef);
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
     setInfoAnchor(event.currentTarget);
   };
-  const handleInfoLeave = () => scheduleClose(TRIGGER_LEAVE_DELAY);
+  const handleInfoLeave = () => {
+    scheduleClose(infoTimerRef, () => setInfoAnchor(null));
+  };
+  const handleInfoSubmenuEnter = () => {
+    clearTimer(infoTimerRef);
+  };
+  const handleInfoSubmenuLeave = () => {
+    scheduleClose(infoTimerRef, () => setInfoAnchor(null));
+  };
 
   const handleRegularItemHover = () => {
-    // Close all submenus when hovering over non-submenu items
-    clearHoverCloseTimer();
+    // Clear all timers and close all submenus immediately
+    clearTimer(openWithTimerRef);
+    clearTimer(shareTimerRef);
+    clearTimer(organiseTimerRef);
+    clearTimer(infoTimerRef);
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
@@ -140,7 +199,10 @@ export const ContextMenu = ({
   };
 
   const handleSubmenuClose = () => {
-    clearHoverCloseTimer();
+    clearTimer(openWithTimerRef);
+    clearTimer(shareTimerRef);
+    clearTimer(organiseTimerRef);
+    clearTimer(infoTimerRef);
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
@@ -149,7 +211,10 @@ export const ContextMenu = ({
 
   const handleMainMenuClose = () => {
     onClose();
-    clearHoverCloseTimer();
+    clearTimer(openWithTimerRef);
+    clearTimer(shareTimerRef);
+    clearTimer(organiseTimerRef);
+    clearTimer(infoTimerRef);
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
@@ -162,8 +227,11 @@ export const ContextMenu = ({
     <>
       <Menu
         anchorEl={anchorEl}
+        anchorReference={anchorPosition ? "anchorPosition" : "anchorEl"}
+        anchorPosition={anchorPosition || undefined}
         open={open}
         onClose={handleMainMenuClose}
+        disableAutoFocusItem
       slotProps={{
         paper: {
           elevation: 8,
@@ -173,6 +241,7 @@ export const ContextMenu = ({
             border: '1px solid #dadce0',
             boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
             py: 0.5,
+            pointerEvents: 'auto',
             '& .MuiMenuItem-root': {
               px: 2,
               py: 1,
@@ -192,6 +261,9 @@ export const ContextMenu = ({
             },
           },
         },
+      }}
+      TransitionProps={{
+        timeout: 100,
       }}
     >
       {/* Open with - only for files, not folders */}
@@ -363,8 +435,8 @@ export const ContextMenu = ({
       open={Boolean(openWithAnchor)}
       onClose={handleSubmenuClose}
       file={file}
-      onMouseEnter={clearHoverCloseTimer}
-      onMouseLeave={() => scheduleClose()}
+      onMouseEnter={handleOpenWithSubmenuEnter}
+      onMouseLeave={handleOpenWithSubmenuLeave}
     />
 
     {/* Share Submenu */}
@@ -373,8 +445,8 @@ export const ContextMenu = ({
       open={Boolean(shareAnchor)}
       onClose={handleSubmenuClose}
       file={file}
-      onMouseEnter={clearHoverCloseTimer}
-      onMouseLeave={() => scheduleClose()}
+      onMouseEnter={handleShareSubmenuEnter}
+      onMouseLeave={handleShareSubmenuLeave}
     />
 
     {/* Organise Submenu */}
@@ -383,8 +455,8 @@ export const ContextMenu = ({
       open={Boolean(organiseAnchor)}
       onClose={handleSubmenuClose}
       file={file}
-      onMouseEnter={clearHoverCloseTimer}
-      onMouseLeave={() => scheduleClose()}
+      onMouseEnter={handleOrganiseSubmenuEnter}
+      onMouseLeave={handleOrganiseSubmenuLeave}
     />
 
     {/* File Information Submenu */}
@@ -393,8 +465,8 @@ export const ContextMenu = ({
       open={Boolean(infoAnchor)}
       onClose={handleSubmenuClose}
       file={file}
-      onMouseEnter={clearHoverCloseTimer}
-      onMouseLeave={() => scheduleClose()}
+      onMouseEnter={handleInfoSubmenuEnter}
+      onMouseLeave={handleInfoSubmenuLeave}
     />
     </>
   );
