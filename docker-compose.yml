@@ -18,6 +18,7 @@ services:
       - DUMMY_USER_PASSWORD=demo123
       - DUMMY_USER_NAME=Demo User
       - DATABASE_PATH=/app/data/drive.db
+      - SEED_ON_STARTUP=true
     restart: unless-stopped
     networks:
       - app-network

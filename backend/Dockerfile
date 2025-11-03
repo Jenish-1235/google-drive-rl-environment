@@ -35,11 +35,15 @@ COPY --from=builder /app/dist ./dist
 # Copy database schema files
 COPY --from=builder /app/database ./database
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
+
 # Create directories for uploads and database
 RUN mkdir -p uploads data
 
 # Expose port
 EXPOSE 5000
 
-# Start the server
-CMD ["node", "dist/server.js"]
+# Use entrypoint script
+ENTRYPOINT ["./docker-entrypoint.sh"]
