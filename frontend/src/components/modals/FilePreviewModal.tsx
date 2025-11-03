@@ -24,7 +24,8 @@ import {
 import type { DriveItem } from '../../types/file.types';
 import { formatFileSize, formatDate } from '../../utils/formatters';
 import { colors } from '../../theme/theme';
-import api from '../../services/api';
+import { fileService } from '../../services/fileService';
+import { useUIStore } from '../../store/uiStore';
 
 interface FilePreviewModalProps {
   open: boolean;
@@ -49,6 +50,7 @@ export const FilePreviewModal = ({
   const [loading, setLoading] = useState(true);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
 
   // Fetch file content when file changes
   useEffect(() => {
@@ -69,13 +71,10 @@ export const FilePreviewModal = ({
     setLoading(true);
     setError(null);
 
-    // Fetch file as blob using the new PREVIEW endpoint
-    api
-      .get(`/files/${file.id}/preview`, {
-        responseType: 'blob',
-      })
-      .then((response) => {
-        const blob = new Blob([response.data]);
+    // Fetch file as blob using the fileService
+    fileService
+      .previewFile(file.id)
+      .then((blob) => {
         const url = window.URL.createObjectURL(blob);
         setPreviewUrl(url);
         setLoading(false);
@@ -84,6 +83,7 @@ export const FilePreviewModal = ({
         console.error('Failed to load file preview:', err);
         setError('Failed to load preview');
         setLoading(false);
+        showSnackbar('Failed to load file preview. Please try again.', 'error');
       });
 
     // Cleanup function to revoke object URL when component unmounts or file changes
@@ -110,21 +110,11 @@ export const FilePreviewModal = ({
     if (!file) return;
 
     try {
-      const response = await api.get(`/files/${file.id}/download`, {
-        responseType: 'blob',
-      });
-
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', file.name);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
+      await fileService.downloadFile(file.id, file.name);
+      showSnackbar('Download started successfully', 'success');
     } catch (error) {
       console.error('Download failed:', error);
+      showSnackbar('Failed to download file. Please try again.', 'error');
     }
   };
 

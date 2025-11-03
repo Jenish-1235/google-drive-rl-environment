@@ -1,260 +1,22 @@
-import {
-  Box,
-  Typography,
-  Button,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
-} from "@mui/material";
+import { Box, Typography, Button, IconButton } from "@mui/material";
 import {
   InfoOutlined as InfoIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  MoreVert as MoreVertIcon,
-  PeopleOutline as PeopleIcon,
-  FolderOutlined as FolderIcon,
 } from "@mui/icons-material";
 import { useState, useEffect } from "react";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
-import { getFileIcon } from "../../utils/fileIcons";
-import { formatFileSize } from "../../utils/formatters";
-import { ContextMenu } from "../../components/common/ContextMenu";
-
-// Mock data for recent files (backup if API fails)
-const mockRecentFiles = [
-  {
-    id: "1",
-    name: "Google Drive Reinforcement Learning Environment",
-    type: "document" as const,
-    owner: "anshul.sharma@scaler.com",
-    ownerInitial: "A",
-    ownerColor: "#EA4335",
-    fileSize: 6144, // 6 KB
-    location: "Shared with me",
-    date: "Nov 1",
-    dateInfo: "Opened by me",
-    isShared: true,
-    timeGroup: "Yesterday",
-  },
-  {
-    id: "2",
-    name: "SST Fee Management System: Student Guide",
-    type: "document" as const,
-    owner: "r.karthik@scaler.com",
-    ownerInitial: "R",
-    ownerColor: "#E91E63",
-    fileSize: 2411520, // 2.3 MB
-    location: "Shared with me",
-    date: "Oct 31",
-    dateInfo: "Opened by me",
-    isShared: true,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "3",
-    name: "NeroSpatial-Aristotle-for-the-Next-Wave-of-Alexanders (2).pdf",
-    type: "pdf" as const,
-    owner: "me",
-    ownerInitial: "M",
-    ownerColor: "#34A853",
-    fileSize: 6502400, // 6.2 MB
-    location: "NeroSpatial",
-    date: "Oct 31",
-    dateInfo: "Modified by me",
-    isShared: false,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "4",
-    name: "SST: Academic Clubs [Open]",
-    type: "document" as const,
-    owner: "utkarsh@scaler.com",
-    ownerInitial: "U",
-    ownerColor: "#5F6368",
-    fileSize: 17408, // 17 KB
-    location: "Shared with me",
-    date: "Oct 30",
-    dateInfo: "Opened by me",
-    isShared: true,
-    hasCatchUp: true,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "5",
-    name: "NeroSpatial - Building Spatially Context Aware Companions",
-    type: "document" as const,
-    owner: "me",
-    ownerInitial: "M",
-    ownerColor: "#34A853",
-    fileSize: 7168, // 7 KB
-    location: "My Drive",
-    date: "Oct 28",
-    dateInfo: "Opened by me",
-    isShared: false,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "6",
-    name: "SST: Academic Clubs [Open].pdf",
-    type: "pdf" as const,
-    owner: "me",
-    ownerInitial: "M",
-    ownerColor: "#34A853",
-    fileSize: 345088, // 337 KB
-    location: "My Drive",
-    date: "Oct 28",
-    dateInfo: "Uploaded",
-    isShared: false,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "7",
-    name: "SST Annual Awards - Nomination Guidelines",
-    type: "document" as const,
-    owner: "vedaansh.kaushik@scaler.com",
-    ownerInitial: "V",
-    ownerColor: "#4285F4",
-    fileSize: 23552, // 23 KB
-    location: "Shared with me",
-    date: "Oct 28",
-    dateInfo: "Opened by me",
-    isShared: true,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "8",
-    name: "NeroSpatial-Pitch-Deck",
-    type: "presentation" as const,
-    owner: "me",
-    ownerInitial: "M",
-    ownerColor: "#34A853",
-    fileSize: 2411520, // 2.3 MB
-    location: "My Drive",
-    date: "Oct 27",
-    dateInfo: "Opened by me",
-    isShared: false,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "9",
-    name: "Untitled presentation",
-    type: "presentation" as const,
-    owner: "me",
-    ownerInitial: "M",
-    ownerColor: "#34A853",
-    fileSize: 92160, // 90 KB
-    location: "My Drive",
-    date: "Oct 27",
-    dateInfo: "Modified by me",
-    isShared: false,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "10",
-    name: "SINE Pitch",
-    type: "presentation" as const,
-    owner: "me",
-    ownerInitial: "M",
-    ownerColor: "#34A853",
-    fileSize: 89088, // 87 KB
-    location: "My Drive",
-    date: "Oct 27",
-    dateInfo: "Modified by me",
-    isShared: false,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "11",
-    name: "NeroSpatial-Pitch-Deck.pdf",
-    type: "pdf" as const,
-    owner: "me",
-    ownerInitial: "M",
-    ownerColor: "#34A853",
-    fileSize: 943104, // 921 KB
-    location: "My Drive",
-    date: "Oct 27",
-    dateInfo: "Uploaded",
-    isShared: false,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "12",
-    name: "YC Application _ Template",
-    type: "document" as const,
-    owner: "vikram@grayscale.vc",
-    ownerInitial: "V",
-    ownerColor: "#C5221F",
-    fileSize: 6144, // 6 KB
-    location: "Shared with me",
-    date: "Oct 26",
-    dateInfo: "Opened by me",
-    isShared: true,
-    timeGroup: "Last week",
-  },
-];
+import { FileList } from "../../components/files/FileList";
+import { FileGrid } from "../../components/files/FileGrid";
+import { FileListSkeleton } from "../../components/loading/FileListSkeleton";
+import { FileGridSkeleton } from "../../components/loading/FileGridSkeleton";
 
 export const RecentPage = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const files = useFileStore((state) => state.files);
+  const isLoading = useFileStore((state) => state.isLoading);
   const fetchRecentFiles = useFileStore((state) => state.fetchRecentFiles);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
-
-  // Context menu state
-  const [contextMenuAnchor, setContextMenuAnchor] = useState<{
-    element: HTMLElement;
-    file: any;
-  } | null>(null);
-
-  // Context menu handlers
-  const handleContextMenuOpen = (event: React.MouseEvent<HTMLElement>, file: any) => {
-    event.stopPropagation();
-    setContextMenuAnchor({ element: event.currentTarget, file });
-  };
-
-  const handleContextMenuClose = () => {
-    setContextMenuAnchor(null);
-  };
-
-  // Context menu action handlers
-  const handleDownload = (file: any) => {
-    console.log('Download file:', file.name);
-    // TODO: Implement download
-  };
-
-  const handleRename = (file: any) => {
-    console.log('Rename file:', file.name);
-    // TODO: Implement rename
-  };
-
-  const handleCopy = (file: any) => {
-    console.log('Make a copy of file:', file.name);
-    // TODO: Implement copy
-  };
-
-  const handleShare = (file: any) => {
-    console.log('Share file:', file.name);
-    // TODO: Implement share
-  };
-
-  const handleOrganise = (file: any) => {
-    console.log('Organise file:', file.name);
-    // TODO: Implement organise
-  };
-
-  const handleDetails = (file: any) => {
-    console.log('Show details for file:', file.name);
-    // TODO: Implement details
-  };
-
-  const handleDelete = (file: any) => {
-    console.log('Delete file:', file.name);
-    // TODO: Implement delete
-  };
 
   // Fetch recent files on mount
   useEffect(() => {
@@ -262,19 +24,6 @@ export const RecentPage = () => {
       showSnackbar(error.message || "Failed to load recent files", "error");
     });
   }, [fetchRecentFiles, showSnackbar]);
-
-  // Use real files from store if available, otherwise use mock data
-  const recentFiles = files.length > 0 ? files : mockRecentFiles;
-
-  // Group files by time period
-  const groupedFiles = recentFiles.reduce((groups, file: any) => {
-    const group = file.timeGroup;
-    if (!groups[group]) {
-      groups[group] = [];
-    }
-    groups[group].push(file);
-    return groups;
-  }, {} as Record<string, typeof mockRecentFiles>);
 
   return (
     <Box
@@ -486,7 +235,7 @@ export const RecentPage = () => {
 
       {/* Filter Buttons */}
       <Box sx={{ display: "flex", gap: 1, mb: 3 }}>
-        {["Type", "People", "Modified", "Source"].map((filter) => (
+        {["Type", "People", "Modified"].map((filter) => (
           <Button
             key={filter}
             variant="outlined"
@@ -513,338 +262,62 @@ export const RecentPage = () => {
         ))}
       </Box>
 
-      {/* File List */}
-      <TableContainer
-        sx={{
-          backgroundColor: "white",
-          borderRadius: 1,
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  color: "#5f6368",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  borderBottom: "1px solid #e8eaed",
-                  py: 1.5,
-                  pl: 2,
-                }}
-              >
-                Name
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "#5f6368",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  borderBottom: "1px solid #e8eaed",
-                  py: 1.5,
-                }}
-              >
-                Owner
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "#5f6368",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  borderBottom: "1px solid #e8eaed",
-                  py: 1.5,
-                }}
-              >
-                File size
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "#5f6368",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  borderBottom: "1px solid #e8eaed",
-                  py: 1.5,
-                }}
-              >
-                Location
-              </TableCell>
-              <TableCell
-                sx={{
-                  borderBottom: "1px solid #e8eaed",
-                  width: 48,
-                }}
-              />
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Object.entries(groupedFiles).map(([timeGroup, files]) => (
-              <>
-                {/* Time Group Header */}
-                <TableRow key={`group-${timeGroup}`}>
-                  <TableCell
-                    colSpan={5}
-                    sx={{
-                      color: "#5f6368",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      borderBottom: "none",
-                      py: 2,
-                      pl: 2,
-                      backgroundColor: "#f9fafb",
-                    }}
-                  >
-                    {timeGroup}
-                  </TableCell>
-                </TableRow>
+      {/* Content Area */}
+      {isLoading ? (
+        viewMode === "list" ? (
+          <FileListSkeleton />
+        ) : (
+          <FileGridSkeleton />
+        )
+      ) : files.length === 0 ? (
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "calc(100vh - 300px)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              maxWidth: 500,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: 22,
+                fontWeight: 400,
+                color: "#202124",
+                textAlign: "center",
+              }}
+            >
+              No recent files
+            </Typography>
 
-                {/* Files in this group */}
-                {files.map((file) => (
-                  <TableRow
-                    key={file.id}
-                    sx={{
-                      "&:hover": {
-                        backgroundColor: "#f8f9fa",
-                      },
-                      cursor: "pointer",
-                    }}
-                  >
-                    {/* Name */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                        pl: 2,
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
-                      >
-                        {getFileIcon(file.type)}
-                        <Box sx={{ display: "flex", flexDirection: "column" }}>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 1,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 14,
-                                color: "#202124",
-                                fontWeight: 400,
-                              }}
-                            >
-                              {file.name}
-                            </Typography>
-                            {file.isShared && (
-                              <PeopleIcon
-                                sx={{ fontSize: 16, color: "#5f6368" }}
-                              />
-                            )}
-                          </Box>
-                          <Box
-                            sx={{
-                              display: "flex",
-                              alignItems: "center",
-                              gap: 0.5,
-                            }}
-                          >
-                            <Typography
-                              sx={{
-                                fontSize: 12,
-                                color: "#5f6368",
-                              }}
-                            >
-                              {file.date}
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 12,
-                                color: "#5f6368",
-                              }}
-                            >
-                              •
-                            </Typography>
-                            <Typography
-                              sx={{
-                                fontSize: 12,
-                                color: "#5f6368",
-                              }}
-                            >
-                              {file.dateInfo}
-                            </Typography>
-                            {file.hasCatchUp && (
-                              <>
-                                <Typography
-                                  sx={{
-                                    fontSize: 12,
-                                    color: "#5f6368",
-                                  }}
-                                >
-                                  •
-                                </Typography>
-                                <Box
-                                  sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 0.5,
-                                    px: 1,
-                                    py: 0.25,
-                                    backgroundColor: "#f1f3f4",
-                                    borderRadius: "12px",
-                                  }}
-                                >
-                                  <Box
-                                    sx={{
-                                      width: 16,
-                                      height: 16,
-                                      display: "flex",
-                                      alignItems: "center",
-                                      justifyContent: "center",
-                                    }}
-                                  >
-                                    <svg
-                                      width="16"
-                                      height="16"
-                                      viewBox="0 0 16 16"
-                                      fill="none"
-                                    >
-                                      <path
-                                        d="M8 2L9.5 5.5L13 6L10.5 8.5L11 12L8 10L5 12L5.5 8.5L3 6L6.5 5.5L8 2Z"
-                                        fill="#5f6368"
-                                      />
-                                    </svg>
-                                  </Box>
-                                  <Typography
-                                    sx={{
-                                      fontSize: 11,
-                                      color: "#5f6368",
-                                      fontWeight: 500,
-                                    }}
-                                  >
-                                    Catch up
-                                  </Typography>
-                                </Box>
-                              </>
-                            )}
-                          </Box>
-                        </Box>
-                      </Box>
-                    </TableCell>
-
-                    {/* Owner */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        <Avatar
-                          sx={{
-                            width: 24,
-                            height: 24,
-                            fontSize: 12,
-                            backgroundColor: file.ownerColor,
-                          }}
-                        >
-                          {file.ownerInitial}
-                        </Avatar>
-                        <Typography
-                          sx={{
-                            fontSize: 14,
-                            color: "#202124",
-                          }}
-                        >
-                          {file.owner}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-
-                    {/* File Size */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: 14,
-                          color: "#202124",
-                        }}
-                      >
-                        {formatFileSize(file.fileSize)}
-                      </Typography>
-                    </TableCell>
-
-                    {/* Location */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 0.5 }}
-                      >
-                        {file.location === "My Drive" ? (
-                          <FolderIcon sx={{ fontSize: 16, color: "#5f6368" }} />
-                        ) : (
-                          <PeopleIcon sx={{ fontSize: 16, color: "#5f6368" }} />
-                        )}
-                        <Typography
-                          sx={{
-                            fontSize: 14,
-                            color: "#202124",
-                          }}
-                        >
-                          {file.location}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                        pr: 2,
-                      }}
-                    >
-                      <IconButton 
-                        size="small"
-                        onClick={(e) => handleContextMenuOpen(e, file)}
-                      >
-                        <MoreVertIcon sx={{ fontSize: 20, color: "#5f6368" }} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
-
-      {/* Context Menu */}
-      <ContextMenu
-        anchorEl={contextMenuAnchor?.element || null}
-        open={Boolean(contextMenuAnchor)}
-        file={contextMenuAnchor?.file || null}
-        onClose={handleContextMenuClose}
-        showOpenWith={true}
-        onDownload={handleDownload}
-        onRename={handleRename}
-        onCopy={handleCopy}
-        onShare={handleShare}
-        onOrganise={handleOrganise}
-        onDetails={handleDetails}
-        onDelete={handleDelete}
-      />
+            <Typography
+              variant="body1"
+              sx={{
+                fontSize: 14,
+                color: "#5f6368",
+                textAlign: "center",
+                lineHeight: 1.6,
+              }}
+            >
+              Your recently accessed files will appear here
+            </Typography>
+          </Box>
+        </Box>
+      ) : viewMode === "list" ? (
+        <FileList files={files} />
+      ) : (
+        <FileGrid files={files} />
+      )}
     </Box>
   );
 };

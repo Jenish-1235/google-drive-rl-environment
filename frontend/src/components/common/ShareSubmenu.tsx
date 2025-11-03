@@ -1,14 +1,13 @@
-import { 
-  Menu, 
-  MenuItem, 
-  ListItemIcon, 
-  ListItemText, 
-  Typography,
-} from '@mui/material';
 import {
-  Share as ShareIcon,
-  Link as CopyLinkIcon,
-} from '@mui/icons-material';
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Typography,
+} from "@mui/material";
+import { Share as ShareIcon, Link as CopyLinkIcon } from "@mui/icons-material";
+import { useUIStore } from "../../store/uiStore";
+import { shareService } from "../../services/shareService";
 
 interface ShareSubmenuProps {
   anchorEl: HTMLElement | null;
@@ -27,10 +26,24 @@ export const ShareSubmenu = ({
   onMouseEnter,
   onMouseLeave,
 }: ShareSubmenuProps) => {
-  const handleAction = (action: string) => {
-    console.log(`Share action: ${action} for file:`, file?.name);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
+  const openModal = useUIStore((state) => state.openModal);
+
+  const handleShare = () => {
+    openModal("share", file);
     onClose();
-    // TODO: Implement share actions
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      const response = await shareService.generateShareLink(file.id);
+      await navigator.clipboard.writeText(response.share_link);
+      showSnackbar("Link copied to clipboard", "success");
+      onClose();
+    } catch (error) {
+      console.error("Failed to generate share link:", error);
+      showSnackbar("Failed to generate share link. Please try again.", "error");
+    }
   };
 
   if (!file) return null;
@@ -44,35 +57,35 @@ export const ShareSubmenu = ({
       onMouseLeave={onMouseLeave}
       disableAutoFocusItem
       anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
+        vertical: "top",
+        horizontal: "right",
       }}
       transformOrigin={{
-        vertical: 'top',
-        horizontal: 'left',
+        vertical: "top",
+        horizontal: "left",
       }}
       slotProps={{
         paper: {
           elevation: 8,
           sx: {
             minWidth: 180,
-            borderRadius: '4px',
-            border: '1px solid #dadce0',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            ml: -0.5,
-            pointerEvents: 'auto',
-            '& .MuiMenuItem-root': {
+            borderRadius: "4px",
+            border: "1px solid #dadce0",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            ml: 0, // Remove left margin to bring submenu closer
+            pointerEvents: "auto",
+            "& .MuiMenuItem-root": {
               px: 2,
               py: 1,
-              fontSize: '14px',
-              color: '#202124',
-              '&:hover': {
-                backgroundColor: '#f8f9fa',
+              fontSize: "14px",
+              color: "#202124",
+              "&:hover": {
+                backgroundColor: "#f8f9fa",
               },
             },
-            '& .MuiListItemIcon-root': {
+            "& .MuiListItemIcon-root": {
               minWidth: 40,
-              color: '#5f6368',
+              color: "#5f6368",
             },
           },
         },
@@ -82,25 +95,25 @@ export const ShareSubmenu = ({
       }}
     >
       {/* Share */}
-      <MenuItem onClick={() => handleAction('share')}>
+      <MenuItem onClick={handleShare}>
         <ListItemIcon>
           <ShareIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Share"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
         <Typography
           variant="caption"
           sx={{
-            fontSize: '12px',
-            color: '#5f6368',
+            fontSize: "12px",
+            color: "#5f6368",
             fontWeight: 400,
-            ml: 'auto',
+            ml: "auto",
           }}
         >
           Ctrl+Alt+A
@@ -108,16 +121,16 @@ export const ShareSubmenu = ({
       </MenuItem>
 
       {/* Copy link */}
-      <MenuItem onClick={() => handleAction('copy-link')}>
+      <MenuItem onClick={handleCopyLink}>
         <ListItemIcon>
           <CopyLinkIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Copy link"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
       </MenuItem>

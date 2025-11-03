@@ -24,6 +24,7 @@ import {
 } from '@mui/icons-material';
 import type { DriveItem } from '../../types/file.types';
 import { useFileStore } from '../../store/fileStore';
+import { useUIStore } from '../../store/uiStore';
 import { fileService } from '../../services/fileService';
 
 interface MoveModalProps {
@@ -43,6 +44,7 @@ export const MoveModal = ({ open, files, onClose, onMove }: MoveModalProps) => {
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
 
   const fileStoreCurrentFolder = useFileStore((state) => state.currentFolderId);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
 
   useEffect(() => {
     if (open) {
@@ -83,6 +85,7 @@ export const MoveModal = ({ open, files, onClose, onMove }: MoveModalProps) => {
       setFolders(availableFolders);
     } catch (error) {
       console.error('Failed to load folders:', error);
+      showSnackbar('Failed to load folders. Please try again.', 'error');
       setFolders([]);
     } finally {
       setLoading(false);
@@ -105,6 +108,7 @@ export const MoveModal = ({ open, files, onClose, onMove }: MoveModalProps) => {
       setBreadcrumbs([{ id: null, name: 'My Drive' }, ...pathBreadcrumbs]);
     } catch (error) {
       console.error('Failed to load breadcrumbs:', error);
+      showSnackbar('Failed to load folder path', 'error');
       setBreadcrumbs([{ id: null, name: 'My Drive' }]);
     }
   };

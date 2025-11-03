@@ -11,16 +11,19 @@ import {
   TableRow,
   TableSortLabel,
   Link,
+  CircularProgress,
 } from "@mui/material";
 import {
   InfoOutlined as InfoIcon,
   ArrowDownward as ArrowDownIcon,
   PeopleAlt as PeopleIcon,
 } from "@mui/icons-material";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { getFileIcon } from "../../utils/fileIcons";
 import { formatFileSize } from "../../utils/formatters";
 import type { FileType } from "../../types/file.types";
+import { getFileTypeFromMime } from "../../types/file.types";
+import { userService, type StorageAnalytics } from "../../services";
 
 interface StorageFile {
   id: string;
@@ -113,24 +116,58 @@ const mockStorageFiles: StorageFile[] = [
 
 export const StoragePage = () => {
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [storageAnalytics, setStorageAnalytics] = useState<StorageAnalytics | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Storage stats
-  const totalStorage = 2 * 1024 * 1024 * 1024 * 1024; // 2 TB
-  const usedStorage = 7.24 * 1024 * 1024 * 1024; // 7.24 GB
-  const storagePercentage = (usedStorage / totalStorage) * 100;
+  // Fetch storage analytics
+  useEffect(() => {
+    const fetchStorageAnalytics = async () => {
+      setLoading(true);
+      try {
+        const data = await userService.getStorageAnalytics();
+        setStorageAnalytics(data);
+      } catch (error) {
+        console.error('Failed to fetch storage analytics:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Storage breakdown (mock data)
-  const driveStorage = 5.5 * 1024 * 1024 * 1024;
-  const photosStorage = 1.2 * 1024 * 1024 * 1024;
-  const gmailStorage = 0.44 * 1024 * 1024 * 1024;
-  const otherStorage = 0.1 * 1024 * 1024 * 1024;
+    fetchStorageAnalytics();
+  }, []);
 
-  const drivePercentage = (driveStorage / usedStorage) * 100;
-  const photosPercentage = (photosStorage / usedStorage) * 100;
-  const gmailPercentage = (gmailStorage / usedStorage) * 100;
-  const otherPercentage = (otherStorage / usedStorage) * 100;
+  // Calculate storage stats from API data
+  const totalStorage = storageAnalytics?.storage_limit || 0;
+  const usedStorage = storageAnalytics?.total_storage || 0;
+  const storagePercentage = storageAnalytics?.storage_percentage || 0;
 
-  const sortedFiles = [...mockStorageFiles].sort((a, b) => {
+  // Storage breakdown from API
+  const breakdown = storageAnalytics?.breakdown || [];
+  const totalBreakdownSize = breakdown.reduce((sum, cat) => sum + cat.total_size, 0) || 1;
+
+  const documentsBreakdown = breakdown.find(b => b.category === 'documents');
+  const imagesBreakdown = breakdown.find(b => b.category === 'images');
+  const videosBreakdown = breakdown.find(b => b.category === 'videos');
+  const otherBreakdown = breakdown.find(b => b.category === 'other');
+
+  const drivePercentage = documentsBreakdown ? (documentsBreakdown.total_size / totalBreakdownSize) * 100 : 0;
+  const photosPercentage = imagesBreakdown ? (imagesBreakdown.total_size / totalBreakdownSize) * 100 : 0;
+  const videosPercentage = videosBreakdown ? (videosBreakdown.total_size / totalBreakdownSize) * 100 : 0;
+  const otherPercentage = otherBreakdown ? (otherBreakdown.total_size / totalBreakdownSize) * 100 : 0;
+
+  // Convert largest files to StorageFile format
+  const largestFiles: StorageFile[] = storageAnalytics?.largest_files.map(file => {
+    const fileType = getFileTypeFromMime(file.mime_type, "file");
+    return {
+      id: file.id,
+      name: file.name,
+      type: fileType,
+      size: file.size,
+      isShared: false, // Not available in LargestFile
+    };
+  }) || mockStorageFiles;
+
+  const sortedFiles = [...largestFiles].sort((a, b) => {
     return sortOrder === "desc" ? b.size - a.size : a.size - b.size;
   });
 
@@ -234,22 +271,28 @@ export const StoragePage = () => {
 
       {/* Storage Usage Display */}
       <Box sx={{ mb: 4 }}>
-        <Typography
-          sx={{
-            fontSize: 32,
-            fontWeight: 400,
-            color: "#202124",
-            mb: 1,
-          }}
-        >
-          7.24 GB{" "}
-          <Typography
-            component="span"
-            sx={{ fontSize: 14, color: "#5f6368", fontWeight: 400 }}
-          >
-            of 2 TB used
-          </Typography>
-        </Typography>
+        {loading ? (
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <>
+            <Typography
+              sx={{
+                fontSize: 32,
+                fontWeight: 400,
+                color: "#202124",
+                mb: 1,
+              }}
+            >
+              {formatFileSize(usedStorage)}{" "}
+              <Typography
+                component="span"
+                sx={{ fontSize: 14, color: "#5f6368", fontWeight: 400 }}
+              >
+                of {formatFileSize(totalStorage)} used
+              </Typography>
+            </Typography>
 
         {/* Progress Bar */}
         <Box sx={{ position: "relative", height: 8, mb: 2 }}>
@@ -286,7 +329,7 @@ export const StoragePage = () => {
             />
             <Box
               sx={{
-                width: `${gmailPercentage}%`,
+                width: `${videosPercentage}%`,
                 backgroundColor: "#ea4335",
               }}
             />
@@ -311,7 +354,7 @@ export const StoragePage = () => {
               }}
             />
             <Typography sx={{ fontSize: 13, color: "#5f6368" }}>
-              Google Drive
+              Documents ({documentsBreakdown ? formatFileSize(documentsBreakdown.total_size) : '0 B'})
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -324,7 +367,7 @@ export const StoragePage = () => {
               }}
             />
             <Typography sx={{ fontSize: 13, color: "#5f6368" }}>
-              Google Photos
+              Images ({imagesBreakdown ? formatFileSize(imagesBreakdown.total_size) : '0 B'})
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -337,7 +380,7 @@ export const StoragePage = () => {
               }}
             />
             <Typography sx={{ fontSize: 13, color: "#5f6368" }}>
-              Gmail
+              Videos ({videosBreakdown ? formatFileSize(videosBreakdown.total_size) : '0 B'})
             </Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -350,7 +393,7 @@ export const StoragePage = () => {
               }}
             />
             <Typography sx={{ fontSize: 13, color: "#5f6368" }}>
-              Other
+              Other ({otherBreakdown ? formatFileSize(otherBreakdown.total_size) : '0 B'})
             </Typography>
           </Box>
         </Box>
@@ -405,6 +448,8 @@ export const StoragePage = () => {
             Clean up space
           </Button>
         </Box>
+          </>
+        )}
       </Box>
 
       {/* File List Table */}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Box,
   Table,
@@ -72,46 +72,60 @@ export const FileList = ({
 
   // User profile popover state
   const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
-  const [profileHoverTimer, setProfileHoverTimer] = useState<number | null>(null);
+  const profileHoverTimerRef = useRef<number | null>(null);
+  const profileOpenTimerRef = useRef<number | null>(null);
   const currentUser = useAuthStore((state) => state.user);
 
   // Get the selected file for context menu
-  const contextMenuFile = actionMenuAnchor ? 
-    files.find(f => f.id === actionMenuAnchor.fileId) || null : 
+  const contextMenuFile = actionMenuAnchor ?
+    files.find(f => f.id === actionMenuAnchor.fileId) || null :
     null;
 
-  // User profile hover handlers
-  const clearProfileHoverTimer = () => {
-    if (profileHoverTimer) {
-      clearTimeout(profileHoverTimer);
-      setProfileHoverTimer(null);
+  // User profile hover handlers - memoized to prevent recreating on every render
+  const clearAllProfileTimers = useCallback(() => {
+    if (profileHoverTimerRef.current) {
+      clearTimeout(profileHoverTimerRef.current);
+      profileHoverTimerRef.current = null;
     }
-  };
+    if (profileOpenTimerRef.current) {
+      clearTimeout(profileOpenTimerRef.current);
+      profileOpenTimerRef.current = null;
+    }
+  }, []);
 
-  const handleProfileHoverEnter = (event: React.MouseEvent<HTMLElement>) => {
-    clearProfileHoverTimer();
-    setProfileAnchor(event.currentTarget);
-  };
+  const handleProfileHoverEnter = useCallback((event: React.MouseEvent<HTMLElement>) => {
+    clearAllProfileTimers();
 
-  const handleProfileHoverLeave = () => {
-    clearProfileHoverTimer();
-    const timer = window.setTimeout(() => {
+    // Delay opening to prevent flicker on quick mouse movement
+    profileOpenTimerRef.current = window.setTimeout(() => {
+      setProfileAnchor(event.currentTarget);
+      profileOpenTimerRef.current = null;
+    }, 300); // 300ms delay - faster but still prevents flicker
+  }, [clearAllProfileTimers]);
+
+  const handleProfileHoverLeave = useCallback(() => {
+    clearAllProfileTimers();
+
+    // Delay closing to allow mouse to move to popover
+    profileHoverTimerRef.current = window.setTimeout(() => {
       setProfileAnchor(null);
+      profileHoverTimerRef.current = null;
     }, 300);
-    setProfileHoverTimer(timer);
-  };
+  }, [clearAllProfileTimers]);
 
-  const handlePopoverEnter = () => {
-    clearProfileHoverTimer();
-  };
+  const handlePopoverEnter = useCallback(() => {
+    clearAllProfileTimers();
+  }, [clearAllProfileTimers]);
 
-  const handlePopoverLeave = () => {
-    clearProfileHoverTimer();
-    const timer = window.setTimeout(() => {
+  const handlePopoverLeave = useCallback(() => {
+    clearAllProfileTimers();
+
+    // Close popover after leaving
+    profileHoverTimerRef.current = window.setTimeout(() => {
       setProfileAnchor(null);
+      profileHoverTimerRef.current = null;
     }, 200);
-    setProfileHoverTimer(timer);
-  };
+  }, [clearAllProfileTimers]);
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {

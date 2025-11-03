@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -20,6 +20,8 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Autocomplete,
+  CircularProgress,
   type SelectChangeEvent,
 } from '@mui/material';
 import {
@@ -31,116 +33,183 @@ import {
 } from '@mui/icons-material';
 import type { DriveItem } from '../../types/file.types';
 import { colors } from '../../theme/theme';
+import { shareService, userService, type User, type ShareWithDetails, type PermissionRole } from '../../services';
+import { useUIStore } from '../../store/uiStore';
 
-export type SharePermission = 'viewer' | 'commenter' | 'editor';
+export type SharePermission = PermissionRole;
 export type GeneralAccess = 'restricted' | 'anyone-with-link';
-
-export interface Collaborator {
-  id: string;
-  name: string;
-  email: string;
-  photoUrl?: string;
-  permission: SharePermission;
-  isOwner?: boolean;
-}
 
 interface ShareModalProps {
   open: boolean;
   file: DriveItem | null;
   onClose: () => void;
-  onShare?: (emails: string[], permission: SharePermission) => void;
-  onUpdatePermission?: (collaboratorId: string, permission: SharePermission) => void;
-  onRemoveAccess?: (collaboratorId: string) => void;
-  onCopyLink?: () => void;
-  onChangeGeneralAccess?: (access: GeneralAccess, permission?: SharePermission) => void;
+  onShareSuccess?: () => void;
 }
 
 export const ShareModal = ({
   open,
   file,
   onClose,
-  onShare,
-  onUpdatePermission,
-  onRemoveAccess,
-  onCopyLink,
-  onChangeGeneralAccess,
+  onShareSuccess,
 }: ShareModalProps) => {
-  const [email, setEmail] = useState('');
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [permission, setPermission] = useState<SharePermission>('viewer');
   const [generalAccess, setGeneralAccess] = useState<GeneralAccess>('restricted');
   const [linkCopied, setLinkCopied] = useState(false);
+  const [shareLink, setShareLink] = useState<string>('');
 
-  // Mock collaborators - in real app, this would come from props or API
-  const [collaborators] = useState<Collaborator[]>([
-    {
-      id: '1',
-      name: 'You',
-      email: 'you@example.com',
-      permission: 'editor',
-      isOwner: true,
-    },
-  ]);
+  // State for data
+  const [shares, setShares] = useState<ShareWithDetails[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  const handleEmailChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setEmail(event.target.value);
-  };
+  // Loading states
+  const [loading, setLoading] = useState(false);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [sharesLoading, setSharesLoading] = useState(false);
+
+  // Fetch shares for the file
+  useEffect(() => {
+    const fetchShares = async () => {
+      if (!file || !open) return;
+
+      setSharesLoading(true);
+      try {
+        const response = await shareService.getSharesForFile(file.id);
+        setShares(response.shares);
+      } catch (error) {
+        console.error('Failed to fetch shares:', error);
+        showSnackbar('Failed to load sharing information', 'error');
+      } finally {
+        setSharesLoading(false);
+      }
+    };
+
+    fetchShares();
+  }, [file, open]);
+
+  // Fetch users for autocomplete
+  useEffect(() => {
+    const fetchUsers = async () => {
+      if (!open) return;
+
+      setUsersLoading(true);
+      try {
+        const [usersResponse, currentUserResponse] = await Promise.all([
+          userService.getAllUsers(),
+          userService.getCurrentUser(),
+        ]);
+        setUsers(usersResponse.users);
+        setCurrentUser(currentUserResponse.user);
+      } catch (error) {
+        console.error('Failed to fetch users:', error);
+        showSnackbar('Failed to load users list', 'error');
+      } finally {
+        setUsersLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, [open]);
 
   const handlePermissionChange = (event: SelectChangeEvent<SharePermission>) => {
     setPermission(event.target.value as SharePermission);
   };
 
-  const handleShare = () => {
-    if (email.trim() && onShare) {
-      onShare([email], permission);
-      setEmail('');
+  const handleShare = async () => {
+    if (!selectedUser || !file) return;
+
+    setLoading(true);
+    try {
+      await shareService.createShare(file.id, selectedUser.id, permission);
+      // Refresh shares
+      const response = await shareService.getSharesForFile(file.id);
+      setShares(response.shares);
+      setSelectedUser(null);
+      showSnackbar(`Successfully shared with ${selectedUser.name}`, 'success');
+      onShareSuccess?.();
+    } catch (error) {
+      console.error('Failed to share file:', error);
+      showSnackbar('Failed to share file. Please try again.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent) => {
-    if (event.key === 'Enter') {
-      handleShare();
-    }
-  };
-
-  const handleCollaboratorPermissionChange = (
-    collaboratorId: string,
+  const handleCollaboratorPermissionChange = async (
+    shareId: number,
     newPermission: SharePermission
   ) => {
-    if (onUpdatePermission) {
-      onUpdatePermission(collaboratorId, newPermission);
+    setLoading(true);
+    try {
+      await shareService.updateSharePermission(shareId, newPermission);
+      // Update local state
+      setShares(prev => prev.map(share =>
+        share.id === shareId ? { ...share, permission: newPermission } : share
+      ));
+      showSnackbar('Permission updated successfully', 'success');
+    } catch (error) {
+      console.error('Failed to update permission:', error);
+      showSnackbar('Failed to update permission. Please try again.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveAccess = (collaboratorId: string) => {
-    if (onRemoveAccess) {
-      onRemoveAccess(collaboratorId);
+  const handleRemoveAccess = async (shareId: number) => {
+    setLoading(true);
+    try {
+      await shareService.revokeShare(shareId);
+      // Remove from local state
+      setShares(prev => prev.filter(share => share.id !== shareId));
+      showSnackbar('Access removed successfully', 'success');
+    } catch (error) {
+      console.error('Failed to remove access:', error);
+      showSnackbar('Failed to remove access. Please try again.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleCopyLink = () => {
-    if (onCopyLink) {
-      onCopyLink();
+  const handleCopyLink = async () => {
+    if (!file) return;
+
+    try {
+      let link = shareLink;
+
+      // Generate link if not already generated
+      if (!link) {
+        const response = await shareService.generateShareLink(file.id, permission);
+        link = response.share_link;
+        setShareLink(link);
+      }
+
+      await navigator.clipboard.writeText(link);
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 2000);
+      showSnackbar('Link copied to clipboard', 'success');
+    } catch (error) {
+      console.error('Failed to copy link:', error);
+      showSnackbar('Failed to copy link. Please try again.', 'error');
     }
-    setLinkCopied(true);
-    setTimeout(() => setLinkCopied(false), 2000);
   };
 
-  const handleGeneralAccessChange = (event: SelectChangeEvent<GeneralAccess>) => {
+  const handleGeneralAccessChange = async (event: SelectChangeEvent<GeneralAccess>) => {
+    if (!file) return;
+
     const newAccess = event.target.value as GeneralAccess;
     setGeneralAccess(newAccess);
-    if (onChangeGeneralAccess) {
-      onChangeGeneralAccess(newAccess, 'viewer');
-    }
-  };
 
-  const getPermissionLabel = (perm: SharePermission) => {
-    switch (perm) {
-      case 'viewer':
-        return 'Viewer';
-      case 'commenter':
-        return 'Commenter';
-      case 'editor':
-        return 'Editor';
+    if (newAccess === 'anyone-with-link' && !shareLink) {
+      try {
+        const response = await shareService.generateShareLink(file.id, permission);
+        setShareLink(response.share_link);
+        showSnackbar('Share link generated', 'success');
+      } catch (error) {
+        console.error('Failed to generate share link:', error);
+        showSnackbar('Failed to generate share link. Please try again.', 'error');
+      }
     }
   };
 
@@ -181,20 +250,52 @@ export const ShareModal = ({
         {/* Add People Section */}
         <Box sx={{ mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-            <TextField
+            <Autocomplete
               fullWidth
-              placeholder="Add people or groups"
-              value={email}
-              onChange={handleEmailChange}
-              onKeyPress={handleKeyPress}
               size="small"
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <PersonAddIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
-                  </InputAdornment>
-                ),
-              }}
+              options={users}
+              value={selectedUser}
+              onChange={(_, newValue) => setSelectedUser(newValue)}
+              getOptionLabel={(option) => `${option.name} (${option.email})`}
+              loading={usersLoading}
+              renderOption={(props, option) => (
+                <li {...props} key={option.id}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Avatar sx={{ width: 32, height: 32 }}>
+                      {option.name.charAt(0).toUpperCase()}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body2">{option.name}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {option.email}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Add people or groups"
+                  InputProps={{
+                    ...params.InputProps,
+                    startAdornment: (
+                      <>
+                        <InputAdornment position="start">
+                          <PersonAddIcon sx={{ color: 'text.secondary', fontSize: 20 }} />
+                        </InputAdornment>
+                        {params.InputProps.startAdornment}
+                      </>
+                    ),
+                    endAdornment: (
+                      <>
+                        {usersLoading ? <CircularProgress size={20} /> : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
             />
             <FormControl sx={{ minWidth: 120 }} size="small">
               <Select value={permission} onChange={handlePermissionChange}>
@@ -206,15 +307,15 @@ export const ShareModal = ({
             <Button
               variant="contained"
               onClick={handleShare}
-              disabled={!email.trim()}
+              disabled={!selectedUser || loading}
               sx={{ minWidth: 80 }}
             >
-              Send
+              {loading ? <CircularProgress size={20} /> : 'Send'}
             </Button>
           </Box>
 
           <Typography variant="caption" color="text.secondary">
-            People will get an email invitation
+            People will get notified when you share with them
           </Typography>
         </Box>
 
@@ -226,66 +327,97 @@ export const ShareModal = ({
             People with access
           </Typography>
 
-          <List sx={{ p: 0 }}>
-            {collaborators.map((collaborator) => (
-              <ListItem
-                key={collaborator.id}
-                sx={{
-                  px: 0,
-                  '&:hover': {
-                    backgroundColor: 'transparent',
-                  },
-                }}
-              >
-                <ListItemAvatar>
-                  <Avatar
-                    src={collaborator.photoUrl}
-                    alt={collaborator.name}
-                    sx={{ width: 40, height: 40 }}
-                  >
-                    {collaborator.name.charAt(0).toUpperCase()}
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2">{collaborator.name}</Typography>
-                      {collaborator.isOwner && (
+          {sharesLoading ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <List sx={{ p: 0 }}>
+              {/* Show file owner */}
+              {file && currentUser && String(file.ownerId) === String(currentUser.id) && (
+                <ListItem
+                  sx={{
+                    px: 0,
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
+                  }}
+                >
+                  <ListItemAvatar>
+                    <Avatar sx={{ width: 40, height: 40 }}>
+                      {currentUser.name.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2">{currentUser.name} (You)</Typography>
                         <Chip label="Owner" size="small" sx={{ height: 20, fontSize: '0.75rem' }} />
-                      )}
-                    </Box>
-                  }
-                  secondary={collaborator.email}
-                />
-                {!collaborator.isOwner ? (
+                      </Box>
+                    }
+                    secondary={currentUser.email}
+                  />
+                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+                    Owner
+                  </Typography>
+                </ListItem>
+              )}
+
+              {/* Show shared users */}
+              {shares.map((share) => share.shared_with_user && (
+                <ListItem
+                  key={share.id}
+                  sx={{
+                    px: 0,
+                    '&:hover': {
+                      backgroundColor: 'transparent',
+                    },
+                  }}
+                >
+                  <ListItemAvatar>
+                    <Avatar sx={{ width: 40, height: 40 }}>
+                      {share.shared_with_user.name.charAt(0).toUpperCase()}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={<Typography variant="body2">{share.shared_with_user.name}</Typography>}
+                    secondary={share.shared_with_user.email}
+                  />
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <FormControl size="small" sx={{ minWidth: 120 }}>
                       <Select
-                        value={collaborator.permission}
+                        value={share.permission}
                         onChange={(e) =>
                           handleCollaboratorPermissionChange(
-                            collaborator.id,
+                            share.id,
                             e.target.value as SharePermission
                           )
                         }
+                        disabled={loading}
                       >
                         <MenuItem value="viewer">Viewer</MenuItem>
                         <MenuItem value="commenter">Commenter</MenuItem>
                         <MenuItem value="editor">Editor</MenuItem>
                       </Select>
                     </FormControl>
-                    <IconButton size="small" onClick={() => handleRemoveAccess(collaborator.id)}>
+                    <IconButton
+                      size="small"
+                      onClick={() => handleRemoveAccess(share.id)}
+                      disabled={loading}
+                    >
                       <CloseIcon fontSize="small" />
                     </IconButton>
                   </Box>
-                ) : (
-                  <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
-                    {getPermissionLabel(collaborator.permission)}
-                  </Typography>
-                )}
-              </ListItem>
-            ))}
-          </List>
+                </ListItem>
+              ))}
+
+              {shares.length === 0 && !sharesLoading && (
+                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                  Not shared with anyone yet
+                </Typography>
+              )}
+            </List>
+          )}
         </Box>
 
         <Divider sx={{ my: 2 }} />

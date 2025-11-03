@@ -1,10 +1,10 @@
-import { 
-  Menu, 
-  MenuItem, 
-  ListItemIcon, 
-  ListItemText, 
+import {
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
   Typography,
-} from '@mui/material';
+} from "@mui/material";
 import {
   InfoOutlined as DetailsIcon,
   Security as SecurityIcon,
@@ -12,7 +12,8 @@ import {
   FolderOpen as ShowLocationIcon,
   History as ManageVersionsIcon,
   Lock as LockIcon,
-} from '@mui/icons-material';
+} from "@mui/icons-material";
+import { useUIStore } from "../../store/uiStore";
 
 interface FileInformationSubmenuProps {
   anchorEl: HTMLElement | null;
@@ -31,10 +32,38 @@ export const FileInformationSubmenu = ({
   onMouseEnter,
   onMouseLeave,
 }: FileInformationSubmenuProps) => {
-  const handleAction = (action: string) => {
-    console.log(`File information action: ${action} for file:`, file?.name);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
+  const openModal = useUIStore((state) => state.openModal);
+  const setDetailsPanelOpen = useUIStore((state) => state.setDetailsPanelOpen);
+
+  const handleDetails = () => {
+    setDetailsPanelOpen(true);
     onClose();
-    // TODO: Implement file information actions
+  };
+
+  const handleSecurity = () => {
+    showSnackbar("Security limitations feature coming soon!", "info");
+    onClose();
+  };
+
+  const handleActivity = () => {
+    showSnackbar("Activity feature coming soon!", "info");
+    onClose();
+  };
+
+  const handleShowLocation = () => {
+    showSnackbar("Show file location feature coming soon!", "info");
+    onClose();
+  };
+
+  const handleManageVersions = () => {
+    showSnackbar("Manage versions feature coming soon!", "info");
+    onClose();
+  };
+
+  const handleLock = () => {
+    showSnackbar("Lock feature coming soon!", "info");
+    onClose();
   };
 
   if (!file) return null;
@@ -48,35 +77,35 @@ export const FileInformationSubmenu = ({
       onMouseLeave={onMouseLeave}
       disableAutoFocusItem
       anchorOrigin={{
-        vertical: 'top',
-        horizontal: 'right',
+        vertical: "top",
+        horizontal: "right",
       }}
       transformOrigin={{
-        vertical: 'top',
-        horizontal: 'left',
+        vertical: "top",
+        horizontal: "left",
       }}
       slotProps={{
         paper: {
           elevation: 8,
           sx: {
             minWidth: 240,
-            borderRadius: '4px',
-            border: '1px solid #dadce0',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            ml: -0.5,
-            pointerEvents: 'auto',
-            '& .MuiMenuItem-root': {
+            borderRadius: "4px",
+            border: "1px solid #dadce0",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            ml: 0, // Remove left margin to bring submenu closer
+            pointerEvents: "auto",
+            "& .MuiMenuItem-root": {
               px: 2,
               py: 1,
-              fontSize: '14px',
-              color: '#202124',
-              '&:hover': {
-                backgroundColor: '#f8f9fa',
+              fontSize: "14px",
+              color: "#202124",
+              "&:hover": {
+                backgroundColor: "#f8f9fa",
               },
             },
-            '& .MuiListItemIcon-root': {
+            "& .MuiListItemIcon-root": {
               minWidth: 40,
-              color: '#5f6368',
+              color: "#5f6368",
             },
           },
         },
@@ -86,25 +115,25 @@ export const FileInformationSubmenu = ({
       }}
     >
       {/* Details */}
-      <MenuItem onClick={() => handleAction('details')}>
+      <MenuItem onClick={handleDetails}>
         <ListItemIcon>
           <DetailsIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Details"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
         <Typography
           variant="caption"
           sx={{
-            fontSize: '12px',
-            color: '#5f6368',
+            fontSize: "12px",
+            color: "#5f6368",
             fontWeight: 400,
-            ml: 'auto',
+            ml: "auto",
           }}
         >
           Alt+V then D
@@ -112,40 +141,40 @@ export const FileInformationSubmenu = ({
       </MenuItem>
 
       {/* Security limitations */}
-      <MenuItem onClick={() => handleAction('security')}>
+      <MenuItem onClick={handleSecurity}>
         <ListItemIcon>
           <SecurityIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Security limitations"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
       </MenuItem>
 
       {/* Activity */}
-      <MenuItem onClick={() => handleAction('activity')}>
+      <MenuItem onClick={handleActivity}>
         <ListItemIcon>
           <ActivityIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Activity"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
         <Typography
           variant="caption"
           sx={{
-            fontSize: '12px',
-            color: '#5f6368',
+            fontSize: "12px",
+            color: "#5f6368",
             fontWeight: 400,
-            ml: 'auto',
+            ml: "auto",
           }}
         >
           Alt+V then A
@@ -153,46 +182,46 @@ export const FileInformationSubmenu = ({
       </MenuItem>
 
       {/* Show file location */}
-      <MenuItem onClick={() => handleAction('show-location')}>
+      <MenuItem onClick={handleShowLocation}>
         <ListItemIcon>
           <ShowLocationIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Show file location"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
       </MenuItem>
 
       {/* Manage versions */}
-      <MenuItem onClick={() => handleAction('manage-versions')}>
+      <MenuItem onClick={handleManageVersions}>
         <ListItemIcon>
           <ManageVersionsIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Manage versions"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
       </MenuItem>
 
       {/* Lock */}
-      <MenuItem onClick={() => handleAction('lock')}>
+      <MenuItem onClick={handleLock}>
         <ListItemIcon>
           <LockIcon fontSize="small" />
         </ListItemIcon>
-        <ListItemText 
+        <ListItemText
           primary="Lock"
           primaryTypographyProps={{
-            fontSize: '14px',
+            fontSize: "14px",
             fontWeight: 400,
-            color: '#202124',
+            color: "#202124",
           }}
         />
       </MenuItem>

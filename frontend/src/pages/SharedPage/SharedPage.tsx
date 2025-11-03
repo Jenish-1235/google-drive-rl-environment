@@ -1,167 +1,60 @@
-import React, { useState } from "react";
-import {
-  Box,
-  Typography,
-  Button,
-  IconButton,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Avatar,
-} from "@mui/material";
+import { Box, Typography, Button, IconButton } from "@mui/material";
 import {
   InfoOutlined as InfoIcon,
   KeyboardArrowDown as ArrowDownIcon,
-  MoreVert as MoreVertIcon,
-  PeopleOutline as PeopleIcon,
-  ArrowDownward as ArrowDownwardIcon,
-  BusinessOutlined as BusinessIcon,
 } from "@mui/icons-material";
-import { getFileIcon } from "../../utils/fileIcons";
+import { useState, useEffect } from "react";
+import { useUIStore } from "../../store/uiStore";
+import { FileList } from "../../components/files/FileList";
+import { FileGrid } from "../../components/files/FileGrid";
+import { FileListSkeleton } from "../../components/loading/FileListSkeleton";
+import { FileGridSkeleton } from "../../components/loading/FileGridSkeleton";
+import { shareService, type SharedFile } from "../../services";
+import type { DriveItem, FileType } from "../../types/file.types";
 
-// Mock data for shared files
-const mockSharedFiles = [
-  {
-    id: "1",
-    name: "Google Drive Reinforcement Learning Environment",
-    type: "document" as const,
-    sharedBy: "anshul.sharma@scaler.com",
-    sharedByInitial: "A",
-    sharedByColor: "#EA4335",
-    dateShared: "Nov 1",
-    isShared: true,
-    timeGroup: "Yesterday",
-  },
-  {
-    id: "2",
-    name: "SST Fee Management System: Student Guide",
-    type: "document" as const,
-    sharedBy: "r.karthik@scaler.com",
-    sharedByInitial: "R",
-    sharedByColor: "#E91E63",
-    dateShared: "Oct 31",
-    isShared: true,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "3",
-    name: "SST Annual Awards - Nomination Guidelines",
-    type: "document" as const,
-    sharedBy: "vedaansh.kaushik@scaler.com",
-    sharedByInitial: "V",
-    sharedByColor: "#4285F4",
-    dateShared: "Oct 28",
-    isShared: true,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "4",
-    name: "SST: Academic Clubs [Open]",
-    type: "document" as const,
-    sharedBy: "utkarsh@scaler.com",
-    sharedByInitial: "U",
-    sharedByColor: "#5F6368",
-    dateShared: "Oct 28",
-    isShared: true,
-    hasCatchUp: true,
-    timeGroup: "Earlier this week",
-  },
-  {
-    id: "5",
-    name: "YC Application _ Template",
-    type: "document" as const,
-    sharedBy: "vikram@grayscale.vc",
-    sharedByInitial: "V",
-    sharedByColor: "#C5221F",
-    dateShared: "Oct 26",
-    isShared: true,
-    timeGroup: "Last week",
-  },
-  {
-    id: "6",
-    name: 'Event Concept Note — "Hack with Vercel: Building with AI"',
-    type: "document" as const,
-    sharedBy: "shruti.sagar@scaler.com",
-    sharedByInitial: "S",
-    sharedByColor: "#F9AB00",
-    dateShared: "Oct 24",
-    isShared: true,
-    timeGroup: "Last week",
-  },
-  {
-    id: "7",
-    name: "Job Description_ Coding Teacher.pdf",
-    type: "pdf" as const,
-    sharedBy: "payal.yerme@vedantu.com",
-    sharedByInitial: "P",
-    sharedByColor: "#F4B400",
-    dateShared: "Oct 22",
-    isShared: true,
-    timeGroup: "Last week",
-  },
-  {
-    id: "8",
-    name: "Vedantu_Early_Learning_Teacher_JD.pdf",
-    type: "pdf" as const,
-    sharedBy: "payal.yerme@vedantu.com",
-    sharedByInitial: "P",
-    sharedByColor: "#F4B400",
-    dateShared: "Oct 22",
-    isShared: true,
-    timeGroup: "Last week",
-  },
-  {
-    id: "9",
-    name: "Y Combinator 10 Questions to Discuss with a Potential Co-Founder",
-    type: "document" as const,
-    sharedBy: "jared@ycombinator.com",
-    sharedByInitial: "J",
-    sharedByColor: "#FF6D00",
-    dateShared: "Oct 21",
-    isShared: true,
-    timeGroup: "Last week",
-  },
-  {
-    id: "10",
-    name: "YC Guide to Co-founder Matching",
-    type: "spreadsheet" as const,
-    sharedBy: "Y Combinator",
-    sharedByInitial: "Y",
-    sharedByColor: "#5F6368",
-    dateShared: "Oct 21",
-    isShared: true,
-    isSharedByOrg: true,
-    timeGroup: "Last week",
-  },
-  {
-    id: "11",
-    name: "Project Report on WiFi-based Multimodal Human and Environment Sensing",
-    type: "document" as const,
-    sharedBy: "techSas",
-    sharedByInitial: "T",
-    sharedByColor: "#F4B400",
-    dateShared: "Oct 16",
-    isShared: true,
-    timeGroup: "Last month",
-  },
-];
+// Map SharedFile to DriveItem
+const mapSharedFileToDriverItem = (sharedFile: SharedFile): DriveItem => ({
+  id: sharedFile.id,
+  name: sharedFile.name,
+  type: sharedFile.type as FileType,
+  mimeType: sharedFile.mime_type,
+  size: sharedFile.size,
+  ownerId: sharedFile.shared_by.id.toString(),
+  ownerName: sharedFile.shared_by.name,
+  ownerEmail: sharedFile.shared_by.email,
+  createdTime: new Date(sharedFile.created_at),
+  modifiedTime: new Date(sharedFile.updated_at),
+  parentId: null,
+  path: [],
+  isStarred: false,
+  isTrashed: false,
+  isShared: true,
+  permissions: [],
+});
 
 export const SharedPage = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [files, setFiles] = useState<DriveItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const showSnackbar = useUIStore((state) => state.showSnackbar);
 
-  // Group files by time period
-  const groupedFiles = mockSharedFiles.reduce((groups, file) => {
-    const group = file.timeGroup;
-    if (!groups[group]) {
-      groups[group] = [];
-    }
-    groups[group].push(file);
-    return groups;
-  }, {} as Record<string, typeof mockSharedFiles>);
+  // Fetch shared with me files on mount
+  useEffect(() => {
+    const fetchSharedWithMe = async () => {
+      setIsLoading(true);
+      try {
+        const response = await shareService.getSharedWithMe();
+        const mappedFiles = response.files.map(mapSharedFileToDriverItem);
+        setFiles(mappedFiles);
+      } catch (error: any) {
+        showSnackbar(error.message || "Failed to load shared files", "error");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchSharedWithMe();
+  }, [showSnackbar]);
 
   return (
     <Box
@@ -373,7 +266,7 @@ export const SharedPage = () => {
 
       {/* Filter Buttons */}
       <Box sx={{ display: "flex", gap: 1, mb: 3 }}>
-        {["Type", "People", "Modified", "Source"].map((filter) => (
+        {["Type", "People", "Modified"].map((filter) => (
           <Button
             key={filter}
             variant="outlined"
@@ -400,292 +293,62 @@ export const SharedPage = () => {
         ))}
       </Box>
 
-      {/* File List */}
-      <TableContainer
-        sx={{
-          backgroundColor: "white",
-          borderRadius: 1,
-        }}
-      >
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell
-                sx={{
-                  color: "#5f6368",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  borderBottom: "1px solid #e8eaed",
-                  py: 1.5,
-                  pl: 2,
-                }}
-              >
-                Name
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "#5f6368",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  borderBottom: "1px solid #e8eaed",
-                  py: 1.5,
-                }}
-              >
-                Shared by
-              </TableCell>
-              <TableCell
-                sx={{
-                  color: "#5f6368",
-                  fontSize: 12,
-                  fontWeight: 500,
-                  borderBottom: "1px solid #e8eaed",
-                  py: 1.5,
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "#f8f9fa",
-                  },
-                }}
-                onClick={() =>
-                  setSortOrder(sortOrder === "asc" ? "desc" : "asc")
-                }
-              >
-                <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                  Date shared
-                  <ArrowDownwardIcon
-                    sx={{
-                      fontSize: 16,
-                      color: "#1a73e8",
-                      transform:
-                        sortOrder === "asc" ? "rotate(180deg)" : "none",
-                      transition: "transform 0.2s",
-                    }}
-                  />
-                </Box>
-              </TableCell>
-              <TableCell
-                sx={{
-                  borderBottom: "1px solid #e8eaed",
-                  width: 48,
-                  py: 1.5,
-                  pr: 2,
-                }}
-              >
-                <IconButton size="small" sx={{ color: "#5f6368" }}>
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path d="M3 9h4V5H3v4zm0 6h4v-4H3v4zm6 0h4v-4H9v4zm6 0h4v-4h-4v4zM9 9h4V5H9v4zm6-4v4h4V5h-4z" />
-                  </svg>
-                </IconButton>
-                <Typography
-                  sx={{
-                    fontSize: 12,
-                    fontWeight: 500,
-                    color: "#5f6368",
-                    display: "inline",
-                    ml: 0.5,
-                  }}
-                >
-                  Sort
-                </Typography>
-              </TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {Object.entries(groupedFiles).map(([timeGroup, files]) => (
-              <React.Fragment key={`group-${timeGroup}`}>
-                {/* Time Group Header */}
-                <TableRow>
-                  <TableCell
-                    colSpan={4}
-                    sx={{
-                      color: "#5f6368",
-                      fontSize: 12,
-                      fontWeight: 500,
-                      borderBottom: "none",
-                      py: 2,
-                      pl: 2,
-                      backgroundColor: "#f9fafb",
-                    }}
-                  >
-                    {timeGroup}
-                  </TableCell>
-                </TableRow>
+      {/* Content Area */}
+      {isLoading ? (
+        viewMode === "list" ? (
+          <FileListSkeleton />
+        ) : (
+          <FileGridSkeleton />
+        )
+      ) : files.length === 0 ? (
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            minHeight: "calc(100vh - 300px)",
+          }}
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+              maxWidth: 500,
+            }}
+          >
+            <Typography
+              variant="h6"
+              sx={{
+                fontSize: 22,
+                fontWeight: 400,
+                color: "#202124",
+                textAlign: "center",
+              }}
+            >
+              No files shared with you
+            </Typography>
 
-                {/* Files in this group */}
-                {files.map((file) => (
-                  <TableRow
-                    key={file.id}
-                    sx={{
-                      "&:hover": {
-                        backgroundColor: "#f8f9fa",
-                      },
-                      cursor: "pointer",
-                    }}
-                  >
-                    {/* Name */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                        pl: 2,
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1.5 }}
-                      >
-                        {getFileIcon(file.type)}
-                        <Box
-                          sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                        >
-                          <Typography
-                            sx={{
-                              fontSize: 14,
-                              color: "#202124",
-                              fontWeight: 400,
-                            }}
-                          >
-                            {file.name}
-                          </Typography>
-                          {file.isShared && (
-                            <PeopleIcon
-                              sx={{ fontSize: 16, color: "#5f6368" }}
-                            />
-                          )}
-                          {file.hasCatchUp && (
-                            <Box
-                              sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.5,
-                                px: 1,
-                                py: 0.25,
-                                backgroundColor: "#f1f3f4",
-                                borderRadius: "12px",
-                                ml: 0.5,
-                              }}
-                            >
-                              <Box
-                                sx={{
-                                  width: 16,
-                                  height: 16,
-                                  display: "flex",
-                                  alignItems: "center",
-                                  justifyContent: "center",
-                                }}
-                              >
-                                <svg
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 16 16"
-                                  fill="none"
-                                >
-                                  <path
-                                    d="M8 2L9.5 5.5L13 6L10.5 8.5L11 12L8 10L5 12L5.5 8.5L3 6L6.5 5.5L8 2Z"
-                                    fill="#5f6368"
-                                  />
-                                </svg>
-                              </Box>
-                              <Typography
-                                sx={{
-                                  fontSize: 11,
-                                  color: "#5f6368",
-                                  fontWeight: 500,
-                                }}
-                              >
-                                Catch up
-                              </Typography>
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-                    </TableCell>
-
-                    {/* Shared by */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                      }}
-                    >
-                      <Box
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
-                      >
-                        {file.isSharedByOrg ? (
-                          <Avatar
-                            sx={{
-                              width: 24,
-                              height: 24,
-                              backgroundColor: "#fff",
-                              border: "1px solid #dadce0",
-                            }}
-                          >
-                            <BusinessIcon
-                              sx={{ fontSize: 16, color: "#5f6368" }}
-                            />
-                          </Avatar>
-                        ) : (
-                          <Avatar
-                            sx={{
-                              width: 24,
-                              height: 24,
-                              fontSize: 12,
-                              backgroundColor: file.sharedByColor,
-                            }}
-                          >
-                            {file.sharedByInitial}
-                          </Avatar>
-                        )}
-                        <Typography
-                          sx={{
-                            fontSize: 14,
-                            color: "#202124",
-                          }}
-                        >
-                          {file.sharedBy}
-                        </Typography>
-                      </Box>
-                    </TableCell>
-
-                    {/* Date shared */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: 14,
-                          color: "#202124",
-                        }}
-                      >
-                        {file.dateShared}
-                      </Typography>
-                    </TableCell>
-
-                    {/* Actions */}
-                    <TableCell
-                      sx={{
-                        borderBottom: "1px solid #e8eaed",
-                        py: 1.5,
-                        pr: 2,
-                      }}
-                    >
-                      <IconButton size="small">
-                        <MoreVertIcon sx={{ fontSize: 20, color: "#5f6368" }} />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </React.Fragment>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            <Typography
+              variant="body1"
+              sx={{
+                fontSize: 14,
+                color: "#5f6368",
+                textAlign: "center",
+                lineHeight: 1.6,
+              }}
+            >
+              When others share files with you, they will appear here
+            </Typography>
+          </Box>
+        </Box>
+      ) : viewMode === "list" ? (
+        <FileList files={files} />
+      ) : (
+        <FileGrid files={files} />
+      )}
     </Box>
   );
 };

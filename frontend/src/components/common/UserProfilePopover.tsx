@@ -50,8 +50,6 @@ export const UserProfilePopover = ({
       open={open}
       anchorEl={anchorEl}
       onClose={onClose}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
       anchorOrigin={{
         vertical: 'bottom',
         horizontal: 'left',
@@ -63,6 +61,8 @@ export const UserProfilePopover = ({
       slotProps={{
         paper: {
           elevation: 8,
+          onMouseEnter: onMouseEnter,
+          onMouseLeave: onMouseLeave,
           sx: {
             width: 360,
             borderRadius: '16px',

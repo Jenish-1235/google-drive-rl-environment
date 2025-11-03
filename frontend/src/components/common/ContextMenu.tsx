@@ -1,11 +1,11 @@
-import { 
-  Menu, 
-  MenuItem, 
-  ListItemIcon, 
-  ListItemText, 
+import {
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
   Typography,
   Divider,
-} from '@mui/material';
+} from "@mui/material";
 import {
   OpenInNew as OpenWithIcon,
   GetApp as DownloadIcon,
@@ -16,13 +16,13 @@ import {
   InfoOutlined as InfoIcon,
   DeleteOutline as DeleteIcon,
   ChevronRight as ChevronRightIcon,
-} from '@mui/icons-material';
-import { useState, useRef } from 'react';
-import { OpenWithSubmenu } from './OpenWithSubmenu';
-import { ShareSubmenu } from './ShareSubmenu';
-import { OrganiseSubmenu } from './OrganiseSubmenu';
-import { FileInformationSubmenu } from './FileInformationSubmenu';
-import type { DriveItem } from '../../types/file.types';
+} from "@mui/icons-material";
+import { useState, useRef, useCallback } from "react";
+import { OpenWithSubmenu } from "./OpenWithSubmenu";
+import { ShareSubmenu } from "./ShareSubmenu";
+import { OrganiseSubmenu } from "./OrganiseSubmenu";
+import { FileInformationSubmenu } from "./FileInformationSubmenu";
+import type { DriveItem } from "../../types/file.types";
 
 interface ContextMenuProps {
   anchorEl?: HTMLElement | null;
@@ -65,161 +65,202 @@ export const ContextMenu = ({
   onMakeOffline: _onMakeOffline,
   onSummarize: _onSummarize,
 }: ContextMenuProps) => {
-  const [openWithAnchor, setOpenWithAnchor] = useState<HTMLElement | null>(null);
+  const [openWithAnchor, setOpenWithAnchor] = useState<HTMLElement | null>(
+    null
+  );
   const [shareAnchor, setShareAnchor] = useState<HTMLElement | null>(null);
-  const [organiseAnchor, setOrganiseAnchor] = useState<HTMLElement | null>(null);
+  const [organiseAnchor, setOrganiseAnchor] = useState<HTMLElement | null>(
+    null
+  );
   const [infoAnchor, setInfoAnchor] = useState<HTMLElement | null>(null);
 
-  // Simple timer refs - one per submenu
-  const openWithTimerRef = useRef<number | null>(null);
-  const shareTimerRef = useRef<number | null>(null);
-  const organiseTimerRef = useRef<number | null>(null);
-  const infoTimerRef = useRef<number | null>(null);
+  // Simplified hover state management
+  const [hoveredMenuItem, setHoveredMenuItem] = useState<string | null>(null);
+  const [isSubmenuHovered, setIsSubmenuHovered] = useState(false);
+  const hoverTimeoutRef = useRef<number | null>(null);
 
-  // Delay before closing submenu
-  const CLOSE_DELAY = 300; // ms
+  // Delays - reduced for more responsive feel like Google Drive
+  const CLOSE_DELAY = 200; // ms - faster closing
+  const OPEN_DELAY = 100; // ms - faster opening
 
-  // Helper to clear a specific timer
-  const clearTimer = (timerRef: React.MutableRefObject<number | null>) => {
-    if (timerRef.current) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
+  // Clear hover timeout
+  const clearHoverTimeout = useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      window.clearTimeout(hoverTimeoutRef.current);
+      hoverTimeoutRef.current = null;
     }
-  };
+  }, []);
 
-  // Helper to schedule closing a specific submenu
-  const scheduleClose = (
-    timerRef: React.MutableRefObject<number | null>,
-    closeAction: () => void
-  ) => {
-    clearTimer(timerRef);
-    timerRef.current = window.setTimeout(() => {
-      closeAction();
-      timerRef.current = null;
+  // Handle menu item hover - unified for all submenu items
+  const handleMenuItemHover = useCallback(
+    (menuItem: string) => {
+      clearHoverTimeout();
+      setHoveredMenuItem(menuItem);
+
+      // Schedule opening submenu with delay
+      hoverTimeoutRef.current = window.setTimeout(() => {
+        switch (menuItem) {
+          case "open-with":
+            setOpenWithAnchor(
+              document.querySelector(
+                `[data-menu-item="${menuItem}"]`
+              ) as HTMLElement
+            );
+            break;
+          case "share":
+            setShareAnchor(
+              document.querySelector(
+                `[data-menu-item="${menuItem}"]`
+              ) as HTMLElement
+            );
+            break;
+          case "organise":
+            setOrganiseAnchor(
+              document.querySelector(
+                `[data-menu-item="${menuItem}"]`
+              ) as HTMLElement
+            );
+            break;
+          case "info":
+            setInfoAnchor(
+              document.querySelector(
+                `[data-menu-item="${menuItem}"]`
+              ) as HTMLElement
+            );
+            break;
+        }
+      }, OPEN_DELAY);
+    },
+    [clearHoverTimeout]
+  );
+
+  // Handle menu item leave
+  const handleMenuItemLeave = useCallback(() => {
+    clearHoverTimeout();
+    // Schedule closing submenu with delay
+    hoverTimeoutRef.current = window.setTimeout(() => {
+      if (!isSubmenuHovered) {
+        setHoveredMenuItem(null);
+        setOpenWithAnchor(null);
+        setShareAnchor(null);
+        setOrganiseAnchor(null);
+        setInfoAnchor(null);
+      }
     }, CLOSE_DELAY);
-  };
+  }, [clearHoverTimeout, isSubmenuHovered, CLOSE_DELAY]);
 
-  const handleAction = (action?: (file: DriveItem) => void) => {
+  // Handle submenu enter
+  const handleSubmenuEnter = useCallback(() => {
+    clearHoverTimeout();
+    setIsSubmenuHovered(true);
+  }, [clearHoverTimeout]);
+
+  // Handle submenu leave
+  const handleSubmenuLeave = useCallback(() => {
+    setIsSubmenuHovered(false);
+    // Schedule closing submenu with delay
+    hoverTimeoutRef.current = window.setTimeout(() => {
+      if (!hoveredMenuItem) {
+        setOpenWithAnchor(null);
+        setShareAnchor(null);
+        setOrganiseAnchor(null);
+        setInfoAnchor(null);
+      }
+    }, CLOSE_DELAY);
+  }, [hoveredMenuItem, CLOSE_DELAY]);
+
+  const handleAction = useCallback(
+    (action?: (file: DriveItem) => void) => {
+      onClose();
+      clearHoverTimeout();
+      setOpenWithAnchor(null);
+      setShareAnchor(null);
+      setOrganiseAnchor(null);
+      setInfoAnchor(null);
+      setHoveredMenuItem(null);
+      setIsSubmenuHovered(false);
+      if (action && file) {
+        action(file);
+      }
+    },
+    [onClose, clearHoverTimeout, file]
+  );
+
+  // Click handlers for immediate submenu opening
+  const handleOpenWithClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      clearHoverTimeout();
+      setHoveredMenuItem("open-with");
+      setOpenWithAnchor(event.currentTarget);
+    },
+    [clearHoverTimeout]
+  );
+
+  const handleShareClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      clearHoverTimeout();
+      setHoveredMenuItem("share");
+      setShareAnchor(event.currentTarget);
+    },
+    [clearHoverTimeout]
+  );
+
+  const handleOrganiseClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      clearHoverTimeout();
+      setHoveredMenuItem("organise");
+      setOrganiseAnchor(event.currentTarget);
+    },
+    [clearHoverTimeout]
+  );
+
+  const handleInfoClick = useCallback(
+    (event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      clearHoverTimeout();
+      setHoveredMenuItem("info");
+      setInfoAnchor(event.currentTarget);
+    },
+    [clearHoverTimeout]
+  );
+
+  const handleRegularItemHover = useCallback(() => {
+    clearHoverTimeout();
+    setHoveredMenuItem(null);
+    setIsSubmenuHovered(false);
+    setOpenWithAnchor(null);
+    setShareAnchor(null);
+    setOrganiseAnchor(null);
+    setInfoAnchor(null);
+  }, [clearHoverTimeout]);
+
+  const handleSubmenuClose = useCallback(() => {
+    clearHoverTimeout();
+    setHoveredMenuItem(null);
+    setIsSubmenuHovered(false);
+    setOpenWithAnchor(null);
+    setShareAnchor(null);
+    setOrganiseAnchor(null);
+    setInfoAnchor(null);
+  }, [clearHoverTimeout]);
+
+  const handleMainMenuClose = useCallback(() => {
     onClose();
-    clearTimer(openWithTimerRef);
-    clearTimer(shareTimerRef);
-    clearTimer(organiseTimerRef);
-    clearTimer(infoTimerRef);
+    clearHoverTimeout();
+    setHoveredMenuItem(null);
+    setIsSubmenuHovered(false);
     setOpenWithAnchor(null);
     setShareAnchor(null);
     setOrganiseAnchor(null);
     setInfoAnchor(null);
-    if (action && file) {
-      action(file);
-    }
-  };
-
-  // OpenWith submenu handlers
-  const handleOpenWithHover = (event: React.MouseEvent<HTMLElement>) => {
-    clearTimer(openWithTimerRef);
-    setShareAnchor(null);
-    setOrganiseAnchor(null);
-    setInfoAnchor(null);
-    setOpenWithAnchor(event.currentTarget);
-  };
-  const handleOpenWithLeave = () => {
-    scheduleClose(openWithTimerRef, () => setOpenWithAnchor(null));
-  };
-  const handleOpenWithSubmenuEnter = () => {
-    clearTimer(openWithTimerRef);
-  };
-  const handleOpenWithSubmenuLeave = () => {
-    scheduleClose(openWithTimerRef, () => setOpenWithAnchor(null));
-  };
-
-  // Share submenu handlers
-  const handleShareHover = (event: React.MouseEvent<HTMLElement>) => {
-    clearTimer(shareTimerRef);
-    setOpenWithAnchor(null);
-    setOrganiseAnchor(null);
-    setInfoAnchor(null);
-    setShareAnchor(event.currentTarget);
-  };
-  const handleShareLeave = () => {
-    scheduleClose(shareTimerRef, () => setShareAnchor(null));
-  };
-  const handleShareSubmenuEnter = () => {
-    clearTimer(shareTimerRef);
-  };
-  const handleShareSubmenuLeave = () => {
-    scheduleClose(shareTimerRef, () => setShareAnchor(null));
-  };
-
-  // Organise submenu handlers
-  const handleOrganiseHover = (event: React.MouseEvent<HTMLElement>) => {
-    clearTimer(organiseTimerRef);
-    setOpenWithAnchor(null);
-    setShareAnchor(null);
-    setInfoAnchor(null);
-    setOrganiseAnchor(event.currentTarget);
-  };
-  const handleOrganiseLeave = () => {
-    scheduleClose(organiseTimerRef, () => setOrganiseAnchor(null));
-  };
-  const handleOrganiseSubmenuEnter = () => {
-    clearTimer(organiseTimerRef);
-  };
-  const handleOrganiseSubmenuLeave = () => {
-    scheduleClose(organiseTimerRef, () => setOrganiseAnchor(null));
-  };
-
-  // Info submenu handlers
-  const handleInfoHover = (event: React.MouseEvent<HTMLElement>) => {
-    clearTimer(infoTimerRef);
-    setOpenWithAnchor(null);
-    setShareAnchor(null);
-    setOrganiseAnchor(null);
-    setInfoAnchor(event.currentTarget);
-  };
-  const handleInfoLeave = () => {
-    scheduleClose(infoTimerRef, () => setInfoAnchor(null));
-  };
-  const handleInfoSubmenuEnter = () => {
-    clearTimer(infoTimerRef);
-  };
-  const handleInfoSubmenuLeave = () => {
-    scheduleClose(infoTimerRef, () => setInfoAnchor(null));
-  };
-
-  const handleRegularItemHover = () => {
-    // Clear all timers and close all submenus immediately
-    clearTimer(openWithTimerRef);
-    clearTimer(shareTimerRef);
-    clearTimer(organiseTimerRef);
-    clearTimer(infoTimerRef);
-    setOpenWithAnchor(null);
-    setShareAnchor(null);
-    setOrganiseAnchor(null);
-    setInfoAnchor(null);
-  };
-
-  const handleSubmenuClose = () => {
-    clearTimer(openWithTimerRef);
-    clearTimer(shareTimerRef);
-    clearTimer(organiseTimerRef);
-    clearTimer(infoTimerRef);
-    setOpenWithAnchor(null);
-    setShareAnchor(null);
-    setOrganiseAnchor(null);
-    setInfoAnchor(null);
-  };
-
-  const handleMainMenuClose = () => {
-    onClose();
-    clearTimer(openWithTimerRef);
-    clearTimer(shareTimerRef);
-    clearTimer(organiseTimerRef);
-    clearTimer(infoTimerRef);
-    setOpenWithAnchor(null);
-    setShareAnchor(null);
-    setOrganiseAnchor(null);
-    setInfoAnchor(null);
-  };
+  }, [onClose, clearHoverTimeout]);
 
   if (!file) return null;
 
@@ -232,242 +273,293 @@ export const ContextMenu = ({
         open={open}
         onClose={handleMainMenuClose}
         disableAutoFocusItem
-      slotProps={{
-        paper: {
-          elevation: 8,
-          sx: {
-            minWidth: 260,
-            borderRadius: '4px',
-            border: '1px solid #dadce0',
-            boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-            py: 0.5,
-            pointerEvents: 'auto',
-            '& .MuiMenuItem-root': {
-              px: 2,
-              py: 1,
-              fontSize: '14px',
-              color: '#202124',
-              '&:hover': {
-                backgroundColor: '#f8f9fa',
+        slotProps={{
+          paper: {
+            elevation: 8,
+            sx: {
+              minWidth: 260,
+              borderRadius: "4px",
+              border: "1px solid #dadce0",
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+              py: 0.5,
+              pointerEvents: "auto",
+              "& .MuiMenuItem-root": {
+                px: 2,
+                py: 1,
+                fontSize: "14px",
+                color: "#202124",
+                "&:hover": {
+                  backgroundColor: "#f8f9fa",
+                },
+              },
+              "& .MuiListItemIcon-root": {
+                minWidth: 40,
+                color: "#5f6368",
+              },
+              "& .MuiDivider-root": {
+                borderColor: "#e8eaed",
+                my: 0,
               },
             },
-            '& .MuiListItemIcon-root': {
-              minWidth: 40,
-              color: '#5f6368',
-            },
-            '& .MuiDivider-root': {
-              borderColor: '#e8eaed',
-              my: 0,
-            },
           },
-        },
-      }}
-      TransitionProps={{
-        timeout: 100,
-      }}
-    >
-      {/* Open with - only for files, not folders */}
-      {showOpenWith && file.type !== 'folder' && (
-        <>
-          <MenuItem 
-            onMouseEnter={handleOpenWithHover}
-            onMouseLeave={handleOpenWithLeave}
+        }}
+        TransitionProps={{
+          timeout: 100,
+        }}
+      >
+        {[
+          // Open with - only for files, not folders
+          ...(showOpenWith && file.type !== "folder"
+            ? [
+                <MenuItem
+                  key="open-with"
+                  data-menu-item="open-with"
+                  onMouseEnter={() => handleMenuItemHover("open-with")}
+                  onMouseLeave={handleMenuItemLeave}
+                  onClick={handleOpenWithClick}
+                >
+                  <ListItemIcon>
+                    <OpenWithIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText
+                    primary="Open with"
+                    primaryTypographyProps={{
+                      fontSize: "14px",
+                      fontWeight: 400,
+                      color: "#202124",
+                    }}
+                  />
+                  <ChevronRightIcon
+                    fontSize="small"
+                    sx={{ color: "#5f6368", ml: "auto" }}
+                  />
+                </MenuItem>,
+                <Divider key="divider-1" />,
+              ]
+            : []),
+
+          <MenuItem
+            key="download"
+            onClick={() => handleAction(onDownload)}
+            onMouseEnter={handleRegularItemHover}
           >
             <ListItemIcon>
-              <OpenWithIcon fontSize="small" />
+              <DownloadIcon fontSize="small" />
             </ListItemIcon>
-            <ListItemText 
-              primary="Open with"
+            <ListItemText
+              primary="Download"
               primaryTypographyProps={{
-                fontSize: '14px',
+                fontSize: "14px",
                 fontWeight: 400,
-                color: '#202124',
+                color: "#202124",
               }}
             />
-            <ChevronRightIcon fontSize="small" sx={{ color: '#5f6368', ml: 'auto' }} />
-          </MenuItem>
-          <Divider />
-        </>
-      )}
+          </MenuItem>,
 
-      <MenuItem onClick={() => handleAction(onDownload)} onMouseEnter={handleRegularItemHover}>
-        <ListItemIcon>
-          <DownloadIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText 
-          primary="Download"
-          primaryTypographyProps={{
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#202124',
-          }}
-        />
-      </MenuItem>
-      
-      <MenuItem onClick={() => handleAction(onRename)} onMouseEnter={handleRegularItemHover}>
-        <ListItemIcon>
-          <RenameIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText 
-          primary="Rename"
-          primaryTypographyProps={{
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#202124',
-          }}
-        />
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: '12px',
-            color: '#5f6368',
-            fontWeight: 400,
-            ml: 'auto',
-          }}
-        >
-          Ctrl+Alt+E
-        </Typography>
-      </MenuItem>
+          <MenuItem
+            key="rename"
+            onClick={() => handleAction(onRename)}
+            onMouseEnter={handleRegularItemHover}
+          >
+            <ListItemIcon>
+              <RenameIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Rename"
+              primaryTypographyProps={{
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "#202124",
+              }}
+            />
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: "12px",
+                color: "#5f6368",
+                fontWeight: 400,
+                ml: "auto",
+              }}
+            >
+              Ctrl+Alt+E
+            </Typography>
+          </MenuItem>,
 
-      <MenuItem onClick={() => handleAction(onCopy)} onMouseEnter={handleRegularItemHover}>
-        <ListItemIcon>
-          <CopyIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText 
-          primary="Make a copy"
-          primaryTypographyProps={{
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#202124',
-          }}
-        />
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: '12px',
-            color: '#5f6368',
-            fontWeight: 400,
-            ml: 'auto',
-          }}
-        >
-          Ctrl+C Ctrl+V
-        </Typography>
-      </MenuItem>
+          <MenuItem
+            key="copy"
+            onClick={() => handleAction(onCopy)}
+            onMouseEnter={handleRegularItemHover}
+          >
+            <ListItemIcon>
+              <CopyIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Make a copy"
+              primaryTypographyProps={{
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "#202124",
+              }}
+            />
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: "12px",
+                color: "#5f6368",
+                fontWeight: 400,
+                ml: "auto",
+              }}
+            >
+              Ctrl+C Ctrl+V
+            </Typography>
+          </MenuItem>,
 
-      <Divider />
+          <Divider key="divider-2" />,
 
-  <MenuItem onMouseEnter={handleShareHover} onMouseLeave={handleShareLeave}>
-        <ListItemIcon>
-          <ShareIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText 
-          primary="Share"
-          primaryTypographyProps={{
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#202124',
-          }}
-        />
-        <ChevronRightIcon fontSize="small" sx={{ color: '#5f6368', ml: 'auto' }} />
-      </MenuItem>
+          <MenuItem
+            key="share"
+            data-menu-item="share"
+            onMouseEnter={() => handleMenuItemHover("share")}
+            onMouseLeave={handleMenuItemLeave}
+            onClick={handleShareClick}
+          >
+            <ListItemIcon>
+              <ShareIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Share"
+              primaryTypographyProps={{
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "#202124",
+              }}
+            />
+            <ChevronRightIcon
+              fontSize="small"
+              sx={{ color: "#5f6368", ml: "auto" }}
+            />
+          </MenuItem>,
 
-  <MenuItem onMouseEnter={handleOrganiseHover} onMouseLeave={handleOrganiseLeave}>
-        <ListItemIcon>
-          <OrganiseIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText 
-          primary="Organise"
-          primaryTypographyProps={{
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#202124',
-          }}
-        />
-        <ChevronRightIcon fontSize="small" sx={{ color: '#5f6368', ml: 'auto' }} />
-      </MenuItem>
+          <MenuItem
+            key="organise"
+            data-menu-item="organise"
+            onMouseEnter={() => handleMenuItemHover("organise")}
+            onMouseLeave={handleMenuItemLeave}
+            onClick={handleOrganiseClick}
+          >
+            <ListItemIcon>
+              <OrganiseIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="Organise"
+              primaryTypographyProps={{
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "#202124",
+              }}
+            />
+            <ChevronRightIcon
+              fontSize="small"
+              sx={{ color: "#5f6368", ml: "auto" }}
+            />
+          </MenuItem>,
 
-  <MenuItem onMouseEnter={handleInfoHover} onMouseLeave={handleInfoLeave}>
-        <ListItemIcon>
-          <InfoIcon fontSize="small" />
-        </ListItemIcon>
-        <ListItemText 
-          primary="File information"
-          primaryTypographyProps={{
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#202124',
-          }}
-        />
-        <ChevronRightIcon fontSize="small" sx={{ color: '#5f6368', ml: 'auto' }} />
-      </MenuItem>
+          <MenuItem
+            key="info"
+            data-menu-item="info"
+            onMouseEnter={() => handleMenuItemHover("info")}
+            onMouseLeave={handleMenuItemLeave}
+            onClick={handleInfoClick}
+          >
+            <ListItemIcon>
+              <InfoIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="File information"
+              primaryTypographyProps={{
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "#202124",
+              }}
+            />
+            <ChevronRightIcon
+              fontSize="small"
+              sx={{ color: "#5f6368", ml: "auto" }}
+            />
+          </MenuItem>,
 
-      <Divider sx={{ my: 0.5 }} />
+          <Divider key="divider-3" sx={{ my: 0.5 }} />,
 
-      <MenuItem onClick={() => handleAction(onDelete)} onMouseEnter={handleRegularItemHover}>
-        <ListItemIcon>
-          <DeleteIcon fontSize="small" sx={{ color: '#5f6368' }} />
-        </ListItemIcon>
-        <ListItemText 
-          primary="Move to bin"
-          primaryTypographyProps={{
-            fontSize: '14px',
-            fontWeight: 400,
-            color: '#202124',
-          }}
-        />
-        <Typography
-          variant="caption"
-          sx={{
-            fontSize: '12px',
-            color: '#5f6368',
-            fontWeight: 400,
-            ml: 'auto',
-          }}
-        >
-          Delete
-        </Typography>
-      </MenuItem>
-    </Menu>
+          <MenuItem
+            key="delete"
+            onClick={() => handleAction(onDelete)}
+            onMouseEnter={handleRegularItemHover}
+          >
+            <ListItemIcon>
+              <DeleteIcon fontSize="small" sx={{ color: "#5f6368" }} />
+            </ListItemIcon>
+            <ListItemText
+              primary="Move to bin"
+              primaryTypographyProps={{
+                fontSize: "14px",
+                fontWeight: 400,
+                color: "#202124",
+              }}
+            />
+            <Typography
+              variant="caption"
+              sx={{
+                fontSize: "12px",
+                color: "#5f6368",
+                fontWeight: 400,
+                ml: "auto",
+              }}
+            >
+              Delete
+            </Typography>
+          </MenuItem>,
+        ]}
+      </Menu>
 
-    {/* Open With Submenu */}
-    <OpenWithSubmenu
-      anchorEl={openWithAnchor}
-      open={Boolean(openWithAnchor)}
-      onClose={handleSubmenuClose}
-      file={file}
-      onMouseEnter={handleOpenWithSubmenuEnter}
-      onMouseLeave={handleOpenWithSubmenuLeave}
-    />
+      {/* Open With Submenu */}
+      <OpenWithSubmenu
+        anchorEl={openWithAnchor}
+        open={Boolean(openWithAnchor)}
+        onClose={handleSubmenuClose}
+        file={file}
+        onMouseEnter={handleSubmenuEnter}
+        onMouseLeave={handleSubmenuLeave}
+      />
 
-    {/* Share Submenu */}
-    <ShareSubmenu
-      anchorEl={shareAnchor}
-      open={Boolean(shareAnchor)}
-      onClose={handleSubmenuClose}
-      file={file}
-      onMouseEnter={handleShareSubmenuEnter}
-      onMouseLeave={handleShareSubmenuLeave}
-    />
+      {/* Share Submenu */}
+      <ShareSubmenu
+        anchorEl={shareAnchor}
+        open={Boolean(shareAnchor)}
+        onClose={handleSubmenuClose}
+        file={file}
+        onMouseEnter={handleSubmenuEnter}
+        onMouseLeave={handleSubmenuLeave}
+      />
 
-    {/* Organise Submenu */}
-    <OrganiseSubmenu
-      anchorEl={organiseAnchor}
-      open={Boolean(organiseAnchor)}
-      onClose={handleSubmenuClose}
-      file={file}
-      onMouseEnter={handleOrganiseSubmenuEnter}
-      onMouseLeave={handleOrganiseSubmenuLeave}
-    />
+      {/* Organise Submenu */}
+      <OrganiseSubmenu
+        anchorEl={organiseAnchor}
+        open={Boolean(organiseAnchor)}
+        onClose={handleSubmenuClose}
+        file={file}
+        onMouseEnter={handleSubmenuEnter}
+        onMouseLeave={handleSubmenuLeave}
+      />
 
-    {/* File Information Submenu */}
-    <FileInformationSubmenu
-      anchorEl={infoAnchor}
-      open={Boolean(infoAnchor)}
-      onClose={handleSubmenuClose}
-      file={file}
-      onMouseEnter={handleInfoSubmenuEnter}
-      onMouseLeave={handleInfoSubmenuLeave}
-    />
+      {/* File Information Submenu */}
+      <FileInformationSubmenu
+        anchorEl={infoAnchor}
+        open={Boolean(infoAnchor)}
+        onClose={handleSubmenuClose}
+        file={file}
+        onMouseEnter={handleSubmenuEnter}
+        onMouseLeave={handleSubmenuLeave}
+      />
     </>
   );
 };

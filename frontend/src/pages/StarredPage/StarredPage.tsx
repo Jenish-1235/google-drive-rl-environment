@@ -6,11 +6,17 @@ import {
 import { useState, useEffect } from "react";
 import { useFileStore } from "../../store/fileStore";
 import { useUIStore } from "../../store/uiStore";
+import { FileList } from "../../components/files/FileList";
+import { FileGrid } from "../../components/files/FileGrid";
+import { FileListSkeleton } from "../../components/loading/FileListSkeleton";
+import { FileGridSkeleton } from "../../components/loading/FileGridSkeleton";
 
 export const StarredPage = () => {
   const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const files = useFileStore((state) => state.files);
+  const isLoading = useFileStore((state) => state.isLoading);
   const fetchStarredFiles = useFileStore((state) => state.fetchStarredFiles);
+  const toggleStar = useFileStore((state) => state.toggleStar);
   const showSnackbar = useUIStore((state) => state.showSnackbar);
 
   // Fetch starred files on mount
@@ -22,6 +28,14 @@ export const StarredPage = () => {
 
   // Get starred files
   const starredFiles = files.filter((file) => file.isStarred);
+
+  const handleToggleStar = async (id: string) => {
+    try {
+      await toggleStar(id);
+    } catch (error: any) {
+      showSnackbar(error.message || "Failed to update star", "error");
+    }
+  };
 
   return (
     <Box
@@ -261,7 +275,13 @@ export const StarredPage = () => {
       </Box>
 
       {/* Content Area */}
-      {starredFiles.length === 0 ? (
+      {isLoading ? (
+        viewMode === "list" ? (
+          <FileListSkeleton />
+        ) : (
+          <FileGridSkeleton />
+        )
+      ) : starredFiles.length === 0 ? (
         <Box
           sx={{
             width: "100%",
@@ -380,11 +400,14 @@ export const StarredPage = () => {
             </Typography>
           </Box>
         </Box>
+      ) : viewMode === "list" ? (
+        <FileList
+          files={starredFiles}
+        />
       ) : (
-        // TODO: Add list/grid view for starred files when data is available
-        <Box sx={{ width: "100%" }}>
-          {/* Starred files list/grid will go here */}
-        </Box>
+        <FileGrid
+          files={starredFiles}
+        />
       )}
     </Box>
   );

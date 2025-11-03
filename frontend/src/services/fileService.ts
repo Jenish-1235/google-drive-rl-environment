@@ -163,6 +163,14 @@ export const fileService = {
     return response.data;
   },
 
+  // Preview file
+  previewFile: async (id: string): Promise<Blob> => {
+    const response = await api.get(`/files/${id}/preview`, {
+      responseType: "blob",
+    });
+    return response.data;
+  },
+
   // Batch operations
   batchMove: async (fileIds: string[], parentId: string | null) => {
     const response = await api.post("/files/batch/move", {

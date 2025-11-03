@@ -71,6 +71,7 @@ interface FileStore {
   fetchStarredFiles: () => Promise<void>;
   fetchTrashedFiles: () => Promise<void>;
   fetchRecentFiles: () => Promise<void>;
+  fetchSharedFiles: () => Promise<void>;
 
   // Batch operations
   batchMoveFiles: (fileIds: string[], newParentId: string | null) => Promise<void>;
@@ -505,6 +506,37 @@ export const useFileStore = create<FileStore>((set, get) => ({
       set({ files: mappedFiles, isLoading: false });
     } catch (error: any) {
       const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch recent files';
+      if (!cachedData) {
+        set({ error: errorMessage, isLoading: false });
+      } else {
+        set({ isLoading: false });
+      }
+      throw error;
+    }
+  },
+
+  fetchSharedFiles: async () => {
+    const cacheKey = get().getCacheKey('shared');
+    const cachedData = get().getCachedData(cacheKey);
+
+    // If we have cached data, use it immediately
+    if (cachedData) {
+      set({ files: cachedData, isLoading: false });
+    } else {
+      set({ isLoading: true, error: null });
+    }
+
+    // Always fetch from API
+    try {
+      const response = await fileService.getSharedFiles();
+      const mappedFiles = response.files.map((file: BackendFile) => mapFile(file));
+
+      // Update cache
+      get().setCachedData(cacheKey, mappedFiles);
+
+      set({ files: mappedFiles, isLoading: false });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch shared files';
       if (!cachedData) {
         set({ error: errorMessage, isLoading: false });
       } else {

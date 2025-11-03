@@ -254,46 +254,6 @@ export const HomePage = () => {
     }
   };
 
-  const handleShareSubmit = (emails: string[], permission: SharePermission) => {
-    showSnackbar(
-      `Shared with ${emails.length} ${
-        emails.length === 1 ? "person" : "people"
-      } as ${permission}`,
-      "success"
-    );
-  };
-
-  const handleUpdatePermission = (
-    _collaboratorId: string,
-    permission: SharePermission
-  ) => {
-    showSnackbar(`Updated permission to ${permission}`, "success");
-  };
-
-  const handleRemoveAccess = (_collaboratorId: string) => {
-    showSnackbar("Removed access", "success");
-  };
-
-  const handleCopyLink = () => {
-    // In real app, this would generate and copy the actual share link
-    navigator.clipboard.writeText(
-      `https://drive.google.com/file/${shareFile?.id}`
-    );
-    showSnackbar("Link copied to clipboard", "success");
-  };
-
-  const handleChangeGeneralAccess = (
-    access: GeneralAccess,
-    permission?: SharePermission
-  ) => {
-    showSnackbar(
-      access === "restricted"
-        ? "Changed to restricted access"
-        : `Anyone with the link can ${permission || "view"}`,
-      "success"
-    );
-  };
-
   // Keyboard shortcuts
   useKeyboardShortcuts([
     {
@@ -436,11 +396,6 @@ export const HomePage = () => {
         open={!!shareFile}
         file={shareFile}
         onClose={() => setShareFile(null)}
-        onShare={handleShareSubmit}
-        onUpdatePermission={handleUpdatePermission}
-        onRemoveAccess={handleRemoveAccess}
-        onCopyLink={handleCopyLink}
-        onChangeGeneralAccess={handleChangeGeneralAccess}
       />
 
       <CreateFolderModal
