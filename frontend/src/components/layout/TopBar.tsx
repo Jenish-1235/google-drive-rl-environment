@@ -111,7 +111,7 @@ export const TopBar = () => {
   const logout = useAuthStore((state) => state.logout);
   const toggleSidebar = useUIStore((state) => state.toggleSidebar);
   const [anchorElHelp, setAnchorElHelp] = useState<null | HTMLElement>(null);
-
+  const [anchorElSettings, setAnchorElSettings] = useState<null | HTMLElement>(null);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
   const [searchFocused, setSearchFocused] = useState(false);
   const [advancedSearchOpen, setAdvancedSearchOpen] = useState(false);
@@ -127,6 +127,14 @@ export const TopBar = () => {
 
   const handleCloseHelpMenu = () => {
     setAnchorElHelp(null);
+  };
+
+  const handleOpenSettingsMenu = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorElSettings(event.currentTarget);
+  };
+
+  const handleCloseSettingsMenu = () => {
+    setAnchorElSettings(null);
   };
 
   const handleCloseUserMenu = () => {
@@ -415,10 +423,114 @@ export const TopBar = () => {
           </Menu>
 
           <Tooltip title="Settings">
-            <IconButton sx={{ color: "#5f6368", p: 1, width: 40, height: 40 }}>
-              <CustomSettingsIcon sx={{ fontSize: 24, width: 24, height: 24 }} />
+            <IconButton 
+              onClick={handleOpenSettingsMenu}
+              role="button"
+              aria-label="Settings"
+              aria-expanded={Boolean(anchorElSettings)}
+              aria-haspopup="true"
+              tabIndex={0}
+              sx={{ 
+                color: "#5f6368", 
+                p: 1, 
+                width: 40, 
+                height: 40,
+                userSelect: "none",
+                backgroundColor: anchorElSettings ? "rgba(26, 115, 232, 0.12)" : "transparent",
+                "&:hover": {
+                  backgroundColor: anchorElSettings ? "rgba(26, 115, 232, 0.16)" : "rgba(95, 99, 104, 0.08)",
+                },
+                "&:focus": {
+                  backgroundColor: anchorElSettings ? "rgba(26, 115, 232, 0.16)" : "rgba(95, 99, 104, 0.08)",
+                  outline: "none",
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <CustomSettingsIcon sx={{ fontSize: 24, width: 24, height: 24 }} />
+              </Box>
             </IconButton>
           </Tooltip>
+
+          {/* Settings Menu */}
+          <Menu
+            anchorEl={anchorElSettings}
+            open={Boolean(anchorElSettings)}
+            onClose={handleCloseSettingsMenu}
+            anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+            transformOrigin={{ vertical: "top", horizontal: "right" }}
+            PaperProps={{
+              sx: {
+                mt: 1,
+                borderRadius: 2,
+                minWidth: 200,
+                boxShadow: "0 2px 8px 2px rgba(60, 64, 67, 0.15), 0 1px 3px 1px rgba(60, 64, 67, 0.3)",
+                border: "none",
+                backgroundColor: "#ffffff",
+                overflow: "hidden",
+              },
+            }}
+            MenuListProps={{
+              sx: {
+                py: 0.5,
+              },
+            }}
+          >
+            <MenuItem
+              onClick={handleCloseSettingsMenu}
+              sx={{
+                py: 1.25,
+                px: 2,
+                fontSize: 14,
+                color: "#202124",
+                "&:hover": { backgroundColor: "#f1f3f4" },
+              }}
+            >
+              Settings
+            </MenuItem>
+            <MenuItem
+              onClick={handleCloseSettingsMenu}
+              sx={{
+                py: 1.25,
+                px: 2,
+                fontSize: 14,
+                color: "#202124",
+                "&:hover": { backgroundColor: "#f1f3f4" },
+              }}
+            >
+              Restore file versions
+            </MenuItem>
+            <MenuItem
+              onClick={handleCloseSettingsMenu}
+              sx={{
+                py: 1.25,
+                px: 2,
+                fontSize: 14,
+                color: "#202124",
+                "&:hover": { backgroundColor: "#f1f3f4" },
+              }}
+            >
+              Get Drive for desktop
+            </MenuItem>
+            <MenuItem
+              onClick={handleCloseSettingsMenu}
+              sx={{
+                py: 1.25,
+                px: 2,
+                fontSize: 14,
+                color: "#202124",
+                "&:hover": { backgroundColor: "#f1f3f4" },
+              }}
+            >
+              Keyboard shortcuts
+            </MenuItem>
+          </Menu>
 
           <Tooltip title="Ask Gemini">
             <IconButton 
