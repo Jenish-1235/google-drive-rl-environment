@@ -15,8 +15,6 @@ import {
   Divider,
 } from "@mui/material";
 import {
-  Add as AddIcon,
-  Home as HomeIcon,
   Folder as FolderIcon,
   UploadFile as UploadFileIcon,
   DriveFolderUpload as FolderUploadIcon,
@@ -29,11 +27,11 @@ import {
   Devices as DevicesIcon,
   Report as SpamIcon,
 } from "@mui/icons-material";
+import { SvgIcon } from "@mui/material";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUIStore } from "../../store/uiStore";
 import { useUploadStore } from "../../store/uploadStore";
 import { useFileStore } from "../../store/fileStore";
-import { colors } from "../../theme/theme";
 import {
   formatFileSize,
   formatStoragePercentage,
@@ -42,6 +40,29 @@ import { mockStorageQuota } from "../../utils/mockData";
 
 const SIDEBAR_WIDTH = 256;
 const SIDEBAR_COLLAPSED_WIDTH = 72;
+
+// Custom Home Icon - exact Google Drive SVG from HTML
+const CustomHomeIcon = (props: any) => (
+  <SvgIcon {...props} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M0 0h24v24H0V0z" fill="none"></path>
+    <path d="M12 3L4 9v12h16V9l-8-6zm6 16h-3v-6H9v6H6v-9l6-4.5 6 4.5v9z"></path>
+  </SvgIcon>
+);
+
+// Custom My Drive Icon - exact Google Drive SVG from HTML
+const CustomMyDriveIcon = (props: any) => (
+  <SvgIcon {...props} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M19 2H5C3.9 2 3 2.9 3 4V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V4C21 2.9 20.1 2 19 2ZM19 20H5V19H19V20ZM19 17H5V4H19V17Z"></path>
+    <path d="M13.1215 6H10.8785C10.5514 6 10.271 6.18692 10.0841 6.46729L7.14019 11.6075C7 11.8878 7 12.215 7.14019 12.4953L8.26168 14.4579C8.40187 14.7383 8.72897 14.9252 9.05608 14.9252H15.0374C15.3645 14.9252 15.6449 14.7383 15.8318 14.4579L16.9533 12.4953C17.0935 12.215 17.0935 11.8878 16.9533 11.6075L13.9159 6.46729C13.7757 6.18692 13.4486 6 13.1215 6ZM10.1776 12.0748L12.0467 8.8972L13.8692 12.0748H10.1776Z"></path>
+  </SvgIcon>
+);
+
+// Custom Add/Plus Icon - exact Google Drive SVG
+const CustomAddIcon = (props: any) => (
+  <SvgIcon {...props} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M20 13h-7v7h-2v-7H4v-2h7V4h2v7h7v2z"></path>
+  </SvgIcon>
+);
 
 interface NavItem {
   id: string;
@@ -54,13 +75,13 @@ const topNavItems: NavItem[] = [
   {
     id: "home",
     label: "Home",
-    icon: <HomeIcon />,
+    icon: <CustomHomeIcon />,
     path: "/home",
   },
   {
     id: "my-drive",
     label: "My Drive",
-    icon: <FolderIcon />,
+    icon: <CustomMyDriveIcon />,
     path: "/drive",
   },
   {
@@ -288,16 +309,17 @@ export const Sidebar = () => {
           }}
         >
           {/* New Button */}
-          <Box sx={{ px: 2, mb: 1 }}>
+          <Box sx={{ px: 2, mb: 1, mt: -1 }}>
             <Button
               variant="outlined"
-              startIcon={<AddIcon />}
+              startIcon={<CustomAddIcon />}
               onClick={handleNewMenuOpen}
               sx={{
-                height: 48,
-                borderRadius: "8px",
+                height: 56,
+                width: 101,
+                borderRadius: "15px",
                 textTransform: "none",
-                fontSize: 14,
+                fontSize: 15,
                 fontWeight: 500,
                 backgroundColor: "white",
                 border: "none",
