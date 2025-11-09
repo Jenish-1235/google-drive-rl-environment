@@ -284,6 +284,16 @@ const theme = createTheme({
         },
       },
     },
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#f8f9fa',
+        },
+        '#root': {
+          backgroundColor: '#f8f9fa',
+        },
+      },
+    },
   },
 });
 

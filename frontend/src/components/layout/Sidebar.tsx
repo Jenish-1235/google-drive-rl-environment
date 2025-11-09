@@ -270,7 +270,8 @@ export const Sidebar = () => {
             width: sidebarOpen ? SIDEBAR_WIDTH : SIDEBAR_COLLAPSED_WIDTH,
             boxSizing: "border-box",
             border: "none",
-            borderRight: `1px solid ${colors.border}`,
+            borderRight: "none",
+            backgroundColor: "#F9FAFD",
             transition: "width 0.2s",
             overflowX: "hidden",
             position: "relative", // Changed from absolute positioning
@@ -457,9 +458,9 @@ export const Sidebar = () => {
                       px: 3,
                       py: 0,
                       justifyContent: sidebarOpen ? "flex-start" : "center",
-                      backgroundColor: active ? "#c2e7ff" : "transparent",
+                      backgroundColor: active ? "#C2E7FF" : "transparent",
                       "&:hover": {
-                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
+                        backgroundColor: active ? "#C2E7FF" : "#f1f3f4",
                       },
                     }}
                   >
@@ -508,9 +509,9 @@ export const Sidebar = () => {
                       px: 3,
                       py: 0,
                       justifyContent: sidebarOpen ? "flex-start" : "center",
-                      backgroundColor: active ? "#c2e7ff" : "transparent",
+                      backgroundColor: active ? "#C2E7FF" : "transparent",
                       "&:hover": {
-                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
+                        backgroundColor: active ? "#C2E7FF" : "#f1f3f4",
                       },
                     }}
                   >
@@ -559,9 +560,9 @@ export const Sidebar = () => {
                       px: 3,
                       py: 0,
                       justifyContent: sidebarOpen ? "flex-start" : "center",
-                      backgroundColor: active ? "#c2e7ff" : "transparent",
+                      backgroundColor: active ? "#C2E7FF" : "transparent",
                       "&:hover": {
-                        backgroundColor: active ? "#c2e7ff" : "#f1f3f4",
+                        backgroundColor: active ? "#C2E7FF" : "#f1f3f4",
                       },
                     }}
                   >

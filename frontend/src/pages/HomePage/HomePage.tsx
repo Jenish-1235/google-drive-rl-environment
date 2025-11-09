@@ -311,7 +311,7 @@ export const HomePage = () => {
         minHeight: "100%",
         py: 3,
         px: 3,
-        backgroundColor: "#f9fafb",
+        backgroundColor: "transparent",
       }}
     >
       <FileToolbar />

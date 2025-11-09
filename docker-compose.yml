@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   backend:
     build:
@@ -7,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: google-drive-backend
     ports:
-      - "5000:5000"
+      - "5001:5000"
     volumes:
       - ./backend/uploads:/app/uploads
       - ./backend/data:/app/data

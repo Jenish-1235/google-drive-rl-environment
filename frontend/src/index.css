@@ -26,18 +26,21 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #f8f9fa;
 }
 
 #root {
   width: 100%;
   height: 100vh;
   overflow: hidden;
+  background-color: #f8f9fa;
 }
 
 /* Ensure the page itself never shows scrollbars to avoid flicker during view changes */
 html, body {
   height: 100%;
   overflow: hidden;
+  background-color: #f8f9fa;
 }
 
 /* Hide scrollbars globally on body (cross-browser), scrolling happens in app containers */

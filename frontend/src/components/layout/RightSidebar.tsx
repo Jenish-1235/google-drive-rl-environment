@@ -66,11 +66,11 @@ export const RightSidebar = () => {
         sx={{
           position: "fixed",
           right: 0,
-          top: 56, // Match TopBar height
+          top: 64, // Match TopBar height
           width: RIGHT_SIDEBAR_WIDTH,
-          height: "calc(100vh - 56px)",
-          borderLeft: `1px solid ${colors.border}`,
-          backgroundColor: "background.paper",
+          height: "calc(100vh - 64px)",
+          borderLeft: "none",
+          backgroundColor: "#F9FAFD",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -133,11 +133,12 @@ export const RightSidebar = () => {
             width: RIGHT_SIDEBAR_EXPANDED_WIDTH,
             boxSizing: "border-box",
             border: "none",
-            borderLeft: `1px solid ${colors.border}`,
+            borderLeft: "none",
+            backgroundColor: "#F9FAFD",
             position: "fixed",
             right: RIGHT_SIDEBAR_WIDTH, // Position next to the icon bar
-            top: 56, // Match TopBar height
-            height: `calc(100vh - 56px)`,
+            top: 64, // Match TopBar height
+            height: `calc(100vh - 64px)`,
             zIndex: (theme) => theme.zIndex.drawer - 1,
           },
         }}

@@ -56,11 +56,18 @@ export const MainLayout = () => {
         flexDirection: "column",
         height: "100vh",
         overflow: "hidden",
+        backgroundColor: "transparent",
       }}
     >
       <TopBar />
       <Box
-        sx={{ display: "flex", flexGrow: 1, overflow: "hidden", pt: "56px" }}
+        sx={{ 
+          display: "flex", 
+          flexGrow: 1, 
+          overflow: "hidden", 
+          pt: "64px",
+          backgroundColor: "transparent",
+        }}
       >
         <Sidebar />
         <Box
@@ -68,9 +75,10 @@ export const MainLayout = () => {
           sx={{
             flexGrow: 1,
             overflow: "auto",
-            backgroundColor: "#f9fafb",
+            backgroundColor: "#ffffff",
             width: "100%",
             minWidth: 0, // Allows flex item to shrink below content size
+            minHeight: "100%",
             pr: "56px", // Add padding for fixed right sidebar
             marginRight: detailsPanelOpen ? "360px" : "0px", // Make space for details panel
             transition: "margin-right 0.225s cubic-bezier(0.4, 0.0, 0.2, 1)",

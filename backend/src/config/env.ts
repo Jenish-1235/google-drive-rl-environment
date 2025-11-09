@@ -4,7 +4,7 @@ dotenv.config();
 
 export const config = {
   nodeEnv: process.env.NODE_ENV || "development",
-  port: parseInt(process.env.PORT || "5000"),
+  port: parseInt(process.env.PORT || "5001"),
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
 
   jwt: {

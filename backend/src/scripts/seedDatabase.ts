@@ -1,4 +1,4 @@
-import { db } from "../config/database";
+import { db, initializeDatabase } from "../config/database";
 import path from "path";
 import fs from "fs";
 
@@ -11,6 +11,18 @@ async function seedDatabase() {
   console.log("🌱 Starting database seeding...");
 
   try {
+    // Initialize schema first if running from Docker (when SEED_ON_STARTUP is set)
+    // This ensures tables exist before seeding
+    if (process.env.SEED_ON_STARTUP === "true") {
+      console.log("📋 Initializing database schema...");
+      try {
+        initializeDatabase();
+      } catch (error) {
+        // Schema might already be initialized, which is fine
+        console.log("ℹ️  Schema initialization skipped (may already exist)");
+      }
+    }
+
     // Read the seed SQL file
     const seedPath = path.join(__dirname, "../../database/seed.sql");
 
@@ -49,9 +61,15 @@ async function seedDatabase() {
   } catch (error) {
     console.error("❌ Seeding failed:", error);
     process.exit(1);
-  } finally {
+  }
+  
+  // Only close the database if running as a standalone script
+  // If SEED_ON_STARTUP is set, we're running from Docker entrypoint and should keep DB open
+  if (!process.env.SEED_ON_STARTUP) {
     db.close();
     console.log("\n✅ Database connection closed");
+  } else {
+    console.log("\n✅ Database seeded (connection kept open for server)");
   }
 }
 
